@@ -1,0 +1,1 @@
+(select convert(int,CHAR(65)))

