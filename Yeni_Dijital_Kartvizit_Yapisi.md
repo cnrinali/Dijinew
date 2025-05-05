@@ -299,54 +299,122 @@ Aşağıda her PHP dosyasının hangi modüle ait olduğu özetlenmiştir:
 
 ## 🔄 Modern Karşılıkları (React.js + Node.js API)
 
-### 1. 🔐 Kimlik Doğrulama (Auth)
+**Not:** Aşağıdaki endpoint'lerin çoğu `protect` middleware'i ile korunmalı ve rol bazlı erişim için `authorize` middleware'i kullanılmalıdır (bkz. Yetkilendirme bölümü).
+
+### 1. 🔐 Kimlik Doğrulama & Yetkilendirme (Auth)
 - Giriş / Çıkış → `POST /api/auth/login`, `POST /api/auth/logout`
+    - Login yanıtı kullanıcı bilgilerine ek olarak `role` ve (varsa) `companyId` içermelidir.
+- Kayıt Ol (Admin tarafından) → `POST /api/admin/users` (Rol ve şirket atanarak)
 - Şifre Sıfırlama → `POST /api/auth/forgot`, `PUT /api/auth/reset`
-- Aktivasyon → JWT veya e-posta onayı
-- Frontend bileşenleri: `LoginPage.jsx`, `ForgotPassword.jsx`, `ResetPassword.jsx`
+- Şifre Değiştirme (Kullanıcı) → `PUT /api/users/change-password`
+- Aktivasyon → JWT temelli
+- Frontend bileşenleri: `LoginPage.jsx`, `RegisterPage.jsx` (Admin için), `ForgotPassword.jsx`, `ResetPassword.jsx`, `ProfilePage.jsx` (Şifre sekmesi)
 
-### 2. 👤 Kullanıcı & Admin Yönetimi
-- Kullanıcı ekle/sil → `GET/POST/DELETE /api/admin/users`
-- Roller ve yetkiler → `PUT /api/admin/users/:id/role`
-- React sayfaları: `UserManagement.jsx`, `AdminDashboard.jsx`
+### 2. 🏢 Şirket & Kullanıcı Yönetimi (Admin & Business Rolleri)
+- **Admin Yetkileri:**
+    - Şirket Oluştur/Listele/Güncelle/Sil → `POST/GET/PUT/DELETE /api/admin/companies` (Limitleri belirleyerek)
+    - Tüm Kullanıcıları Listele/Detay → `GET /api/admin/users`, `GET /api/admin/users/:id`
+    - Kullanıcı Oluştur (Rol ve Şirket atayarak) → `POST /api/admin/users`
+    - Kullanıcı Güncelle/Sil/Rol Değiştir → `PUT/DELETE /api/admin/users/:id`, `PUT /api/admin/users/:id/role`
+- **Business Yetkileri:**
+    - Kendi Şirket Bilgisini Getir → `GET /api/business/company`
+    - Kendi Şirket Kullanıcılarını Listele/Detay → `GET /api/business/users`, `GET /api/business/users/:id`
+    - Şirkete Kullanıcı Ekle (Limit dahilinde) → `POST /api/business/users`
+    - Şirket Kullanıcısını Güncelle/Sil → `PUT/DELETE /api/business/users/:id`
+- React sayfaları: `CompanyManagement.jsx` (Admin), `UserManagement.jsx` (Admin), `BusinessUserManagement.jsx` (Business), `AdminDashboard.jsx`
 
-### 3. 🗂 Kartvizit Yönetimi
-- Kart oluştur/güncelle → `POST /api/cards`, `PUT /api/cards/:id`
-- Kart listeleme → `GET /api/cards`, `GET /api/cards/:id`
-- Kart durumu yönetimi (aktif/pasif)
-- React bileşeni: `CardEditor.jsx`, `CardList.jsx`
+### 3. 🗂 Kartvizit Yönetimi (Rol Bazlı)
+- **Admin Yetkileri:**
+    - Tüm Kartları Listele → `GET /api/admin/cards`
+    - Kart Detayı Görüntüle → `GET /api/cards/:id` (Tüm kartlar için)
+    - Kart Durumu Değiştir (Aktif/Pasif) → `PUT /api/admin/cards/:id/status`
+- **Business Yetkileri:**
+    - Kendi Şirketinin Kartlarını Listele → `GET /api/business/cards`
+    - Kendi Şirketine Kart Oluştur (Limit dahilinde) → `POST /api/business/cards`
+    - Kendi Şirket Kartını Güncelle/Sil → `PUT/DELETE /api/business/cards/:id`
+    - Excel ile Toplu Kartvizit Yükle → `POST /api/business/cards/import`
+- **User Yetkileri:**
+    - Kendi Kartlarını Listele → `GET /api/cards`
+    - Kendi Kartını Oluştur (Limit dahilinde, genellikle 1) → `POST /api/cards`
+    - Kendi Kartını Güncelle/Sil → `PUT/DELETE /api/cards/:id`
+- **Genel:**
+    - Public Kartvizit Görünümü → `GET /api/public/cards/:slugOrId` (Token gerektirmez)
+- React bileşenleri: `CardList.jsx` (Rol'e göre farklı veri), `CardEditor.jsx`, `CardImport.jsx` (Business), `PublicCardView.jsx`
 
-### 4. 🏢 Kurumsal Yapı & Bayiler
-- Bayi işlemleri → `GET/POST/DELETE /api/branches`
-- Kurumsal kartlar → `GET /api/cards?type=corporate`
-- React bileşenleri: `BranchList.jsx`, `CorporateCard.jsx`
+### 4. 👤 Kullanıcı Profili (Tüm Roller)
+- Profil Bilgilerini Getir → `GET /api/users/profile`
+- Profil Bilgilerini Güncelle (isim, email vb.) → `PUT /api/users/profile`
+- React sayfası: `ProfilePage.jsx` (Bilgilerim sekmesi)
 
-### 5. 🌐 Sosyal Medya & Banka Bilgileri
-- Sosyal Medya CRUD → `POST /api/cards/:id/socials`
-- Banka Bilgisi CRUD → `POST /api/cards/:id/banks`
-- React bileşeni: `SocialBankForm.jsx`
+### 5. 🌐 İçerik Yönetimi (Sosyal Medya, Banka, Ürünler, Dökümanlar vb.)
+- **Genel Yaklaşım:** Bu bilgiler genellikle bir kartvizite bağlıdır. İlgili kartvizitin sahibi (veya admin/ilgili business) tarafından yönetilir.
+- Sosyal Medya CRUD → `GET/POST/PUT/DELETE /api/cards/:cardId/socials`
+- Banka Bilgisi CRUD → `GET/POST/PUT/DELETE /api/cards/:cardId/banks`
+- Ürün Bilgisi CRUD → `GET/POST/PUT/DELETE /api/cards/:cardId/products`
+- Döküman Bilgisi CRUD → `GET/POST/PUT/DELETE /api/cards/:cardId/documents`
+- Tanıtım Videosu → `PUT /api/cards/:cardId/video` (URL veya dosya yükleme)
+- Slider Yönetimi (Şirket veya Kart bazlı?) → `GET/POST/DELETE /api/cards/:cardId/sliders` veya `/api/business/sliders`
+- React bileşenleri: `SocialBankForm.jsx`, `ProductManager.jsx`, `DocumentManager.jsx`, `VideoUpload.jsx`, `SliderManager.jsx` (Kart düzenleme sayfasının parçaları olabilir)
 
-### 6. 📊 Raporlama & İstatistik
-- Genel istatistikler → `GET /api/analytics`
-- Rapor sayfaları: `Reports.jsx`, `StatsDashboard.jsx`
+### 6. 📊 Raporlama & İstatistik (Rol Bazlı)
+- **Admin Yetkileri:**
+    - Genel Sistem Raporları → `GET /api/admin/reports/summary`
+    - Kullanıcı/Şirket Bazlı Raporlar → `GET /api/admin/reports/users`, `/api/admin/reports/companies`
+- **Business Yetkileri:**
+    - Kendi Şirketinin Raporları → `GET /api/business/reports/summary`
+    - Şirket Etkileşim Raporları → `GET /api/business/reports/interactions`
+- **User Yetkileri:**
+    - Kendi Kartvizit Raporları (Özet, Etkileşim vb.) → `GET /api/users/reports/summary`, `/api/users/reports/interactions`
+    - Pazaryeri Raporları (Varsa) → `GET /api/users/reports/marketplace`
+    - Sosyal Ağ Raporları (Varsa) → `GET /api/users/reports/social`
+- Rapor sayfaları: `AdminReports.jsx`, `BusinessReports.jsx`, `UserReports.jsx`, `StatsDashboard.jsx` (Genel)
 
 ### 7. 🖼 Medya Yönetimi
-- Dosya yükleme → `POST /api/upload`, `PUT /api/upload/:id`
-- Slider, katalog, video yönetimi
-- React bileşenleri: `MediaManager.jsx`
+- Dosya yükleme (Profil, Kart, Slider, Döküman vb.) → `POST /api/upload` (Yetkilendirme ve dosya tipi kontrolü ile)
+- React bileşenleri: `ImageUpload.jsx`, `FileUpload.jsx` (Genel amaçlı)
 
 ### 8. 🛠 Yapılandırmalar & Bağlantılar
-- `config.js` → environment değişkenleri
-- `db.js` → mssql bağlantısı
+- `config.js` veya `.env` → environment değişkenleri (DB, JWT Secret vb.)
+- `db.js` → mssql bağlantısı (Mevcut haliyle iyi görünüyor)
 
 ### 9. 📞 Destek ve Talep Sistemi
-- Destek kayıtları → `POST /api/support`
-- Destek yönetimi → `GET /api/admin/support`
-- React bileşeni: `SupportForm.jsx`
+- Destek Talebi Oluştur (User/Business) → `POST /api/support/tickets`
+- Destek Taleplerini Listele (Kullanıcı kendi, Business kendi şirketi, Admin hepsi) → `GET /api/support/tickets` (Rol'e göre filtreli)
+- Talep Detayı/Yanıtla (Admin/İlgili Kullanıcı) → `GET /api/support/tickets/:id`, `POST /api/support/tickets/:id/reply`
+- React bileşeni: `SupportTicketList.jsx`, `SupportTicketDetail.jsx`, `NewSupportTicket.jsx`
 
-### 10. 📶 NFC Sihirbazı
-- Kart adım adım oluşturma → çok sayfalı form (wizard)
-- React: `WizardStep1.jsx` ... `WizardStep6.jsx`
+### 10. 📶 NFC Sihirbazı (Kart Oluşturma/Düzenleme Adımları)
+- Mevcut `CardEditor.jsx` bileşeni içinde çok adımlı bir yapı (Stepper) kullanılabilir veya ayrı `WizardStepX.jsx` bileşenleri ile yönetilebilir. Backend tarafında `POST /api/cards` ve `PUT /api/cards/:id` endpoint'leri kullanılır.
+
+---
+
+## 🔐 Yetkilendirme (Authorization) Middleware
+
+API endpoint'lerinin güvenliğini sağlamak ve rol bazlı erişimi kontrol etmek için iki temel middleware kullanılacaktır:
+
+1.  **`protect` (Kimlik Doğrulama):**
+    - Gelen istekteki JWT'yi (Authorization header) doğrular.
+    - Geçerli ise, token içerisindeki kullanıcı bilgisini (id, rol vb.) veritabanından çekerek `req.user` nesnesine ekler.
+    - Geçersiz veya eksik token durumunda 401 Unauthorized hatası döner.
+    - Hemen hemen tüm özel API endpoint'lerinde ilk olarak bu middleware kullanılır.
+
+2.  **`authorize(...roles)` (Yetkilendirme):**
+    - `protect` middleware'inden sonra çalışır ve `req.user` nesnesinin var olduğunu varsayar.
+    - Parametre olarak izin verilen rolleri (`['admin']`, `['admin', 'business']` vb.) alır.
+    - `req.user.role` bilgisini kontrol eder. Eğer kullanıcının rolü izin verilen rollerden biri değilse, 403 Forbidden hatası döner.
+    - Sadece belirli rollerin erişebilmesi gereken endpoint'lerde kullanılır.
+
+**Örnek Kullanım (`routes.js` içinde):**
+```javascript
+// Sadece admin erişebilir
+router.get('/users', protect, authorize('admin'), userController.getAllUsers);
+
+// Admin ve Business erişebilir
+router.get('/cards', protect, authorize('admin', 'business'), cardController.getCards);
+
+// Giriş yapmış tüm kullanıcılar erişebilir (authorize gerekmez, protect yeterli)
+router.get('/profile', protect, userController.getUserProfile);
+```
 
 ---
 
@@ -415,12 +483,55 @@ const getUsers = async () => {
 };
 ```
 
-### 4. Veri Tabanı Tasarımı (MSSQL Tablolar)
-- Users (id, name, email, password, role)
-- Cards (id, user_id, phone, title, company)
-- Socials (id, card_id, type, link)
-- Banks (id, card_id, bank_name, iban)
-- Logs (id, card_id, viewer_ip, viewed_at)
+### 4. Veri Tabanı Tasarımı (MSSQL Tablolar) - Güncellenmiş
+- **Companies**
+    - `id` (INT, Primary Key, Identity)
+    - `name` (NVARCHAR(255), Not Null)
+    - `userLimit` (INT, Not Null, Default 1)
+    - `cardLimit` (INT, Not Null, Default 1)
+    - `status` (BIT, Not Null, Default 1) -- 1: Aktif, 0: Pasif
+    - `phone` (NVARCHAR(50), Null)
+    - `website` (NVARCHAR(255), Null)
+    - `address` (NVARCHAR(500), Null)
+    - `createdAt` (DATETIME2, Default GETDATE())
+    - `updatedAt` (DATETIME2, Default GETDATE()) -- Güncelleme tarihi eklendi
+- **Users**
+    - `id` (INT, Primary Key, Identity)
+    - `name` (NVARCHAR(100), Not Null)
+    - `email` (NVARCHAR(100), Not Null, Unique)
+    - `password` (NVARCHAR(255), Not Null) - Hashlenmiş
+    - `role` (NVARCHAR(20), Not Null, CHECK (role IN ('admin', 'business', 'user')))
+    - `companyId` (INT, Null, Foreign Key References Companies(id)) - Business rolü için zorunlu olabilir
+    - `createdAt` (DATETIME2, Default GETDATE())
+    - `isActive` (BIT, Default 1) - Kullanıcıyı dondurmak için
+- **Cards**
+    - `id` (INT, Primary Key, Identity)
+    - `userId` (INT, Not Null, Foreign Key References Users(id)) - Kartın sahibi olan kullanıcı
+    - `companyId` (INT, Null, Foreign Key References Companies(id)) - Kartın ait olduğu şirket (business kartları için)
+    - `title` (NVARCHAR(100), Null)
+    - `name` (NVARCHAR(100), Null) - Kart üzerindeki isim
+    - `companyName` (NVARCHAR(100), Null) - Kart üzerindeki şirket adı
+    - `phone` (NVARCHAR(20), Null)
+    - `email` (NVARCHAR(100), Null) - Kart üzerindeki e-posta
+    - `address` (NVARCHAR(255), Null)
+    - `website` (NVARCHAR(255), Null)
+    - `profileImageUrl` (NVARCHAR(512), Null)
+    - `logoImageUrl` (NVARCHAR(512), Null)
+    - `slug` (NVARCHAR(100), Null, Unique) - Public erişim için benzersiz kısa isim
+    - `theme` (NVARCHAR(50), Null) - Kart tema bilgisi
+    - `isActive` (BIT, Default 1) - Kartı dondurmak için
+    - `createdAt` (DATETIME2, Default GETDATE())
+    - `updatedAt` (DATETIME2, Default GETDATE())
+    - *(Diğer kart detayları eklenebilir: bio, jobTitle vb.)*
+- **Socials** (id, card_id FK, type, link) - Mevcut haliyle iyi
+- **Banks** (id, card_id FK, bank_name, iban) - Mevcut haliyle iyi
+- **Products** (id, card_id FK, name, description, price, imageUrl) - Eklenebilir
+- **Documents** (id, card_id FK, name, fileUrl, description) - Eklenebilir
+- **Sliders** (id, card_id FK?, companyId FK?, imageUrl, link, order) - Eklenebilir (Kart veya Şirket bazlı olabilir)
+- **Videos** (id, card_id FK, videoUrl, description) - Eklenebilir (veya Cards tablosuna bir alan olarak)
+- **Logs** (id, card_id FK, viewer_ip, viewed_at, user_agent) - Mevcut haliyle iyi, user_agent eklenebilir
+- **SupportTickets** (id, userId FK, subject, message, status, createdAt)
+- **SupportReplies** (id, ticketId FK, userId FK, message, createdAt)
 
 ### 5. Avantajlar
 - Kurumsal ortamlarda uyumluluk

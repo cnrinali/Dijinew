@@ -15,6 +15,7 @@ import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
+import Paper from '@mui/material/Paper';
 
 // Sayfalar
 import LoginPage from './pages/LoginPage';
@@ -33,6 +34,18 @@ import AdminRoute from './components/AdminRoute';
 import AdminUserListPage from './pages/admin/AdminUserListPage';
 import AdminCardListPage from './pages/admin/AdminCardListPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import CompanyManagementPage from './pages/admin/CompanyManagementPage';
+
+// Basit Yetkisiz Erişim Sayfası
+const UnauthorizedPage = () => (
+    <Container sx={{ py: 4 }} maxWidth="sm">
+        <Paper sx={{ p: 3, textAlign: 'center' }}>
+            <Typography variant="h4" color="error" gutterBottom>Erişim Yetkiniz Yok</Typography>
+            <Typography>Bu sayfayı görüntülemek için gerekli yetkilere sahip değilsiniz.</Typography>
+            <Button component={RouterLink} to="/" variant="contained" sx={{ mt: 3 }}>Ana Sayfa'ya Dön</Button>
+        </Paper>
+    </Container>
+);
 
 function App() {
   const { isLoggedIn, logout, loading, user } = useAuth(); 
@@ -84,73 +97,33 @@ function App() {
         }}
       >
         <Routes>
+          {/* Public Rotalar */}
           <Route path="/login" element={isLoggedIn ? <Navigate to="/" /> : <LoginPage />} />
           <Route path="/register" element={isLoggedIn ? <Navigate to="/" /> : <RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password/:resetToken" element={<ResetPasswordPage />} />
           <Route path="/" element={<HomePage />} /> 
-          
           <Route path="/card/:slugOrId" element={<PublicCardViewPage />} />
+          <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-          <Route 
-            path="/cards" 
-            element={
-              <ProtectedRoute>
-                <CardListPage />
-              </ProtectedRoute>
-            }
-          />
-           <Route 
-            path="/cards/create"
-            element={
-              <ProtectedRoute>
-                <CreateCardPage />
-              </ProtectedRoute>
-            }
-          />
-           <Route 
-            path="/cards/edit/:id"
-            element={
-              <ProtectedRoute>
-                <EditCardPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route 
-            path="/profile" 
-            element={ 
-              <ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>
-            } 
-          />
+          {/* Kullanıcı Rotaları (Giriş Gerekli) */}
+          <Route element={<ProtectedRoute />}>
+             <Route path="/cards" element={<CardListPage />} />
+             <Route path="/cards/create" element={<CreateCardPage />} />
+             <Route path="/cards/edit/:id" element={<EditCardPage />} />
+             <Route path="/profile" element={<ProfilePage />} />
+          </Route>
 
-          {/* Yönetici Rotaları */} 
-          <Route 
-            path="/admin"
-            element={
-              <AdminRoute>
-                <AdminDashboardPage />
-              </AdminRoute>
-            }
-          />
-           <Route 
-            path="/admin/users" 
-            element={
-              <AdminRoute>
-                <AdminUserListPage />
-              </AdminRoute>
-            }
-          />
-           <Route 
-            path="/admin/cards" 
-            element={
-              <AdminRoute>
-                <AdminCardListPage />
-              </AdminRoute>
-            }
-          />
-          {/* Gelecekte diğer admin rotaları buraya eklenebilir */}
+          {/* Yönetici Rotaları (Admin Rolü Gerekli) */}
+          <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+             <Route path="/admin" element={<AdminDashboardPage />} />
+             <Route path="/admin/users" element={<AdminUserListPage />} />
+             <Route path="/admin/cards" element={<AdminCardListPage />} />
+             <Route path="/admin/companies" element={<CompanyManagementPage />} />
+          </Route>
+
+          {/* Diğer Rotalar (404 vb.) buraya eklenebilir */}
+          <Route path="*" element={<Navigate to="/" replace />} />
 
         </Routes>
       </Container>

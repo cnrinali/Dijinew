@@ -1,24 +1,35 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext.jsx'; // AuthContext'in yolu doğru varsayıldı
+import { Navigate, Outlet } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
-function ProtectedRoute({ children }) {
-  const { isLoggedIn, loading } = useAuth();
+// Bu bileşen, belirli rollere sahip kullanıcıların erişebileceği route'ları korur.
+// Eğer kullanıcı giriş yapmamışsa veya rolü uygun değilse login sayfasına yönlendirir.
+// children yerine <Outlet /> kullanmak, iç içe route yapısını destekler.
 
-  if (loading) {
-    // Auth durumu yüklenirken bekleme durumu gösterilebilir
-    return <div>Yükleniyor...</div>; 
-  }
+const ProtectedRoute = ({ allowedRoles }) => {
+    const { user, isLoggedIn, loading } = useAuth();
 
-  if (!isLoggedIn) {
-    // Kullanıcı giriş yapmamışsa login sayfasına yönlendir
-    // `replace` prop'u tarayıcı geçmişinde gereksiz bir giriş oluşturmaz
-    return <Navigate to="/login" replace />;
-  }
+    if (loading) {
+        // AuthContext hala kullanıcıyı kontrol ediyorsa bekleme göster
+        // veya null dönerek App.jsx'deki genel yüklenme durumuna bırak
+        return <div>Yükleniyor...</div>; // Veya <CircularProgress />
+    }
 
-  // Kullanıcı giriş yapmışsa istenen bileşeni (children) göster
-  console.log('ProtectedRoute: Kullanıcı giriş yapmış, children render ediliyor.');
-  return children;
-}
+    if (!isLoggedIn) {
+        // Kullanıcı giriş yapmamışsa login sayfasına yönlendir
+        console.log('ProtectedRoute: Kullanıcı giriş yapmamış, /login yönlendiriliyor.');
+        return <Navigate to="/login" replace />;
+    }
+
+    if (allowedRoles && !allowedRoles.includes(user?.role)) {
+        // Kullanıcının rolü izin verilenler arasında değilse
+        console.log(`ProtectedRoute: Yetkisiz rol (${user?.role}), /unauthorized veya / adresine yönlendiriliyor.`);
+        // Yetkisiz sayfasına veya ana sayfaya yönlendir
+        return <Navigate to="/unauthorized" replace />; // veya to="/"
+    }
+
+    // Kullanıcı giriş yapmış ve rolü uygunsa, route'un içeriğini göster
+    return <Outlet />; // Outlet, Route içindeki child elementleri render eder
+};
 
 export default ProtectedRoute; 

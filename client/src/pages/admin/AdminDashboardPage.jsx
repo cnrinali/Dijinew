@@ -17,8 +17,8 @@ import PeopleIcon from '@mui/icons-material/People';
 import CardMembershipIcon from '@mui/icons-material/CardMembership';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 
-// Admin Servisi
-import * as adminService from '../../services/adminService';
+// Admin Servisi - Named import kullanalım
+import { getDashboardStats } from '../../services/adminService';
 
 // Basit bir istatistik kartı bileşeni
 function StatCard({ title, value, icon, color = 'primary' }) {
@@ -49,7 +49,8 @@ function AdminDashboardPage() {
             setLoading(true);
             setError('');
             try {
-                const data = await adminService.getDashboardStats();
+                // Çağrıyı doğrudan yapalım
+                const data = await getDashboardStats(); 
                 setStats(data);
             } catch (err) {
                 setError(err.response?.data?.message || 'İstatistikler getirilirken bir hata oluştu.');
@@ -108,6 +109,7 @@ function AdminDashboardPage() {
                 <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap'}}>
                     <Button variant="outlined" component={RouterLink} to="/admin/users">Kullanıcıları Yönet</Button>
                     <Button variant="outlined" component={RouterLink} to="/admin/cards">Kartvizitleri Yönet</Button>
+                    <Button variant="outlined" component={RouterLink} to="/admin/companies">Şirketleri Yönet</Button>
                 </Box>
             </Paper>
 

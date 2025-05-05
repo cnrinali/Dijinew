@@ -571,176 +571,135 @@ const getDashboardStats = async (req, res) => {
 // @route   POST /api/admin/companies
 // @access  Private/Admin
 const createCompany = async (req, res) => {
-    const { name, userLimit = 5, cardLimit = 10 } = req.body; // Varsayılan limitler
+    console.log("createCompany controller çağrıldı", req.body);
+    // Yeni alanları da alalım (status varsayılan olarak 1 olacak)
+    const { name, userLimit, cardLimit, status = 1, phone, website, address } = req.body;
 
-    if (!name) {
-        return res.status(400).json({ message: 'Şirket adı zorunludur.' });
+    if (!name || userLimit == null || cardLimit == null) {
+        return res.status(400).json({ message: 'Şirket adı, kullanıcı limiti ve kart limiti zorunludur.' });
     }
-    const userLimitNum = parseInt(userLimit, 10);
-    const cardLimitNum = parseInt(cardLimit, 10);
-    if (isNaN(userLimitNum) || userLimitNum < 1 || isNaN(cardLimitNum) || cardLimitNum < 0) {
-         return res.status(400).json({ message: 'Geçersiz kullanıcı veya kart limiti.' });
+    // Basit status kontrolü
+    if (status !== 0 && status !== 1 && status !== true && status !== false) {
+         return res.status(400).json({ message: 'Durum alanı 0, 1, true veya false olmalıdır.' });
     }
+    const companyStatus = (status === 1 || status === true); // Boolean'a çevir
 
     try {
         const pool = await getPool();
-        // İsim benzersizliği kontrolü (opsiyonel ama önerilir)
-        const nameCheck = await pool.request()
-            .input('name', sql.NVarChar, name)
-            .query('SELECT TOP 1 id FROM Companies WHERE name = @name');
-        if (nameCheck.recordset.length > 0) {
-            return res.status(400).json({ message: 'Bu isimde bir şirket zaten mevcut.' });
-        }
-
         const result = await pool.request()
             .input('name', sql.NVarChar, name)
-            .input('userLimit', sql.Int, userLimitNum)
-            .input('cardLimit', sql.Int, cardLimitNum)
-            .query(`INSERT INTO Companies (name, userLimit, cardLimit) 
-                    OUTPUT inserted.* 
-                    VALUES (@name, @userLimit, @cardLimit)`);
+            .input('userLimit', sql.Int, userLimit)
+            .input('cardLimit', sql.Int, cardLimit)
+            .input('status', sql.Bit, companyStatus)
+            .input('phone', sql.NVarChar, phone || null) // Boşsa NULL gönder
+            .input('website', sql.NVarChar, website || null)
+            .input('address', sql.NVarChar, address || null)
+            // updatedAt eklendi
+            .query('INSERT INTO Companies (name, userLimit, cardLimit, status, phone, website, address, updatedAt) OUTPUT INSERTED.* VALUES (@name, @userLimit, @cardLimit, @status, @phone, @website, @address, GETDATE())');
         
-        if (result.recordset && result.recordset.length > 0) {
-            res.status(201).json(result.recordset[0]);
-        } else {
-            throw new Error('Şirket oluşturulamadı.');
-        }
+        res.status(201).json(result.recordset[0]);
     } catch (error) {
-        console.error("Şirket oluşturma hatası (Admin):", error);
-         if (error.number === 2601 || error.number === 2627) { // Unique constraint (isim için)
-             return res.status(400).json({ message: 'Bu isimde bir şirket zaten mevcut.' });
+        console.error("Şirket oluşturma hatası:", error);
+        if (error.number === 2627) { 
+             return res.status(400).json({ message: 'Bu isimde bir şirket zaten mevcut olabilir.' });
         }
-        res.status(500).json({ message: 'Sunucu hatası oluştu' });
+        res.status(500).json({ message: 'Sunucu hatası oluştu.' });
     }
 };
 
-// @desc    Get all companies (with pagination)
+// @desc    Get all companies
 // @route   GET /api/admin/companies
 // @access  Private/Admin
-const getAllCompanies = async (req, res) => {
-    const { page = 1, limit = 10, search } = req.query;
-    const pageNum = parseInt(page, 10);
-    const limitNum = parseInt(limit, 10);
-    const offset = (pageNum - 1) * limitNum;
-
-    if (isNaN(pageNum) || pageNum < 1 || isNaN(limitNum) || limitNum < 1) {
-        return res.status(400).json({ message: 'Geçersiz sayfa veya limit değeri.' });
-    }
-
+const getCompanies = async (req, res) => {
+    console.log("getCompanies controller çağrıldı");
     try {
         const pool = await getPool();
-        const request = pool.request();
-        let whereClause = '';
-        if (search) {
-            whereClause = 'WHERE name LIKE @searchTerm';
-            request.input('searchTerm', sql.NVarChar, `%${search}%`);
-        }
-
-        const countQuery = `SELECT COUNT(*) as totalCount FROM Companies ${whereClause}`;
-        const countResult = await request.query(countQuery);
-        const totalCount = countResult.recordset[0].totalCount;
-
-        const dataQuery = `
-            SELECT * FROM Companies 
-            ${whereClause} 
-            ORDER BY id ASC 
-            OFFSET @offset ROWS 
-            FETCH NEXT @limit ROWS ONLY
-        `;
-        request.input('offset', sql.Int, offset);
-        request.input('limit', sql.Int, limitNum);
-        
-        const dataResult = await request.query(dataQuery);
-
-        res.status(200).json({
-            data: dataResult.recordset,
-            totalCount: totalCount,
-            page: pageNum,
-            limit: limitNum,
-            totalPages: Math.ceil(totalCount / limitNum)
-        });
-
+        // Yeni alanları da seçelim
+        const result = await pool.request().query('SELECT id, name, userLimit, cardLimit, status, phone, website, address, createdAt, updatedAt FROM Companies ORDER BY createdAt DESC');
+        res.status(200).json(result.recordset);
     } catch (error) {
-        console.error("Tüm şirketleri getirme hatası (Admin):", error);
-        res.status(500).json({ message: 'Sunucu hatası oluştu' });
+        console.error("Şirketleri listeleme hatası:", error);
+        res.status(500).json({ message: 'Sunucu hatası oluştu.' });
     }
 };
 
-// @desc    Update a company (name, limits)
+// @desc    Get company by ID
+// @route   GET /api/admin/companies/:id
+// @access  Private/Admin
+const getCompanyById = async (req, res) => {
+    const companyId = req.params.id;
+    console.log(`getCompanyById controller çağrıldı, ID: ${companyId}`);
+    try {
+        const pool = await getPool();
+        const result = await pool.request()
+            .input('companyId', sql.Int, companyId)
+            // Yeni alanları da seçelim
+            .query('SELECT id, name, userLimit, cardLimit, status, phone, website, address, createdAt, updatedAt FROM Companies WHERE id = @companyId');
+
+        if (result.recordset.length === 0) {
+            return res.status(404).json({ message: 'Şirket bulunamadı.' });
+        }
+        res.status(200).json(result.recordset[0]);
+    } catch (error) {
+        console.error("Şirket detayı getirme hatası:", error);
+        res.status(500).json({ message: 'Sunucu hatası oluştu.' });
+    }
+};
+
+// @desc    Update a company
 // @route   PUT /api/admin/companies/:id
 // @access  Private/Admin
 const updateCompany = async (req, res) => {
     const companyId = req.params.id;
-    const { name, userLimit, cardLimit } = req.body;
+    // Yeni alanları al
+    const { name, userLimit, cardLimit, status, phone, website, address } = req.body;
+    console.log(`updateCompany controller çağrıldı, ID: ${companyId}`, req.body);
 
-    if (isNaN(parseInt(companyId))) {
-        return res.status(400).json({ message: 'Geçersiz Şirket ID' });
+     if (!name || userLimit == null || cardLimit == null) {
+        return res.status(400).json({ message: 'Şirket adı, kullanıcı limiti ve kart limiti zorunludur.' });
     }
-    if (!name && userLimit === undefined && cardLimit === undefined) {
-         return res.status(400).json({ message: 'Güncellenecek en az bir alan gönderilmelidir (name, userLimit, cardLimit).' });
-    }
-
-    // Limitleri kontrol et
-    const userLimitNum = userLimit !== undefined ? parseInt(userLimit, 10) : undefined;
-    const cardLimitNum = cardLimit !== undefined ? parseInt(cardLimit, 10) : undefined;
-    if ((userLimitNum !== undefined && (isNaN(userLimitNum) || userLimitNum < 1)) || 
-        (cardLimitNum !== undefined && (isNaN(cardLimitNum) || cardLimitNum < 0))) {
-         return res.status(400).json({ message: 'Geçersiz kullanıcı veya kart limiti.' });
+    // Status kontrolü (opsiyonel olduğu için null da olabilir)
+    let companyStatus = null;
+    if (status !== undefined && status !== null) {
+        if (status !== 0 && status !== 1 && status !== true && status !== false) {
+            return res.status(400).json({ message: 'Durum alanı 0, 1, true veya false olmalıdır.' });
+        }
+        companyStatus = (status === 1 || status === true);
     }
 
     try {
         const pool = await getPool();
-        
-        // İsim güncelleniyorsa, yeni ismin başka bir şirkette kullanılmadığını kontrol et
-        if (name) {
-             const nameCheck = await pool.request()
-                .input('name', sql.NVarChar, name)
-                .input('companyId', sql.Int, parseInt(companyId))
-                .query('SELECT TOP 1 id FROM Companies WHERE name = @name AND id != @companyId');
-            if (nameCheck.recordset.length > 0) {
-                return res.status(400).json({ message: 'Bu isim başka bir şirkete ait.' });
-            }
+        const request = pool.request()
+            .input('companyId', sql.Int, companyId)
+            .input('name', sql.NVarChar, name)
+            .input('userLimit', sql.Int, userLimit)
+            .input('cardLimit', sql.Int, cardLimit)
+            .input('phone', sql.NVarChar, phone || null)
+            .input('website', sql.NVarChar, website || null)
+            .input('address', sql.NVarChar, address || null)
+            .input('updatedAt', sql.DateTime2, new Date()); // Veya GETDATE() kullan
+
+        // Status sadece gönderildiyse güncellensin
+        let setClauses = 'name = @name, userLimit = @userLimit, cardLimit = @cardLimit, phone = @phone, website = @website, address = @address, updatedAt = @updatedAt';
+        if (companyStatus !== null) {
+            setClauses += ', status = @status';
+            request.input('status', sql.Bit, companyStatus);
         }
 
-        // Hangi alanların güncelleneceğini dinamik olarak belirle
-        let setClauses = [];
-        const request = pool.request().input('companyId', sql.Int, parseInt(companyId));
-        if (name) {
-            setClauses.push('name = @name');
-            request.input('name', sql.NVarChar, name);
-        }
-        if (userLimitNum !== undefined) {
-            setClauses.push('userLimit = @userLimit');
-            request.input('userLimit', sql.Int, userLimitNum);
-        }
-        if (cardLimitNum !== undefined) {
-            setClauses.push('cardLimit = @cardLimit');
-            request.input('cardLimit', sql.Int, cardLimitNum);
-        }
-        
-        // updatedAt otomatik güncellenmiyorsa elle ekle
-        // setClauses.push('updatedAt = GETDATE()'); 
+        const query = `UPDATE Companies SET ${setClauses} OUTPUT INSERTED.* WHERE id = @companyId`;
+        const result = await request.query(query);
 
-        if (setClauses.length === 0) {
-             return res.status(400).json({ message: 'Güncellenecek geçerli alan bulunamadı.' });
-        }
-
-        const updateQuery = `UPDATE Companies SET ${setClauses.join(', ')} 
-                             OUTPUT inserted.* 
-                             WHERE id = @companyId`;
-        const result = await request.query(updateQuery);
-
-        if (result.recordset && result.recordset.length > 0) {
-            res.status(200).json(result.recordset[0]);
-        } else {
+        if (result.rowsAffected[0] === 0) {
             return res.status(404).json({ message: 'Güncellenecek şirket bulunamadı.' });
         }
+
+        res.status(200).json(result.recordset[0]);
     } catch (error) {
-        console.error("Şirket güncelleme hatası (Admin):", error);
-        if (error.number === 2601 || error.number === 2627) { // Unique constraint (isim için)
-             return res.status(400).json({ message: 'Bu isim başka bir şirkete ait.' });
+        console.error("Şirket güncelleme hatası:", error);
+         if (error.number === 2627) { 
+             return res.status(400).json({ message: 'Bu isimde bir şirket zaten mevcut olabilir.' });
         }
-        res.status(500).json({ message: 'Sunucu hatası oluştu' });
+        res.status(500).json({ message: 'Sunucu hatası oluştu.' });
     }
 };
 
@@ -782,7 +741,8 @@ module.exports = {
     updateAnyCard,
     getDashboardStats,
     createCompany,
-    getAllCompanies,
+    getCompanies,
+    getCompanyById,
     updateCompany,
     deleteCompany
 }; 

@@ -1,116 +1,137 @@
-import axios from 'axios'; // Doğrudan paketi import et
+import axios from 'axios';
 
-const API_URL = '/api/admin'; // Temel admin API yolu
-
-// Token'ı almak için helper (userService.js'deki gibi)
-const getToken = () => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    return user?.token;
-};
-
-// Tüm kullanıcıları getir (opsiyonel arama, rol filtresi ve sayfalama ile)
-const getAllUsers = async (searchTerm = '', page = 1, limit = 10, role = '') => {
-    const config = {
-        headers: { Authorization: `Bearer ${getToken()}` },
-        params: { page, limit }
-    };
-    if (searchTerm) {
-        config.params.search = searchTerm;
+// Helper to get auth config
+const getAuthConfig = () => {
+    let token = null;
+    try {
+        const storedUserData = localStorage.getItem('user'); // Anahtarı 'user' olarak değiştir
+        if (storedUserData) {
+            const userData = JSON.parse(storedUserData);
+            token = userData?.token; // userData içindeki token alanını al
+        }
+    } catch (error) {
+        console.error("Error parsing user data from localStorage:", error);
+        localStorage.removeItem('user'); // Hatalı veriyi temizle
     }
-    if (role) {
-        config.params.role = role;
-    }
-    console.log("getAllUsers Request Config:", config);
-    const response = await axios.get(API_URL + '/users', config);
-    console.log("getAllUsers Response:", response.data);
-    return response.data;
-};
 
-// Bir kullanıcıyı sil
-const deleteUser = async (userId) => {
-    const config = {
-        headers: { Authorization: `Bearer ${getToken()}` },
+    console.log('Token from parsed user data:', token);
+    return {
+        headers: {
+            // Token yoksa bile Authorization başlığını göndermemek daha doğru olabilir,
+            // ancak şimdilik null token ile gönderelim, backend zaten reddedecektir.
+            Authorization: `Bearer ${token}`
+        }
     };
-    const response = await axios.delete(`${API_URL}/users/${userId}`, config);
-    return response.data; // Başarı mesajı ve id döner
 };
 
-// Tüm kartları getir (opsiyonel arama, durum filtresi ve sayfalama ile)
-const getAllCards = async (searchTerm = '', page = 1, limit = 10, isActive = null) => {
-    const config = {
-        headers: { Authorization: `Bearer ${getToken()}` },
-        params: { page, limit }
-    };
-    if (searchTerm) {
-        config.params.search = searchTerm;
-    }
-    if (isActive !== null) {
-        config.params.isActive = isActive;
-    }
-    console.log("getAllCards Request Config:", config);
-    const response = await axios.get(API_URL + '/cards', config);
-    console.log("getAllCards Response:", response.data);
-    return response.data;
-};
+const API_URL = '/api/admin'; // Base URL for admin API
 
-// Bir kartı sil
-const deleteCard = async (cardId) => {
-     const config = {
-        headers: { Authorization: `Bearer ${getToken()}` },
-    };
-    const response = await axios.delete(`${API_URL}/cards/${cardId}`, config);
-    return response.data; // Başarı mesajı ve id döner
-};
-
-// Update user role (Admin)
-const updateUserRole = async (userId, newRole) => {
-    const config = {
-        headers: { Authorization: `Bearer ${getToken()}` },
-    };
-    const body = { role: newRole };
-    const response = await axios.put(`${API_URL}/users/${userId}/role`, body, config);
-    return response.data;
-};
-
-// Update any user's profile (Admin)
-const updateAnyUserProfile = async (userId, userData) => {
-    const config = {
-        headers: { Authorization: `Bearer ${getToken()}` },
-    };
-    // userData objesinin sadece name ve email içermesi beklenir
-    const body = { name: userData.name, email: userData.email }; 
-    const response = await axios.put(`${API_URL}/users/${userId}`, body, config);
-    return response.data; // Başarı mesajı ve güncellenmiş kullanıcı bilgisi döner
-};
-
-// Update any card (Admin)
-const updateAnyCard = async (cardId, cardData) => {
-    const config = {
-        headers: { Authorization: `Bearer ${getToken()}` },
-    };
-    // cardData objesinin tüm kart alanlarını içermesi beklenir
-    const response = await axios.put(`${API_URL}/cards/${cardId}`, cardData, config);
-    return response.data; // Başarı mesajı ve güncellenmiş kart bilgisi döner
-};
-
-// Get Dashboard Stats (Admin)
+// --- Dashboard --- 
+// Get Dashboard Stats (TODO: Backend'de /stats endpoint'inin olduğundan emin olun)
 const getDashboardStats = async () => {
-    const config = {
-        headers: { Authorization: `Bearer ${getToken()}` },
-    };
-    const response = await axios.get(`${API_URL}/stats`, config);
-    return response.data; // { totalUsers: number, totalCards: number, activeCards: number } dönecek
+    console.warn("getDashboardStats fonksiyonu çağrıldı ama implementasyonu eksik olabilir.");
+    // Örnek API çağrısı:
+    const response = await axios.get(`${API_URL}/stats`, getAuthConfig());
+    return response.data; 
+    // return { totalUsers: 0, totalCards: 0, activeCards: 0 }; // Şimdilik simüle edelim
 };
 
-const adminService = {
-    getAllUsers,
-    deleteUser,
-    getAllCards,
+// --- User Management --- 
+// Kullanıcıları Listele
+const getUsers = async () => { 
+    // console.warn("getUsers fonksiyonu çağrıldı ama implementasyonu eksik olabilir."); // Uyarıyı kaldırabiliriz
+    // Gerçek API çağrısı:
+    const response = await axios.get(`${API_URL}/users`, getAuthConfig());
+    return response.data; // Backend'den gelen veriyi döndür
+    // return []; // Kaldırıldı
+};
+
+// Kullanıcı Sil 
+const deleteUser = async (id) => {
+    // console.warn(`deleteUser(${id}) fonksiyonu çağrıldı ama implementasyonu eksik olabilir.`); // Uyarıyı kaldırabiliriz
+    const response = await axios.delete(`${API_URL}/users/${id}`, getAuthConfig());
+    return response.data; 
+};
+
+// --- Şirket Yönetimi ---
+
+// Şirketleri Listele
+const getCompanies = async () => {
+    const response = await axios.get(`${API_URL}/companies`, getAuthConfig());
+    return response.data;
+};
+
+// Şirket Detayı Getir
+const getCompanyById = async (id) => {
+    const response = await axios.get(`${API_URL}/companies/${id}`, getAuthConfig());
+    return response.data;
+};
+
+// Şirket Oluştur
+const createCompany = async (companyData) => {
+    const response = await axios.post(`${API_URL}/companies`, companyData, getAuthConfig());
+    return response.data;
+};
+
+// Şirket Güncelle
+const updateCompany = async (id, companyData) => {
+    const response = await axios.put(`${API_URL}/companies/${id}`, companyData, getAuthConfig());
+    return response.data;
+};
+
+// Şirket Sil
+const deleteCompany = async (id) => {
+    const response = await axios.delete(`${API_URL}/companies/${id}`, getAuthConfig());
+    return response.data;
+};
+
+// --- Kart Yönetimi ---
+
+// Kartları Listele (şirkete göre filtreleme opsiyonel)
+const getCards = async (companyId = null) => {
+    const url = companyId
+        ? `${API_URL}/companies/${companyId}/cards`
+        : `${API_URL}/cards`;
+    const response = await axios.get(url, getAuthConfig());
+    return response.data;
+};
+
+// Kart Oluştur
+const createCard = async (cardData) => {
+    const response = await axios.post(`${API_URL}/cards`, cardData, getAuthConfig());
+    return response.data;
+};
+
+// Kart Güncelle
+const updateCard = async (id, cardData) => {
+    const response = await axios.put(`${API_URL}/cards/${id}`, cardData, getAuthConfig());
+    return response.data;
+};
+
+// Kart Sil
+const deleteCard = async (id) => {
+    const response = await axios.delete(`${API_URL}/cards/${id}`, getAuthConfig());
+    return response.data;
+};
+
+// --- Diğer Admin İşlemleri Buraya Eklenebilir ---
+
+
+export {
+    // Şirketler
+    getCompanies,
+    getCompanyById,
+    createCompany,
+    updateCompany,
+    deleteCompany,
+    // Kartlar
+    getCards,
+    createCard,
+    updateCard,
     deleteCard,
-    updateUserRole,
-    updateAnyUserProfile,
-    updateAnyCard,
-    getDashboardStats
+    // Kullanıcılar
+    getUsers, 
+    deleteUser,
+    // Diğerleri
+    getDashboardStats,
 };
-
-export default adminService; 

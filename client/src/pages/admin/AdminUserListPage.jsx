@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import adminService from '../../services/adminService';
+import { getUsers, deleteUser } from '../../services/adminService';
 import { Link as RouterLink } from 'react-router-dom'; // Detay sayfasına link için (opsiyonel)
+// import { useNotification } from '../../context/NotificationContext';
 
 // MUI Imports
 import Box from '@mui/material/Box';
@@ -30,11 +31,20 @@ function AdminUserListPage() {
         setLoading(true);
         setError('');
         try {
-            const data = await adminService.getAllUsers();
-            setUsers(data);
+            // getAllUsers yanıtı { data: userArray, totalCount: ... } şeklinde
+            const response = await getUsers(); 
+            if (response && Array.isArray(response.data)) {
+                 setUsers(response.data); // Sadece data dizisini state'e ata
+                 // TODO: Sayfalama bilgisi (response.totalCount vb.) kullanılabilir
+            } else {
+                 console.error("Beklenmeyen API yanıt formatı:", response);
+                 setUsers([]); // Hata durumunda boş dizi ata
+                 setError('Kullanıcı verileri alınamadı (format hatası).');
+            }
         } catch (err) {
             console.error("Kullanıcıları getirirken hata (Admin):", err);
             setError(err.response?.data?.message || 'Kullanıcılar yüklenemedi.');
+            setUsers([]); // Hata durumunda boş dizi ata
         } finally {
             setLoading(false);
         }
@@ -50,7 +60,7 @@ function AdminUserListPage() {
         }
         setError('');
         try {
-            await adminService.deleteUser(id);
+            await deleteUser(id);
             setUsers(users.filter(user => user.id !== id));
             // Başarı mesajı gösterilebilir (örn: Snackbar ile)
         } catch (err) {

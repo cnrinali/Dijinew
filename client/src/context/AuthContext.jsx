@@ -57,6 +57,26 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
     };
 
+    // Kullanıcı bilgilerini context'te güncelle (profil güncelleme sonrası için)
+    const updateAuthUser = (updatedData) => {
+        setUser(prevUser => {
+            if (!prevUser) return null; // Kullanıcı yoksa bir şey yapma
+
+            // Mevcut kullanıcı verisini al, sadece güncellenen alanları değiştir
+            const newUser = { ...prevUser, ...updatedData }; 
+
+            // localStorage'ı da güncelle
+            try {
+                localStorage.setItem('user', JSON.stringify(newUser));
+            } catch (error) {
+                console.error("localStorage güncelleme hatası (updateAuthUser):", error);
+                // Opsiyonel: Hata durumunda state'i geri al veya log tut
+            }
+
+            return newUser;
+        });
+    };
+
     // Context Değerleri
     const value = {
         user,
@@ -64,7 +84,8 @@ export const AuthProvider = ({ children }) => {
         loading, // Yüklenme durumunu context'e ekle
         login,
         register,
-        logout
+        logout,
+        updateAuthUser // Yeni fonksiyonu ekle
     };
 
     // Provider ile çocuk bileşenleri sar

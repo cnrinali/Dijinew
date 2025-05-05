@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import adminService from '../../services/adminService';
+import { getCards, deleteCard } from '../../services/adminService';
 import { Link as RouterLink } from 'react-router-dom'; 
 
 // MUI Imports
@@ -31,11 +31,20 @@ function AdminCardListPage() {
         setLoading(true);
         setError('');
         try {
-            const data = await adminService.getAllCards();
-            setCards(data);
+            // getAllCards yanıtı { data: cardArray, totalCount: ... } şeklinde
+            const response = await getCards(); 
+            if (response && Array.isArray(response.data)) {
+                 setCards(response.data); // Sadece data dizisini state'e ata
+                 // TODO: Sayfalama bilgisi (response.totalCount vb.) kullanılabilir
+            } else {
+                 console.error("Beklenmeyen API yanıt formatı (Cards):", response);
+                 setCards([]); // Hata durumunda boş dizi ata
+                 setError('Kartvizit verileri alınamadı (format hatası).');
+            }
         } catch (err) {
             console.error("Tüm kartları getirirken hata (Admin):", err);
             setError(err.response?.data?.message || 'Kartvizitler yüklenemedi.');
+            setCards([]); // Hata durumunda boş dizi ata
         } finally {
             setLoading(false);
         }
@@ -51,7 +60,7 @@ function AdminCardListPage() {
         }
         setError('');
         try {
-            await adminService.deleteCard(id);
+            await deleteCard(id);
             setCards(cards.filter(card => card.id !== id));
             // Başarı mesajı gösterilebilir
         } catch (err) {

@@ -13,13 +13,16 @@ import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import CircularProgress from '@mui/material/CircularProgress';
 import Divider from '@mui/material/Divider';
+import Tabs from '@mui/material/Tabs'; // Tabs import edildi
+import Tab from '@mui/material/Tab'; // Tab import edildi
 
 function ProfilePage() {
-    const { updateUserContext } = useAuth(); // Context'teki kullanıcıyı güncellemek için
+    const { updateAuthUser } = useAuth(); // Context'teki kullanıcıyı güncellemek için (updateUserContext -> updateAuthUser)
     const { showNotification } = useNotification(); // Eklendi
     
     const [profileData, setProfileData] = useState({ name: '', email: '' });
     const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
+    const [tabIndex, setTabIndex] = useState(0); // Aktif sekme state'i
     
     const [loading, setLoading] = useState(true);
     const [updateLoading, setUpdateLoading] = useState(false);
@@ -52,6 +55,11 @@ function ProfilePage() {
         setPasswordData({ ...passwordData, [e.target.name]: e.target.value });
     };
 
+    // Sekme değişikliği handler
+    const handleTabChange = (event, newValue) => {
+        setTabIndex(newValue);
+    };
+
     // Profil güncelleme submit
     const handleProfileSubmit = async (e) => {
         e.preventDefault();
@@ -59,7 +67,8 @@ function ProfilePage() {
         try {
             const updatedUser = await userService.updateUserProfile(profileData);
             setProfileData({ name: updatedUser.name, email: updatedUser.email });
-            updateUserContext({ name: updatedUser.name, email: updatedUser.email });
+            // Sadece güncellenen alanları context'e gönder
+            updateAuthUser({ name: updatedUser.name, email: updatedUser.email }); 
             showNotification('Profil bilgileri başarıyla güncellendi.', 'success');
         } catch (err) {
             const errorMsg = err.response?.data?.message || 'Profil güncellenemedi.';
@@ -112,109 +121,135 @@ function ProfilePage() {
 
     return (
         <Container maxWidth="sm" sx={{ py: 4 }}>
-             <Paper sx={{ p: { xs: 2, md: 4 } }}>
-                <Typography component="h1" variant="h4" align="center" gutterBottom>
+             <Paper sx={{ p: { xs: 2, md: 4 }, borderRadius: 2, elevation: 3 }}>
+                <Typography component="h1" variant="h4" align="center" gutterBottom sx={{ mb: 4 }}>
                     Profilim
                 </Typography>
 
-                {/* Profil Güncelleme Formu */} 
-                <Box component="form" onSubmit={handleProfileSubmit} sx={{ mt: 3 }}>
-                     <Typography variant="h6" gutterBottom>Bilgileri Güncelle</Typography>
-                     <Grid container spacing={2}>
-                        <Grid item xs={12}>
-                            <TextField
-                                required
-                                fullWidth
-                                id="name"
-                                label="İsim Soyisim"
-                                name="name"
-                                value={profileData.name}
-                                onChange={onProfileChange}
-                                disabled={updateLoading}
-                            />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                                required
-                                fullWidth
-                                id="email"
-                                label="E-posta Adresi"
-                                name="email"
-                                type="email"
-                                value={profileData.email}
-                                onChange={onProfileChange}
-                                disabled={updateLoading}
-                            />
-                        </Grid>
-                    </Grid>
-                    <Button
-                        type="submit"
-                        fullWidth
-                        variant="contained"
-                        sx={{ mt: 3, mb: 2 }}
-                        disabled={updateLoading}
-                    >
-                        {updateLoading ? <CircularProgress size={24} /> : 'Bilgileri Kaydet'}
-                    </Button>
+                {/* Sekmeler */}
+                <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+                    <Tabs value={tabIndex} onChange={handleTabChange} aria-label="Profil ayarları sekmeleri" centered>
+                        <Tab label="Bilgilerim" id="profile-tab-0" aria-controls="profile-tabpanel-0" />
+                        <Tab label="Şifre İşlemleri" id="profile-tab-1" aria-controls="profile-tabpanel-1" />
+                    </Tabs>
                 </Box>
 
-                <Divider sx={{ my: 4 }} />
+                {/* Bilgileri Güncelle Formu (Sekme 0) */}
+                <Box
+                    role="tabpanel"
+                    hidden={tabIndex !== 0}
+                    id="profile-tabpanel-0"
+                    aria-labelledby="profile-tab-0"
+                >
+                    {tabIndex === 0 && (
+                        <Box component="form" onSubmit={handleProfileSubmit} sx={{ mt: 1 }}>
+                             {/* <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>Bilgileri Güncelle</Typography> -> Sekme başlığı yeterli */} 
+                             <Grid container spacing={2.5}>
+                                <Grid item xs={12}>
+                                    <TextField
+                                        required
+                                        fullWidth
+                                        id="name"
+                                        label="İsim Soyisim"
+                                        name="name"
+                                        value={profileData.name}
+                                        onChange={onProfileChange}
+                                        disabled={updateLoading}
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <TextField
+                                        required
+                                        fullWidth
+                                        id="email"
+                                        label="E-posta Adresi"
+                                        name="email"
+                                        type="email"
+                                        value={profileData.email}
+                                        onChange={onProfileChange}
+                                        disabled={updateLoading}
+                                    />
+                                </Grid>
+                            </Grid>
+                            <Button
+                                type="submit"
+                                fullWidth
+                                variant="contained"
+                                sx={{ mt: 3, mb: 2 }} 
+                                disabled={updateLoading}
+                            >
+                                {updateLoading ? <CircularProgress size={24} /> : 'Bilgileri Kaydet'}
+                            </Button>
+                        </Box>
+                    )}
+                </Box>
 
-                 {/* Şifre Değiştirme Formu */} 
-                 <Box component="form" onSubmit={handlePasswordSubmit} sx={{ mt: 3 }}>
-                    <Typography variant="h6" gutterBottom>Şifreyi Değiştir</Typography>
-                    <Grid container spacing={2}>
-                        <Grid item xs={12}>
-                            <TextField
-                                required
+                {/* Şifre Değiştirme Formu (Sekme 1) */}
+                <Box
+                    role="tabpanel"
+                    hidden={tabIndex !== 1}
+                    id="profile-tabpanel-1"
+                    aria-labelledby="profile-tab-1"
+                >
+                    {tabIndex === 1 && (
+                         <Box component="form" onSubmit={handlePasswordSubmit} sx={{ mt: 1 }}>
+                            {/* <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>Şifreyi Değiştir</Typography> -> Sekme başlığı yeterli */}
+                            <Grid container spacing={2.5}>
+                                <Grid item xs={12}>
+                                    <TextField
+                                        required
+                                        fullWidth
+                                        name="currentPassword"
+                                        label="Mevcut Şifre"
+                                        type="password"
+                                        id="currentPassword"
+                                        value={passwordData.currentPassword}
+                                        onChange={onPasswordChange}
+                                        disabled={passwordLoading}
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <TextField
+                                        required
+                                        fullWidth
+                                        name="newPassword"
+                                        label="Yeni Şifre"
+                                        type="password"
+                                        id="newPassword"
+                                        value={passwordData.newPassword}
+                                        onChange={onPasswordChange}
+                                        disabled={passwordLoading}
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <TextField
+                                        required
+                                        fullWidth
+                                        name="confirmNewPassword"
+                                        label="Yeni Şifre (Tekrar)"
+                                        type="password"
+                                        id="confirmNewPassword"
+                                        value={passwordData.confirmNewPassword}
+                                        onChange={onPasswordChange}
+                                        disabled={passwordLoading}
+                                    />
+                                </Grid>
+                            </Grid>
+                            <Button
+                                type="submit"
                                 fullWidth
-                                name="currentPassword"
-                                label="Mevcut Şifre"
-                                type="password"
-                                id="currentPassword"
-                                value={passwordData.currentPassword}
-                                onChange={onPasswordChange}
+                                variant="contained"
+                                color="primary" 
+                                sx={{ mt: 3, mb: 2 }} 
                                 disabled={passwordLoading}
-                            />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                                required
-                                fullWidth
-                                name="newPassword"
-                                label="Yeni Şifre"
-                                type="password"
-                                id="newPassword"
-                                value={passwordData.newPassword}
-                                onChange={onPasswordChange}
-                                disabled={passwordLoading}
-                            />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                                required
-                                fullWidth
-                                name="confirmNewPassword"
-                                label="Yeni Şifre (Tekrar)"
-                                type="password"
-                                id="confirmNewPassword"
-                                value={passwordData.confirmNewPassword}
-                                onChange={onPasswordChange}
-                                disabled={passwordLoading}
-                            />
-                        </Grid>
-                    </Grid>
-                    <Button
-                        type="submit"
-                        fullWidth
-                        variant="contained"
-                        color="secondary" // Farklı renk
-                        sx={{ mt: 3, mb: 2 }}
-                        disabled={passwordLoading}
-                    >
-                        {passwordLoading ? <CircularProgress size={24} /> : 'Şifreyi Değiştir'}
-                    </Button>
+                            >
+                                {passwordLoading ? <CircularProgress size={24} /> : 'Şifreyi Değiştir'}
+                            </Button>
+                         </Box>
+                    )}
                  </Box>
+                 
+                 {/* Divider kaldırıldı */}
             </Paper>
         </Container>
     );
