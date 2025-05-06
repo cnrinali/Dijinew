@@ -53,6 +53,21 @@ const deleteUser = async (id) => {
     return response.data; 
 };
 
+// Yeni Kullanıcı Oluştur (Admin)
+const createUserAdmin = async (userData) => {
+    // userData = { name, email, password, role, companyId? }
+    const response = await axios.post(`${API_URL}/users`, userData, getAuthConfig());
+    return response.data; // Yeni oluşturulan kullanıcıyı döndürür
+};
+
+// Kullanıcı Güncelle (Admin)
+const updateUserAdmin = async (id, userData) => {
+    // userData = { name, email, role?, companyId? }
+    // Şifre bu endpoint ile güncellenmez
+    const response = await axios.put(`${API_URL}/users/${id}`, userData, getAuthConfig());
+    return response.data; // Güncellenmiş kullanıcıyı döndürür
+};
+
 // --- Şirket Yönetimi ---
 
 // Şirketleri Listele
@@ -132,6 +147,8 @@ export {
     // Kullanıcılar
     getUsers, 
     deleteUser,
+    createUserAdmin,
+    updateUserAdmin,
     // Diğerleri
     getDashboardStats,
 };

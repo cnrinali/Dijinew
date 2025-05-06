@@ -1,74 +1,35 @@
 const { getPool, sql } = require('../../config/db');
 
-// @desc    Get all users (with optional search, role filter and pagination)
+// @desc    Get all users (Admin view)
 // @route   GET /api/admin/users
 // @access  Private/Admin
 const getAllUsers = async (req, res) => {
-    const { search, role, page = 1, limit = 10 } = req.query; 
-    const pageNum = parseInt(page, 10);
-    const limitNum = parseInt(limit, 10);
-    const offset = (pageNum - 1) * limitNum;
-
-    if (isNaN(pageNum) || pageNum < 1 || isNaN(limitNum) || limitNum < 1) {
-        return res.status(400).json({ message: 'Geçersiz sayfa veya limit değeri.' });
-    }
-    // Geçerli rol filtresi (business eklendi)
-    const validRoles = ['admin', 'business', 'user'];
-    if (role && !validRoles.includes(role)) {
-        return res.status(400).json({ message: `Geçersiz rol değeri. ${validRoles.join(', ')} olabilir.` });
-    }
-
+    console.log("getAllUsers controller (Admin) çağrıldı");
+    // TODO: Sayfalama, arama, rol filtreleme eklenebilir
     try {
         const pool = await getPool();
-        const request = pool.request();
-        
-        // Temel sorgu ve JOIN (GÜNCELLENDİ)
-        let baseQuery = `FROM Users u LEFT JOIN Companies c ON u.companyId = c.id`; 
-        let whereConditions = []; 
+        const result = await pool.request()
+            .query(`
+                SELECT 
+                    u.id, 
+                    u.name, 
+                    u.email, 
+                    u.role, 
+                    u.createdAt,
+                    u.companyId,      -- companyId eklendi
+                    c.name AS companyName -- Şirket adı eklendi (LEFT JOIN ile)
+                FROM Users u
+                LEFT JOIN Companies c ON u.companyId = c.id -- LEFT JOIN kullanıldı
+                ORDER BY u.createdAt DESC
+            `);
 
-        // Arama koşulu (u.name, u.email)
-        if (search) {
-            whereConditions.push('(u.name LIKE @searchTerm OR u.email LIKE @searchTerm)');
-            request.input('searchTerm', sql.NVarChar, `%${search}%`);
-        }
-        // Rol filtresi koşulu (u.role)
-        if (role) {
-             whereConditions.push('u.role = @roleFilter');
-             request.input('roleFilter', sql.NVarChar, role);
-        }
-
-        let whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
-
-        // 1. Toplam kayıt sayısını al
-        const countQuery = `SELECT COUNT(u.id) as totalCount ${baseQuery} ${whereClause}`;
-        const countResult = await request.query(countQuery);
-        const totalCount = countResult.recordset[0].totalCount;
-
-        // 2. Mevcut sayfanın verisini al (GÜNCELLENDİ - c.name eklendi)
-        const dataQuery = `
-            SELECT u.id, u.name, u.email, u.role, u.companyId, u.createdAt, c.name as companyName 
-            ${baseQuery} 
-            ${whereClause} 
-            ORDER BY u.id ASC 
-            OFFSET @offset ROWS 
-            FETCH NEXT @limit ROWS ONLY
-        `;
-        request.input('offset', sql.Int, offset);
-        request.input('limit', sql.Int, limitNum);
-        
-        const dataResult = await request.query(dataQuery);
-        
-        res.status(200).json({
-            data: dataResult.recordset,
-            totalCount: totalCount,
-            page: pageNum,
-            limit: limitNum,
-            totalPages: Math.ceil(totalCount / limitNum)
-        });
+        // Belki direkt result.recordset döndürmek yerine sayfalama için bir obje döndürmek daha iyi olabilir
+        // Örnek: res.status(200).json({ data: result.recordset, totalCount: result.recordset.length });
+        res.status(200).json(result.recordset); // Şimdilik direkt diziyi döndürelim
 
     } catch (error) {
-        console.error("Tüm kullanıcıları getirme hatası (Admin):", error);
-        res.status(500).json({ message: 'Sunucu hatası oluştu' });
+        console.error("Admin - Kullanıcıları listeleme hatası:", error);
+        res.status(500).json({ message: 'Sunucu hatası oluştu.' });
     }
 };
 
@@ -212,223 +173,158 @@ const deleteAnyCard = async (req, res) => {
     }
 };
 
-// @desc    Update user role and assign/unassign company (GÜNCELLENDİ)
-// @route   PUT /api/admin/users/:id/role
+// @desc    Create a new user by Admin (GÜNCELLENDİ - Yeni Fonksiyon)
+// @route   POST /api/admin/users
 // @access  Private/Admin
-const updateUserRole = async (req, res) => {
-    const userIdToUpdate = req.params.id;
-    // İstekten yeni rolü ve opsiyonel şirket ID'sini al
-    const { role: newRole, companyId: requestedCompanyId } = req.body; 
-    const adminUserId = req.user.id; 
+const createUserAdmin = async (req, res) => {
+    const { name, email, password, role, companyId } = req.body;
+    console.log("createUserAdmin controller çağrıldı:", { name, email, role, companyId }); // Şifreyi loglama
 
-    if (parseInt(userIdToUpdate) === adminUserId) {
-        return res.status(400).json({ message: 'Yöneticiler kendi rollerini/şirketlerini değiştiremez.' });
+    // Gerekli alan kontrolü
+    if (!name || !email || !password || !role) {
+        return res.status(400).json({ message: 'İsim, e-posta, şifre ve rol zorunludur.' });
     }
 
-    if (isNaN(parseInt(userIdToUpdate))) {
-         return res.status(400).json({ message: 'Geçersiz Kullanıcı ID' });
+    // Rol kontrolü (sadece admin ve user olabilir)
+    const validRoles = ['admin', 'user'];
+    if (!validRoles.includes(role)) {
+        return res.status(400).json({ message: `Geçersiz rol. Rol ${validRoles.join(' veya ')} olmalıdır.` });
     }
 
-    // Geçerli rol değerlerini kontrol et (business eklendi)
-    const validRoles = ['admin', 'business', 'user'];
-    if (!newRole || !validRoles.includes(newRole)) {
-        return res.status(400).json({ message: `Geçersiz rol değeri. Rol ${validRoles.join(', ')} olmalıdır.` });
-    }
-
-    let companyIdToSet = null; // Varsayılan olarak NULL
-
-    try {
-        const pool = await getPool();
-        
-        // Eğer rol 'business' ise, geçerli bir companyId sağlanmalı
-        if (newRole === 'business') {
-            if (!requestedCompanyId) {
-                 return res.status(400).json({ message: 'Business rolü için şirket ID\'si zorunludur.' });
-            }
-            const companyIdNum = parseInt(requestedCompanyId, 10);
-            if (isNaN(companyIdNum)) {
-                 return res.status(400).json({ message: 'Geçersiz şirket ID formatı.' });
-            }
-            
-            // Şirketin var olup olmadığını kontrol et
-            const companyCheck = await pool.request()
-                .input('companyId', sql.Int, companyIdNum)
-                .query('SELECT TOP 1 id FROM Companies WHERE id = @companyId');
-            
-            if (companyCheck.recordset.length === 0) {
-                 return res.status(404).json({ message: `Şirket bulunamadı (ID: ${companyIdNum}).` });
-            }
-            companyIdToSet = companyIdNum; // Şirket geçerliyse atanacak ID'yi ayarla
-        }
-        
-        // Kullanıcının var olup olmadığını kontrol et (zaten vardı, iyi)
-        const userCheck = await pool.request()
-            .input('userId', sql.Int, parseInt(userIdToUpdate))
-            .query('SELECT TOP 1 id FROM Users WHERE id = @userId');
-        
-        if (userCheck.recordset.length === 0) {
-             return res.status(404).json({ message: 'Rolü güncellenecek kullanıcı bulunamadı' });
-        }
-
-        // Rolü ve CompanyId'yi güncelle (GÜNCELLENDİ)
-        const result = await pool.request()
-            .input('userId', sql.Int, parseInt(userIdToUpdate))
-            .input('newRole', sql.NVarChar, newRole)
-            .input('newCompanyId', sql.Int, companyIdToSet) // NULL veya geçerli ID
-            .query('UPDATE Users SET role = @newRole, companyId = @newCompanyId WHERE id = @userId');
-        
-        // rowsAffected MSSQL'de dizi olarak dönebilir, ilk elemanına bakmak lazım
-         if (result.rowsAffected && result.rowsAffected[0] > 0) {
-            // Güncellenen kullanıcı bilgisini (sadece ID, rol, companyId) döndür
-            res.status(200).json({ 
-                message: 'Kullanıcı rolü ve şirket bilgisi başarıyla güncellendi.',
-                user: { id: parseInt(userIdToUpdate), role: newRole, companyId: companyIdToSet } 
-            });
-        } else {
-            // Bu durum normalde userCheck ile yakalanmalı ama yine de kontrol edelim
-            return res.status(404).json({ message: 'Kullanıcı bulunamadı (güncelleme sırasında).' });
-        }
-
-    } catch (error) {
-        console.error("Kullanıcı rol/şirket güncelleme hatası (Admin):", error);
-        res.status(500).json({ message: 'Sunucu hatası oluştu' });
-    }
-};
-
-// @desc    Update any user's profile (name, email) by Admin
-// @route   PUT /api/admin/users/:id
-// @access  Private/Admin
-const updateAnyUserProfile = async (req, res) => {
-    const userIdToUpdate = req.params.id;
-    const { name, email } = req.body; // Sadece isim ve email alınır
-    const adminUserId = req.user.id;
-
-    // Adminin kendi profilini buradan güncellemesini engelle (profil sayfası var)
-    // Aslında güncelleyebilir ama karışıklık olmasın diye ayıralım.
-    if (parseInt(userIdToUpdate) === adminUserId) {
-        return res.status(400).json({ message: 'Kendi profilinizi buradan güncelleyemezsiniz.' });
-    }
-
-    // ID kontrolü
-    if (isNaN(parseInt(userIdToUpdate))) {
-        return res.status(400).json({ message: 'Geçersiz Kullanıcı ID' });
-    }
-
-    // Gelen veriyi doğrula (boş olamaz)
-    if (!name || !email) {
-        return res.status(400).json({ message: 'İsim ve e-posta alanları zorunludur.' });
-    }
-
-    // E-posta formatı kontrolü (basit)
+    // E-posta format kontrolü
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
          return res.status(400).json({ message: 'Geçersiz e-posta formatı.' });
     }
 
+    // Şifre uzunluğu kontrolü (opsiyonel ama önerilir)
+    if (password.length < 6) { 
+        return res.status(400).json({ message: 'Şifre en az 6 karakter olmalıdır.' });
+    }
+
+    let companyIdToSet = null;
+    if (companyId) { // Eğer companyId gönderildiyse, geçerliliğini kontrol et
+        const parsedCompanyId = parseInt(companyId, 10);
+        if (isNaN(parsedCompanyId)) {
+            return res.status(400).json({ message: 'Geçersiz Şirket ID formatı.' });
+        }
+        companyIdToSet = parsedCompanyId;
+    } // Gönderilmediyse NULL kalır (Bireysel)
+
     try {
         const pool = await getPool();
-        const transaction = new sql.Transaction(pool); // Transaction başlatalım
-
+        const transaction = new sql.Transaction(pool);
         await transaction.begin();
 
         try {
-            // 1. E-posta adresinin başka bir kullanıcı tarafından kullanılıp kullanılmadığını kontrol et
-            const emailCheckRequest = new sql.Request(transaction); // Request'i transaction'a bağla
+            // 1. E-posta zaten var mı?
+            const emailCheckRequest = new sql.Request(transaction);
             emailCheckRequest.input('email', sql.NVarChar, email);
-            emailCheckRequest.input('userIdToExclude', sql.Int, parseInt(userIdToUpdate));
-            const emailCheckResult = await emailCheckRequest.query(
-                'SELECT TOP 1 id FROM Users WHERE email = @email AND id != @userIdToExclude'
-            );
-
+            const emailCheckResult = await emailCheckRequest.query('SELECT TOP 1 id FROM Users WHERE email = @email');
             if (emailCheckResult.recordset.length > 0) {
-                await transaction.rollback(); // Transaction'ı geri al
-                return res.status(400).json({ message: 'Bu e-posta adresi zaten başka bir kullanıcı tarafından kullanılıyor.' });
-            }
-
-            // 2. Kullanıcı bilgilerini güncelle
-            const updateRequest = new sql.Request(transaction);
-            updateRequest.input('userId', sql.Int, parseInt(userIdToUpdate));
-            updateRequest.input('name', sql.NVarChar, name);
-            updateRequest.input('email', sql.NVarChar, email);
-            // Sadece isim ve email güncelleniyor
-            const updateResult = await updateRequest.query(
-                'UPDATE Users SET name = @name, email = @email OUTPUT inserted.id, inserted.name, inserted.email, inserted.role, inserted.createdAt WHERE id = @userId'
-            );
-
-            if (updateResult.recordset.length === 0) {
-                // Kullanıcı bulunamadıysa (bu normalde olmamalı ama kontrol edelim)
                 await transaction.rollback();
-                return res.status(404).json({ message: 'Güncellenecek kullanıcı bulunamadı.' });
+                return res.status(400).json({ message: 'Bu e-posta adresi zaten kullanılıyor.' });
             }
-            
-            await transaction.commit(); // Transaction'ı onayla
 
-            res.status(200).json({
-                message: 'Kullanıcı bilgileri başarıyla güncellendi.',
-                user: updateResult.recordset[0] // Güncellenmiş kullanıcı bilgisini döndür
-            });
+            // 2. Eğer companyId varsa, şirket var mı?
+            if (companyIdToSet !== null) {
+                const companyCheckRequest = new sql.Request(transaction);
+                companyCheckRequest.input('companyId', sql.Int, companyIdToSet);
+                const companyCheckResult = await companyCheckRequest.query('SELECT TOP 1 id FROM Companies WHERE id = @companyId');
+                if (companyCheckResult.recordset.length === 0) {
+                    await transaction.rollback();
+                    return res.status(404).json({ message: `Belirtilen şirket bulunamadı (ID: ${companyIdToSet}).` });
+                }
+            }
+
+            // 3. Şifreyi hashle
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(password, salt);
+
+            // 4. Kullanıcıyı ekle
+            const insertRequest = new sql.Request(transaction);
+            insertRequest.input('name', sql.NVarChar, name);
+            insertRequest.input('email', sql.NVarChar, email);
+            insertRequest.input('password', sql.NVarChar, hashedPassword);
+            insertRequest.input('role', sql.NVarChar, role);
+            insertRequest.input('companyId', sql.Int, companyIdToSet); // NULL veya geçerli ID
+            
+            const insertResult = await insertRequest.query(`
+                INSERT INTO Users (name, email, password, role, companyId)
+                OUTPUT inserted.id, inserted.name, inserted.email, inserted.role, inserted.createdAt, inserted.companyId
+                VALUES (@name, @email, @password, @role, @companyId);
+            `);
+
+            const newUser = insertResult.recordset[0];
+
+            // Yeni eklenen kullanıcıya şirket adını ekle (varsa)
+            if (newUser.companyId) {
+                 const companyNameRequest = new sql.Request(transaction);
+                 companyNameRequest.input('cId', sql.Int, newUser.companyId);
+                 const companyNameResult = await companyNameRequest.query('SELECT name FROM Companies WHERE id = @cId');
+                 newUser.companyName = companyNameResult.recordset[0]?.name;
+            }
+
+            await transaction.commit();
+            
+            // Başarılı yanıt (şifre olmadan)
+            res.status(201).json(newUser);
 
         } catch (error) {
-            await transaction.rollback(); // İç try-catch bloğunda hata olursa geri al
-            console.error("Kullanıcı profil güncelleme (Admin - Transaction) hatası:", error);
-            // Özel unique constraint hatası (çok düşük ihtimal)
-             if (error.number === 2601 || error.number === 2627) { 
+            await transaction.rollback();
+            console.error("Kullanıcı oluşturma (Admin - Transaction) hatası:", error);
+            if (error.number === 2601 || error.number === 2627) { // Unique constraint email
                 return res.status(400).json({ message: 'E-posta adresi zaten kullanılıyor (Tekrar kontrol).' });
+            } else if (error.number === 547) { // Foreign key constraint companyId
+                 return res.status(400).json({ message: 'Belirtilen şirket ID\'si geçersiz (FK hatası).' });
             }
-            res.status(500).json({ message: 'Güncelleme sırasında bir sunucu hatası oluştu.' });
+            res.status(500).json({ message: 'Kullanıcı oluşturulurken bir sunucu hatası oluştu.' });
         }
 
     } catch (error) {
-        console.error("Kullanıcı profil güncelleme (Admin - Connection/Begin) hatası:", error);
+        console.error("Kullanıcı oluşturma (Admin - Connection/Begin) hatası:", error);
         res.status(500).json({ message: 'Sunucu bağlantı hatası oluştu.' });
     }
 };
 
-// @desc    Update any card by Admin
-// @route   PUT /api/admin/cards/:id
+// @desc    Update any user's profile (name, email, role, companyId) by Admin (GÜNCELLENDİ)
+// @route   PUT /api/admin/users/:id
 // @access  Private/Admin
-const updateAnyCard = async (req, res) => {
-    const cardId = req.params.id;
-    const {
-        cardName,
-        profileImageUrl,
-        coverImageUrl,
-        name,
-        title,
-        company,
-        bio,
-        phone,
-        email,
-        website,
-        address,
-        theme,
-        customSlug: rawCustomSlug,
-        isActive,
-        linkedinUrl,
-        twitterUrl,
-        instagramUrl
-    } = req.body;
+const updateAnyUser = async (req, res) => { // Fonksiyon adı değiştirildi
+    const userIdToUpdate = req.params.id;
+    const { name, email, role, companyId } = req.body; // Rol ve companyId eklendi
+    const adminUserId = req.user.id;
+    console.log(`updateAnyUser controller çağrıldı, ID: ${userIdToUpdate}`, { name, email, role, companyId });
 
-    if (isNaN(parseInt(cardId))) {
-        return res.status(400).json({ message: 'Geçersiz Kart ID' });
+    if (parseInt(userIdToUpdate) === adminUserId) {
+        return res.status(400).json({ message: 'Kendi bilgilerinizi buradan güncelleyemezsiniz.' });
+    }
+    if (isNaN(parseInt(userIdToUpdate))) {
+        return res.status(400).json({ message: 'Geçersiz Kullanıcı ID' });
     }
 
-    // Slug doğrulama ve temizleme (iç içe fonksiyon)
-    const validateAndCleanSlug = (slug) => {
-        if (!slug) return null;
-        let cleanedSlug = slug.toLowerCase().trim();
-        cleanedSlug = cleanedSlug.replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-');
-        cleanedSlug = cleanedSlug.replace(/^-+|-+$/g, '');
-        if (cleanedSlug.length < 1) return null;
-        if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(cleanedSlug)) {
-            console.warn('Slug temizleme sonrası beklenmedik format:', cleanedSlug);
-            return null;
-        }
-        return cleanedSlug;
-    };
-    const newCustomSlug = validateAndCleanSlug(rawCustomSlug);
+    // Gerekli alan kontrolü (role hariç hepsi zorunlu, role varsa geçerli olmalı)
+    if (!name || !email) {
+        return res.status(400).json({ message: 'İsim ve e-posta alanları zorunludur.' });
+    }
+    const validRoles = ['admin', 'user'];
+    if (role && !validRoles.includes(role)) {
+        return res.status(400).json({ message: `Geçersiz rol. Rol ${validRoles.join(' veya ')} olmalıdır.` });
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+         return res.status(400).json({ message: 'Geçersiz e-posta formatı.' });
+    }
 
-    if (rawCustomSlug && !newCustomSlug) {
-        return res.status(400).json({ message: `Geçersiz özel URL formatı.` });
+    let companyIdToSet = null;
+    let updateCompanyId = false; // companyId'nin güncellenip güncellenmeyeceğini takip et
+    if (companyId !== undefined) { // companyId bilerek null veya bir değer olarak gönderilebilir
+        updateCompanyId = true;
+        if (companyId !== null) { // Eğer null değilse, geçerliliğini kontrol et
+            const parsedCompanyId = parseInt(companyId, 10);
+            if (isNaN(parsedCompanyId)) {
+                return res.status(400).json({ message: 'Geçersiz Şirket ID formatı.' });
+            }
+            companyIdToSet = parsedCompanyId;
+        } // null ise companyIdToSet null kalır
     }
 
     try {
@@ -437,104 +333,85 @@ const updateAnyCard = async (req, res) => {
         await transaction.begin();
 
         try {
-            const currentCardRequest = new sql.Request(transaction);
-            currentCardRequest.input('cardId', sql.Int, parseInt(cardId));
-            const currentCardResult = await currentCardRequest.query(
-                'SELECT TOP 1 customSlug FROM Cards WHERE id = @cardId'
+            // 1. E-posta başka kullanıcıda var mı?
+            const emailCheckRequest = new sql.Request(transaction);
+            emailCheckRequest.input('email', sql.NVarChar, email);
+            emailCheckRequest.input('userIdToExclude', sql.Int, parseInt(userIdToUpdate));
+            const emailCheckResult = await emailCheckRequest.query(
+                'SELECT TOP 1 id FROM Users WHERE email = @email AND id != @userIdToExclude'
             );
-
-            if (currentCardResult.recordset.length === 0) {
+            if (emailCheckResult.recordset.length > 0) {
                 await transaction.rollback();
-                return res.status(404).json({ message: 'Güncellenecek kartvizit bulunamadı.' });
+                return res.status(400).json({ message: 'Bu e-posta adresi zaten başka bir kullanıcı tarafından kullanılıyor.' });
             }
-            const currentCustomSlug = currentCardResult.recordset[0].customSlug;
 
-            if (newCustomSlug && newCustomSlug !== currentCustomSlug) {
-                const slugCheckRequest = new sql.Request(transaction);
-                slugCheckRequest.input('customSlug', sql.VarChar, newCustomSlug);
-                slugCheckRequest.input('cardId', sql.Int, parseInt(cardId));
-                const slugCheckResult = await slugCheckRequest.query(
-                    'SELECT TOP 1 id FROM Cards WHERE customSlug = @customSlug AND id != @cardId'
-                );
-
-                if (slugCheckResult.recordset.length > 0) {
+            // 2. companyId null değilse ve güncelleniyorsa, şirket var mı?
+            if (updateCompanyId && companyIdToSet !== null) {
+                const companyCheckRequest = new sql.Request(transaction);
+                companyCheckRequest.input('companyId', sql.Int, companyIdToSet);
+                const companyCheckResult = await companyCheckRequest.query('SELECT TOP 1 id FROM Companies WHERE id = @companyId');
+                if (companyCheckResult.recordset.length === 0) {
                     await transaction.rollback();
-                    return res.status(400).json({ message: `Bu özel URL (${newCustomSlug}) zaten başka bir kartvizit tarafından kullanılıyor.` });
+                    return res.status(404).json({ message: `Belirtilen şirket bulunamadı (ID: ${companyIdToSet}).` });
                 }
             }
 
+            // 3. Kullanıcıyı güncelle
             const updateRequest = new sql.Request(transaction);
-            updateRequest.input('cardId', sql.Int, parseInt(cardId));
-            updateRequest.input('cardName', sql.NVarChar, cardName);
-            updateRequest.input('profileImageUrl', sql.NVarChar, profileImageUrl);
-            updateRequest.input('coverImageUrl', sql.NVarChar, coverImageUrl);
+            updateRequest.input('userId', sql.Int, parseInt(userIdToUpdate));
             updateRequest.input('name', sql.NVarChar, name);
-            updateRequest.input('title', sql.NVarChar, title);
-            updateRequest.input('company', sql.NVarChar, company);
-            updateRequest.input('bio', sql.NVarChar, bio);
-            updateRequest.input('phone', sql.NVarChar, phone);
             updateRequest.input('email', sql.NVarChar, email);
-            updateRequest.input('website', sql.NVarChar, website);
-            updateRequest.input('address', sql.NVarChar, address);
-            updateRequest.input('theme', sql.NVarChar, theme);
-            updateRequest.input('customSlug', sql.VarChar, newCustomSlug);
-            updateRequest.input('isActive', sql.Bit, isActive);
-            updateRequest.input('linkedinUrl', sql.NVarChar, linkedinUrl);
-            updateRequest.input('twitterUrl', sql.NVarChar, twitterUrl);
-            updateRequest.input('instagramUrl', sql.NVarChar, instagramUrl);
 
-            const updateResult = await updateRequest.query(`
-                UPDATE Cards SET
-                    cardName = @cardName, profileImageUrl = @profileImageUrl, coverImageUrl = @coverImageUrl,
-                    name = @name, title = @title, company = @company, bio = @bio, phone = @phone,
-                    email = @email, website = @website, address = @address, theme = @theme,
-                    customSlug = @customSlug, isActive = @isActive, linkedinUrl = @linkedinUrl,
-                    twitterUrl = @twitterUrl, instagramUrl = @instagramUrl
-                OUTPUT inserted.*
-                WHERE id = @cardId;
-            `);
+            let setClauses = 'name = @name, email = @email';
+            if (role) { // Rol sadece gönderildiyse güncellenir
+                setClauses += ', role = @role';
+                updateRequest.input('role', sql.NVarChar, role);
+            }
+            if (updateCompanyId) { // CompanyId sadece gönderildiyse güncellenir (null olabilir)
+                setClauses += ', companyId = @companyId';
+                updateRequest.input('companyId', sql.Int, companyIdToSet);
+            }
+            
+            const updateQuery = `UPDATE Users SET ${setClauses} OUTPUT inserted.id, inserted.name, inserted.email, inserted.role, inserted.createdAt, inserted.companyId WHERE id = @userId`;
+            const updateResult = await updateRequest.query(updateQuery);
 
-             if (updateResult.recordset.length === 0) {
-                 await transaction.rollback();
-                 return res.status(404).json({ message: 'Kartvizit güncellenirken bulunamadı.' });
+            if (updateResult.recordset.length === 0) {
+                await transaction.rollback();
+                return res.status(404).json({ message: 'Güncellenecek kullanıcı bulunamadı.' });
             }
 
+            const updatedUser = updateResult.recordset[0];
+
+            // Güncellenen kullanıcıya şirket adını ekle (varsa)
+             if (updatedUser.companyId) {
+                 const companyNameRequest = new sql.Request(transaction);
+                 companyNameRequest.input('cId', sql.Int, updatedUser.companyId);
+                 const companyNameResult = await companyNameRequest.query('SELECT name FROM Companies WHERE id = @cId');
+                 updatedUser.companyName = companyNameResult.recordset[0]?.name;
+            } else {
+                updatedUser.companyName = null; // Eğer companyId null olduysa companyName'i de null yap
+            }
+            
             await transaction.commit();
 
-            // Liste güncellemesi için kullanıcı bilgilerini de içeren tam kart verisini çek
-            const finalResultRequest = new sql.Request(pool); // Yeni request, transaction bitti
-            finalResultRequest.input('cardId', sql.Int, updateResult.recordset[0].id);
-            const finalResult = await finalResultRequest.query(`
-                SELECT c.*, u.name as userName, u.email as userEmail 
-                FROM Cards c 
-                JOIN Users u ON c.userId = u.id 
-                WHERE c.id = @cardId
-            `);
-
-             if (finalResult.recordset.length === 0) {
-                 // Bu olmamalı ama hata durumunda sadece güncellenen ham veriyi döndür
-                 console.warn("Admin güncelleme sonrası tam kart verisi çekilemedi, ID:", updateResult.recordset[0].id);
-                 return res.status(200).json({
-                    message: 'Kartvizit başarıyla güncellendi (ancak tam veri çekilemedi).'
-                 });
-            }
-
             res.status(200).json({
-                message: 'Kartvizit başarıyla güncellendi.',
-                card: finalResult.recordset[0] 
+                message: 'Kullanıcı bilgileri başarıyla güncellendi.',
+                user: updatedUser // Güncellenmiş tam kullanıcı bilgisini döndür
             });
 
         } catch (error) {
             await transaction.rollback();
-            console.error("Kartvizit güncelleme (Admin - Transaction) hatası:", error);
-            if (error.number === 2601 || error.number === 2627) {
-                return res.status(400).json({ message: `Özel URL (${newCustomSlug || rawCustomSlug}) zaten kullanılıyor (Tekrar kontrol).` });
+            console.error("Kullanıcı güncelleme (Admin - Transaction) hatası:", error);
+            if (error.number === 2601 || error.number === 2627) { 
+                return res.status(400).json({ message: 'E-posta adresi zaten kullanılıyor (Tekrar kontrol).' });
+            } else if (error.number === 547) { // Foreign key constraint companyId
+                 return res.status(400).json({ message: 'Belirtilen şirket ID\'si geçersiz (FK hatası).' });
             }
             res.status(500).json({ message: 'Güncelleme sırasında bir sunucu hatası oluştu.' });
         }
 
     } catch (error) {
-        console.error("Kartvizit güncelleme (Admin - Connection/Begin) hatası:", error);
+        console.error("Kullanıcı güncelleme (Admin - Connection/Begin) hatası:", error);
         res.status(500).json({ message: 'Sunucu bağlantı hatası oluştu.' });
     }
 };
@@ -736,9 +613,8 @@ module.exports = {
     deleteUser,
     getAllCards,
     deleteAnyCard,
-    updateUserRole,
-    updateAnyUserProfile,
-    updateAnyCard,
+    createUserAdmin,
+    updateAnyUser,
     getDashboardStats,
     createCompany,
     getCompanies,

@@ -31,20 +31,23 @@ function AdminCardListPage() {
         setLoading(true);
         setError('');
         try {
-            // getAllCards yanıtı { data: cardArray, totalCount: ... } şeklinde
-            const response = await getCards(); 
-            if (response && Array.isArray(response.data)) {
-                 setCards(response.data); // Sadece data dizisini state'e ata
-                 // TODO: Sayfalama bilgisi (response.totalCount vb.) kullanılabilir
+            // getCards fonksiyonu doğrudan diziyi döndürüyor
+            const cardList = await getCards(); 
+            // Yanıtın doğrudan dizi olup olmadığını kontrol et
+            if (Array.isArray(cardList)) {
+                 setCards(cardList); // Diziyi doğrudan state'e ata
+                 // Eski kontrol: response.data kontrol ediliyordu
+            // } else if (response && Array.isArray(response.data)) {
+            //      setCards(response.data); 
             } else {
-                 console.error("Beklenmeyen API yanıt formatı (Cards):", response);
-                 setCards([]); // Hata durumunda boş dizi ata
+                 console.error("Beklenmeyen API yanıt formatı (Cards):", cardList);
+                 setCards([]); 
                  setError('Kartvizit verileri alınamadı (format hatası).');
             }
         } catch (err) {
             console.error("Tüm kartları getirirken hata (Admin):", err);
             setError(err.response?.data?.message || 'Kartvizitler yüklenemedi.');
-            setCards([]); // Hata durumunda boş dizi ata
+            setCards([]); 
         } finally {
             setLoading(false);
         }

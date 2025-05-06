@@ -3,11 +3,8 @@ const router = express.Router();
 const {
     getAllUsers,
     deleteUser,
-    getAllCards,
-    deleteAnyCard,
-    updateUserRole,
-    updateAnyUserProfile,
-    updateAnyCard,
+    updateAnyUser,
+    createUserAdmin,
     getDashboardStats,
     createCompany,
     getCompanies,
@@ -29,22 +26,16 @@ router.get('/stats', getDashboardStats);
 
 // Kullanıcı Yönetimi
 router.route('/users')
-    .get(getAllUsers);
+    .get(getAllUsers)
+    .post(createUserAdmin);
 
 router.route('/users/:id')
     .delete(deleteUser)
-    .put(updateAnyUserProfile);
-
-router.route('/users/:id/role')
-    .put(updateUserRole);
+    .put(updateAnyUser);
 
 // Kartvizit Yönetimi
-router.route('/cards')
-    .get(getAllCards);
-
-router.route('/cards/:id')
-    .delete(deleteAnyCard)
-    .put(updateAnyCard);
+// router.route('/cards')
+//     .get(getAllCards);
 
 // Şirket Yönetimi (YENİ)
 router.route('/companies')

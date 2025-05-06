@@ -32,7 +32,7 @@ import ProfilePage from './pages/ProfilePage';
 // Admin sayfaları ve rota koruması
 import AdminRoute from './components/AdminRoute'; 
 import AdminUserListPage from './pages/admin/AdminUserListPage';
-import AdminCardListPage from './pages/admin/AdminCardListPage';
+import CardManagementPage from './pages/admin/CardManagementPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import CompanyManagementPage from './pages/admin/CompanyManagementPage';
 
@@ -118,7 +118,7 @@ function App() {
           <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
              <Route path="/admin" element={<AdminDashboardPage />} />
              <Route path="/admin/users" element={<AdminUserListPage />} />
-             <Route path="/admin/cards" element={<AdminCardListPage />} />
+             <Route path="/admin/cards" element={<CardManagementPage />} />
              <Route path="/admin/companies" element={<CompanyManagementPage />} />
           </Route>
 

@@ -1,6 +1,17 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { getCards, deleteCard, getCompanies, createCard, updateCard } from '../../services/adminService'; // getCompanies eklendi
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { getCards, deleteCard, getCompanies, getUsers, createCard, updateCard } from '../../services/adminService'; // getCompanies eklendi
 import { useNotification } from '../../context/NotificationContext';
+// QR Kod Modal komponentini import et
+import QrCodeModal from '../../components/QrCodeModal';
+import * as XLSX from 'xlsx'; // xlsx kütüphanesini import et
+import { DataGrid, useGridApiRef } from '@mui/x-data-grid';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import QrCodeIcon from '@mui/icons-material/QrCode'; // QR Kodu ikonu
+import FileDownloadIcon from '@mui/icons-material/FileDownload'; // Excel ikonu için
+import UploadFileIcon from '@mui/icons-material/UploadFile'; // Import ikonu
+import Alert from '@mui/material/Alert';
 
 // MUI Imports
 import Box from '@mui/material/Box';
@@ -22,23 +33,25 @@ import MenuItem from '@mui/material/MenuItem'; // Şirket seçimi için
 import InputLabel from '@mui/material/InputLabel'; // Şirket seçimi için
 import FormControl from '@mui/material/FormControl'; // Şirket seçimi için
 import Avatar from '@mui/material/Avatar'; // QR Kodu göstermek için
-import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import QrCodeIcon from '@mui/icons-material/QrCode'; // QR Kodu ikonu
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
 
 function CardManagementPage() {
     const [cards, setCards] = useState([]);
     const [companies, setCompanies] = useState([]); // Şirket listesi state'i
+    const [users, setUsers] = useState([]); // Kullanıcı listesi state'i
     const [loading, setLoading] = useState(true);
     const [modalOpen, setModalOpen] = useState(false);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [qrModalOpen, setQrModalOpen] = useState(false); // QR Kod modalı için state
     const [selectedCard, setSelectedCard] = useState(null);
+    const [selectedQrUrl, setSelectedQrUrl] = useState(''); // QR Modal için URL state'i
     const [isEditMode, setIsEditMode] = useState(false);
+    const apiRef = useGridApiRef();
     const initialFormData = {
-        companyId: '', // Başlangıçta boş
+        companyId: '',
+        userId: '',
         name: '',
         title: '',
         email: '',
@@ -46,11 +59,21 @@ function CardManagementPage() {
         website: '',
         address: '',
         status: true,
+        customSlug: ''
     };
     const [formData, setFormData] = useState(initialFormData);
     const [formLoading, setFormLoading] = useState(false);
+    const [formError, setFormError] = useState(''); // Form içi hata mesajı
 
     const { showNotification } = useNotification();
+
+    // Import için State'ler
+    const [importModalOpen, setImportModalOpen] = useState(false);
+    const [selectedImportCompanyId, setSelectedImportCompanyId] = useState('');
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [importLoading, setImportLoading] = useState(false);
+    const [importErrors, setImportErrors] = useState([]);
+    const fileInputRef = useRef(null); // Dosya inputuna erişim için ref
 
     // Şirketleri Yükle
     const fetchCompaniesList = useCallback(async () => {
@@ -69,11 +92,23 @@ function CardManagementPage() {
         }
     }, [showNotification]);
 
+    // Kullanıcıları Yükle
+    const fetchUsersList = useCallback(async () => {
+        try {
+            const userData = await getUsers(); // getUsers artık diziyi dönmeli
+            setUsers(Array.isArray(userData) ? userData : []);
+        } catch (err) {
+            console.error("Kullanıcı listesi getirilirken hata:", err);
+            showNotification(err.response?.data?.message || 'Kullanıcı listesi yüklenemedi.', 'error');
+            setUsers([]);
+        }
+    }, [showNotification]);
+
     // Kartları Yükle
     const fetchCards = useCallback(async () => {
         setLoading(true);
         try {
-            const cardData = await getCards();
+            const cardData = await getCards(); // API artık companyName ve userName/userEmail de dönmeli
             if (Array.isArray(cardData)) {
                 setCards(cardData);
             } else {
@@ -92,14 +127,17 @@ function CardManagementPage() {
 
     useEffect(() => {
         fetchCompaniesList(); // Şirketleri yükle
+        fetchUsersList(); // Kullanıcıları yükle
         fetchCards(); // Kartları yükle
-    }, [fetchCompaniesList, fetchCards]);
+    }, [fetchCompaniesList, fetchUsersList, fetchCards]);
 
     const handleOpenModal = (card = null) => {
+        setFormError(''); // Hataları temizle
         if (card) {
             setSelectedCard(card);
             setFormData({
                 companyId: card.companyId || '',
+                userId: card.userId || '',
                 name: card.name || '',
                 title: card.title || '',
                 email: card.email || '',
@@ -107,6 +145,7 @@ function CardManagementPage() {
                 website: card.website || '',
                 address: card.address || '',
                 status: card.status !== undefined ? !!card.status : true,
+                customSlug: card.customSlug || ''
             });
             setIsEditMode(true);
         } else {
@@ -120,54 +159,93 @@ function CardManagementPage() {
     const handleCloseModal = () => {
         setModalOpen(false);
         setSelectedCard(null);
+        setFormData(initialFormData);
+        setFormError('');
     };
 
+    // QR Modal Açma Fonksiyonunu Güncelle
     const handleOpenQrModal = (card) => {
-        setSelectedCard(card);
+        if (!card) return;
+        // Tam public URL'yi oluştur
+        const publicUrl = `${window.location.origin}/card/${card.customSlug || card.id}`;
+        setSelectedQrUrl(publicUrl); // State'i güncelle
+        setSelectedCard(card); // Seçili kartı da tutalım (opsiyonel, modal başlığı için vs.)
         setQrModalOpen(true);
     };
 
     const handleCloseQrModal = () => {
         setQrModalOpen(false);
+        setSelectedQrUrl(''); // URL'i temizle
         setSelectedCard(null);
     };
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setFormData(prev => ({ ...prev, [name]: type === 'checkbox' || type === 'switch' ? checked : value }));
+        let processedValue = type === 'checkbox' || type === 'switch' ? checked : value;
+
+        // Şirket seçimi değiştiğinde, eğer bireysele geçildiyse kullanıcıyı sıfırlama (opsiyonel)
+        // if (name === 'companyId' && processedValue === '') {
+        //     setFormData(prev => ({ ...prev, companyId: '', userId: '' }));
+        // } else {
+             setFormData(prev => ({ ...prev, [name]: processedValue }));
+        // }
     };
 
     // Form Gönderimi (Ekleme/Güncelleme)
     const handleFormSubmit = async () => {
-        // Basit frontend validasyon (Şirket ve isim zorunlu)
-        if (!formData.companyId || !formData.name) {
-            showNotification('Lütfen Şirket ve Ad Soyad alanlarını doldurun.', 'warning');
+        setFormLoading(true);
+        setFormError('');
+
+        // --- Validasyon --- 
+        if (!formData.name) {
+            setFormError('Kart adı zorunludur.');
+            setFormLoading(false);
             return;
         }
+        const companyIdSelected = formData.companyId && formData.companyId !== '';
+        const userIdSelected = formData.userId && formData.userId !== '';
 
-        setFormLoading(true);
+        if (!companyIdSelected && !userIdSelected) {
+            setFormError('Lütfen bir Şirket veya bir Kullanıcı seçin.');
+            setFormLoading(false);
+            return;
+        }
+        if (!companyIdSelected && userIdSelected) {
+             // Bireysel kart: Kullanıcı zorunlu (zaten kontrol edildi)
+        }
+         if (companyIdSelected && !userIdSelected) {
+             // Kurumsal kart: Kullanıcı opsiyonel (Sorun yok)
+        }
+        // --- Validasyon Bitti ---
+
+        const cardData = {
+            ...formData,
+            companyId: companyIdSelected ? parseInt(formData.companyId, 10) : null,
+            userId: userIdSelected ? parseInt(formData.userId, 10) : null,
+        };
+
         try {
+            let resultCard;
             if (isEditMode && selectedCard) {
-                // Güncelleme
-                await updateCard(selectedCard.id, formData); 
+                resultCard = await updateCard(selectedCard.id, cardData);
+                console.log('Backend updateCard yanıtı (resultCard):', resultCard);
+                setCards(prevCards => prevCards.map(c => c.id === resultCard.id ? resultCard : c));
                 showNotification('Kart başarıyla güncellendi.', 'success');
             } else {
-                // Oluşturma
-                await createCard(formData); 
+                resultCard = await createCard(cardData);
+                console.log('Backend createCard yanıtı (resultCard):', resultCard);
+                setCards(prevCards => [resultCard, ...prevCards]); 
                 showNotification('Kart başarıyla oluşturuldu.', 'success');
             }
-            handleCloseModal(); // Modalı kapat
-            fetchCards(); // Listeyi yenile
+            handleCloseModal();
         } catch (err) {
             console.error("Kart form submit hatası:", err);
-            showNotification(err.response?.data?.message || 'İşlem başarısız oldu.', 'error');
-            // Hata durumunda modal açık kalabilir, kullanıcı tekrar deneyebilir.
+            const errorMsg = err.response?.data?.message || 'İşlem başarısız oldu.';
+            setFormError(errorMsg);
+            showNotification(errorMsg, 'error');
         } finally {
             setFormLoading(false);
         }
-        // Bu log ve modal kapatma işlemi try içine taşındı
-        // console.log("Form Data Submitted:", formData); 
-        // handleCloseModal();
     };
 
     // Silme Butonuna Tıklama
@@ -188,9 +266,9 @@ function CardManagementPage() {
         setFormLoading(true);
         try {
             await deleteCard(selectedCard.id);
+            setCards(prevCards => prevCards.filter(c => c.id !== selectedCard.id));
             showNotification('Kart başarıyla silindi.', 'success');
             handleCloseDeleteConfirm();
-            fetchCards(); // Listeyi yenile
         } catch (err) {
              console.error("Kart silme hatası:", err);
              showNotification(err.response?.data?.message || 'Kart silinemedi.', 'error');
@@ -199,28 +277,237 @@ function CardManagementPage() {
         }
     };
 
+    // Excel'e Aktarma Fonksiyonu (Geçici olarak sadece görünür satırları alacak şekilde basitleştirildi)
+    const handleExportExcel = () => {
+        const visibleRows = apiRef.current?.getVisibleRowModels ? Array.from(apiRef.current.getVisibleRowModels().values()) : cards;
+
+        if (visibleRows.length === 0) {
+            showNotification("Dışa aktarılacak veri bulunamadı.", "warning");
+            return;
+        }
+
+        // Excel için veriyi hazırla
+        const excelData = visibleRows.map(card => ({
+            'ID': card.id,
+            'Kart Adı/Sahibi': card.name,
+            'Özel URL Slug': card.customSlug || '-',
+            'Kart URL': `${window.location.origin}/card/${card.customSlug || card.id}`,
+            'Ünvan': card.title || '-',
+            'Şirket Adı': card.companyName || '-',
+            'Kullanıcı Adı': card.userName || '-',
+            'Kullanıcı Email': card.userEmail || '-',
+            'Durum': card.status ? 'Aktif' : 'Pasif',
+            'Email': card.email || '-',
+            'Telefon': card.phone || '-',
+            'Web Sitesi': card.website || '-',
+            'Adres': card.address || '-',
+            'Oluşturulma Tarihi': new Date(card.createdAt).toLocaleString(),
+            'Güncellenme Tarihi': new Date(card.updatedAt).toLocaleString(),
+            'QR Kod Data URL': card.qrCodeData || '-' 
+        }));
+
+        // Çalışma sayfası oluştur
+        const ws = XLSX.utils.json_to_sheet(excelData);
+        // Çalışma kitabı oluştur ve sayfayı ekle
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Kartvizitler");
+
+        // Dosyayı indir
+        XLSX.writeFile(wb, "kartvizit_listesi.xlsx");
+    };
+
+    // --- Import Fonksiyonları ---\
+    const handleOpenImportModal = () => {
+        setSelectedImportCompanyId('');
+        setSelectedFile(null);
+        setImportErrors([]);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = null; // Önceki dosya seçimini temizle
+        }
+        setImportModalOpen(true);
+    };
+
+    const handleCloseImportModal = () => {
+        setImportModalOpen(false);
+    };
+
+    const handleFileChange = (event) => {
+        const file = event.target.files[0];
+        if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+            setSelectedFile(file);
+            setImportErrors([]); // Yeni dosya seçildiğinde hataları temizle
+        } else {
+            setSelectedFile(null);
+            showNotification('Lütfen geçerli bir Excel dosyası (.xlsx veya .xls) seçin.', 'error');
+        }
+    };
+
+    const handleImportSubmit = async () => {
+        if (!selectedImportCompanyId) {
+            showNotification('Lütfen kartların ekleneceği şirketi seçin.', 'warning');
+            return;
+        }
+        if (!selectedFile) {
+            showNotification('Lütfen içeri aktarılacak Excel dosyasını seçin.', 'warning');
+            return;
+        }
+
+        setImportLoading(true);
+        setImportErrors([]);
+        const reader = new FileReader();
+
+        reader.onload = async (e) => {
+            try {
+                const data = e.target.result;
+                const workbook = XLSX.read(data, { type: 'binary' });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                if (!jsonData || jsonData.length === 0) {
+                    showNotification('Excel dosyası boş veya okunamadı.', 'error');
+                    setImportLoading(false);
+                    return;
+                }
+
+                let successCount = 0;
+                const errors = [];
+
+                const normalizeHeader = (header) => String(header).toLowerCase().replace(/\s+/g, '');
+                
+                // Beklenen başlıkları tanımla (küçük harf, boşluksuz)
+                const expectedHeaders = {
+                    name: ['kartadı/sahibiadı', 'kartadı', 'ad', 'name'],
+                    title: ['ünvan', 'title'],
+                    email: ['email', 'eposta'],
+                    phone: ['telefon', 'phone', 'tel'],
+                    website: ['website', 'websitesi'],
+                    address: ['adres', 'address'],
+                    customSlug: ['özelurl', 'customslug', 'slug'],
+                    status: ['durum', 'status', 'aktif']
+                };
+
+                const headerRow = XLSX.utils.sheet_to_json(worksheet, { header: 1 })[0] || [];
+                const actualHeaders = headerRow.map(h => normalizeHeader(String(h)));
+                
+                console.log("Okunan Ham Başlıklar:", headerRow);
+                console.log("Normalize Edilmiş Başlıklar:", actualHeaders);
+
+                const nameHeaderFound = Object.keys(expectedHeaders.name).some(key => actualHeaders.includes(expectedHeaders.name[key]));
+                if (!nameHeaderFound) {
+                    errors.push({ row: 'Başlık Satırı', error: `Excel dosyasında zorunlu '${expectedHeaders.name.join(' veya ')}' sütunu bulunamadı.` });
+                }
+
+                for (let i = 0; i < jsonData.length; i++) {
+                    const row = jsonData[i];
+                    const rowIndex = i + 2; // Excel satır numarası (1-başlıklı, veri 2'den başlar)
+                    
+                    // Normalize edilmiş başlıkları kullanarak veriyi al
+                    const getRowValue = (possibleHeaders) => {
+                        for (const possibleHeader of possibleHeaders) {
+                             const headerIndex = actualHeaders.indexOf(possibleHeader);
+                             if (headerIndex !== -1) {
+                                 const originalHeader = headerRow[headerIndex]; // Orijinal başlığı al
+                                 return row[originalHeader]; // Orijinal başlıkla veriyi oku
+                             }
+                        }
+                        return undefined; // Eşleşen başlık yoksa
+                    };
+
+                    const cardName = getRowValue(expectedHeaders.name);
+
+                    if (!cardName) {
+                        errors.push({ row: rowIndex, error: `Bu satırda zorunlu 'Kart Adı/Sahibi Adı' bilgisi eksik.` });
+                        continue; // Bu satırı atla
+                    }
+
+                    const cardTitle = getRowValue(expectedHeaders.title);
+                    const cardEmail = getRowValue(expectedHeaders.email);
+                    const cardPhone = getRowValue(expectedHeaders.phone);
+                    const cardWebsite = getRowValue(expectedHeaders.website);
+                    const cardAddress = getRowValue(expectedHeaders.address);
+                    const cardCustomSlug = getRowValue(expectedHeaders.customSlug);
+                    const statusValue = getRowValue(expectedHeaders.status);
+                    // Durumu boolean yap (örn: 'Aktif', 1, true -> true; diğerleri -> false)
+                    const cardStatus = statusValue ? ['aktif', 'active', 'true', '1', 1].includes(String(statusValue).toLowerCase()) : true; // Varsayılan aktif
+
+                    const cardData = {
+                        companyId: parseInt(selectedImportCompanyId, 10),
+                        userId: null, // Şimdilik kullanıcı atanmıyor, isteğe bağlı eklenebilir
+                        name: String(cardName), // Stringe çevir
+                        title: cardTitle ? String(cardTitle) : '',
+                        email: cardEmail ? String(cardEmail) : '',
+                        phone: cardPhone ? String(cardPhone) : '',
+                        website: cardWebsite ? String(cardWebsite) : '',
+                        address: cardAddress ? String(cardAddress) : '',
+                        customSlug: cardCustomSlug ? String(cardCustomSlug) : null,
+                        status: cardStatus,
+                    };
+
+                    try {
+                        await createCard(cardData);
+                        successCount++;
+                    } catch (err) {
+                        const errorMsg = err.response?.data?.message || err.message || 'Bilinmeyen API hatası';
+                        errors.push({ row: rowIndex, name: cardData.name, error: errorMsg });
+                    }
+                }
+
+                setImportErrors(errors); // Hataları state'e ata
+                
+                let summaryMessage = `${successCount} kart başarıyla içe aktarıldı.`;
+                 if (errors.length > 0) {
+                    summaryMessage += ` ${errors.length} satırda hata oluştu. Detaylar için hata listesine bakın.`;
+                    showNotification(summaryMessage, 'warning');
+                 } else {
+                     showNotification(summaryMessage, 'success');
+                     handleCloseImportModal(); // Hata yoksa modalı kapat
+                 }
+               
+                fetchCards(); // Kart listesini yenile
+
+            } catch (error) {
+                console.error("Excel dosyası okunurken/işlenirken hata:", error);
+                showNotification(`Excel dosyası işlenirken bir hata oluştu: ${error.message}`, 'error');
+                setImportErrors([{row: 'Genel', error: `Dosya işleme hatası: ${error.message}`}]);
+            } finally {
+                setImportLoading(false);
+            }
+        };
+
+        reader.onerror = (error) => {
+            console.error("Dosya okuma hatası:", error);
+            showNotification('Dosya okunurken bir hata oluştu.', 'error');
+            setImportLoading(false);
+        };
+
+        reader.readAsBinaryString(selectedFile);
+    };
+    // --- Import Fonksiyonları Bitti ---\
+
     // DataGrid Kolonları
     const columns = [
         { field: 'id', headerName: 'ID', width: 70 }, 
         { 
-            field: 'qrCodeData', 
+            field: 'qrCodeData', // Bu alan artık doğrudan kullanılmıyor ama sütun kalabilir
             headerName: 'QR', 
-            width: 80, 
+            width: 60, 
             sortable: false,
             disableColumnMenu: true,
             renderCell: (params) => (
-                params.value ? (
-                    <Tooltip title="QR Kodu Göster">
-                        <IconButton size="small" onClick={() => handleOpenQrModal(params.row)}>
-                           <QrCodeIcon />
-                        </IconButton>
-                    </Tooltip>
-                ) : null
+                // QR kod ikonu her zaman gösterilebilir (QR backend'de üretiliyor varsayımı)
+                <Tooltip title="QR Kodu Göster/İndir">
+                    <IconButton size="small" onClick={() => handleOpenQrModal(params.row)}> 
+                        <QrCodeIcon />
+                    </IconButton>
+                </Tooltip>
             )
         },
-        { field: 'name', headerName: 'Ad Soyad', width: 200 },
-        { field: 'title', headerName: 'Ünvan', width: 180 },
-        { field: 'companyName', headerName: 'Şirket', width: 180 }, // Şirket adı eklendi
+        { field: 'name', headerName: 'Kart Adı/Sahibi', width: 200 },
+        { field: 'customSlug', headerName: 'Özel URL', width: 150, renderCell: (params) => params.value || '-' },
+        { field: 'title', headerName: 'Ünvan', width: 150 },
+        { field: 'companyName', headerName: 'Şirket', width: 180, renderCell: (params) => params.value || '-' }, 
+        { field: 'userName', headerName: 'Kullanıcı', width: 180, renderCell: (params) => params.value || '-' },
         {
              field: 'status',
              headerName: 'Durum',
@@ -228,9 +515,8 @@ function CardManagementPage() {
              type: 'boolean',
              renderCell: (params) => (params.value ? 'Aktif' : 'Pasif') 
         },
-        { field: 'email', headerName: 'Email', width: 200 },
-        { field: 'phone', headerName: 'Telefon', width: 150 },
-        { field: 'website', headerName: 'Web Sitesi', width: 180 },
+        { field: 'email', headerName: 'Email', width: 180 },
+        { field: 'phone', headerName: 'Telefon', width: 130 },
         {
             field: 'actions',
             headerName: 'İşlemler',
@@ -255,16 +541,37 @@ function CardManagementPage() {
     ];
 
     return (
-        <Paper sx={{ p: 3, height: '80vh', width: '100%' }}>
+        <Paper sx={{ p: 3 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Typography variant="h5" component="h1">Kartvizit Yönetimi</Typography>
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => handleOpenModal()}
-                >
-                    Yeni Kart Ekle
-                </Button>
+                <Box>
+                     <Button
+                        variant="outlined"
+                        startIcon={<FileDownloadIcon />}
+                        onClick={handleExportExcel}
+                        sx={{ mr: 1 }}
+                        disabled={loading || cards.length === 0}
+                     >
+                         Excel'e Aktar (Görünür)
+                     </Button>
+                     <Button
+                        variant="outlined"
+                        startIcon={<UploadFileIcon />}
+                        onClick={handleOpenImportModal}
+                        sx={{ ml: 1, mr: 1 }}
+                        disabled={loading}
+                     >
+                         Excel'den İçeri Aktar
+                     </Button>
+                     <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => handleOpenModal()}
+                        disabled={loading}
+                     >
+                        Yeni Kart Ekle
+                    </Button>
+                </Box>
             </Box>
 
             {loading ? (
@@ -275,20 +582,9 @@ function CardManagementPage() {
                  <DataGrid
                     rows={cards}
                     columns={columns}
-                    initialState={{
-                        pagination: {
-                            paginationModel: { page: 0, pageSize: 10 },
-                        },
-                    }}
+                    apiRef={apiRef} 
                     pageSizeOptions={[5, 10, 25]}
-                    slots={{ toolbar: GridToolbar }}
-                    slotProps={{
-                      toolbar: {
-                        showQuickFilter: true,
-                      },
-                    }}
                     disableRowSelectionOnClick
-                    autoHeight={false}
                 />
             )}
 
@@ -296,18 +592,22 @@ function CardManagementPage() {
             <Dialog open={modalOpen} onClose={handleCloseModal} maxWidth="sm" fullWidth>
                 <DialogTitle>{isEditMode ? 'Kartı Düzenle' : 'Yeni Kart Oluştur'}</DialogTitle>
                 <DialogContent>
+                    {formError && <Alert severity="error" sx={{ mb: 2 }}>{formError}</Alert>}
+
+                    <TextField autoFocus margin="dense" id="name" name="name" label="Kart Adı / Sahibi Adı" type="text" fullWidth variant="outlined" value={formData.name} onChange={handleInputChange} required disabled={formLoading} />
+                    
                     {/* Şirket Seçimi */}
-                    <FormControl fullWidth margin="dense" required disabled={formLoading}>
-                         <InputLabel id="company-select-label">Şirket</InputLabel>
+                    <FormControl fullWidth margin="dense" disabled={formLoading}>
+                         <InputLabel id="company-select-label">Şirket (Kurumsal Kart İçin)</InputLabel>
                          <Select
                             labelId="company-select-label"
                             id="companyId"
                             name="companyId"
                             value={formData.companyId}
-                            label="Şirket"
+                            label="Şirket (Kurumsal Kart İçin)"
                             onChange={handleInputChange}
                         >
-                            <MenuItem value="" disabled><em>Şirket Seçiniz</em></MenuItem>
+                            <MenuItem value=""><em>Bireysel Kart (Şirket Yok)</em></MenuItem>
                             {companies.map((company) => (
                                 <MenuItem key={company.id} value={company.id}>
                                     {company.name}
@@ -316,7 +616,41 @@ function CardManagementPage() {
                         </Select>
                     </FormControl>
 
-                    <TextField autoFocus margin="dense" id="name" name="name" label="Ad Soyad" type="text" fullWidth variant="outlined" value={formData.name} onChange={handleInputChange} required disabled={formLoading} />
+                    {/* Kullanıcı Seçimi */}
+                     <FormControl fullWidth margin="dense" disabled={formLoading} required={!formData.companyId} > {/* Şirket seçili değilse zorunlu */} 
+                         <InputLabel id="user-select-label">Kullanıcı {formData.companyId ? '(Opsiyonel)' : '(Zorunlu)'}</InputLabel>
+                         <Select
+                            labelId="user-select-label"
+                            id="userId"
+                            name="userId"
+                            value={formData.userId}
+                            label={`Kullanıcı ${formData.companyId ? '(Opsiyonel)' : '(Zorunlu)'}`}
+                            onChange={handleInputChange}
+                        >
+                            <MenuItem value=""><em>Kullanıcı Seç / Yok</em></MenuItem>
+                            {users.map((user) => (
+                                <MenuItem key={user.id} value={user.id}>
+                                    {user.name} ({user.email})
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+
+                    {/* Özel URL Alanı Eklendi */}
+                    <TextField 
+                        margin="dense" 
+                        id="customSlug" 
+                        name="customSlug" 
+                        label="Özel URL (Opsiyonel)" 
+                        helperText="Sadece harf, rakam ve tire kullanın (örn: caner-inali). Boş bırakırsanız ID kullanılır."
+                        type="text" 
+                        fullWidth 
+                        variant="outlined" 
+                        value={formData.customSlug}
+                        onChange={handleInputChange} 
+                        disabled={formLoading} 
+                    />
+
                     <TextField margin="dense" id="title" name="title" label="Ünvan" type="text" fullWidth variant="outlined" value={formData.title} onChange={handleInputChange} disabled={formLoading} />
                     <TextField margin="dense" id="email" name="email" label="Email" type="email" fullWidth variant="outlined" value={formData.email} onChange={handleInputChange} disabled={formLoading} />
                     <TextField margin="dense" id="phone" name="phone" label="Telefon" type="tel" fullWidth variant="outlined" value={formData.phone} onChange={handleInputChange} disabled={formLoading} />
@@ -352,20 +686,91 @@ function CardManagementPage() {
                 </DialogActions>
             </Dialog>
 
-            {/* QR Kod Gösterme Modalı */}
-             <Dialog open={qrModalOpen} onClose={handleCloseQrModal}>
-                 <DialogTitle>Kartvizit QR Kodu ({selectedCard?.name})</DialogTitle>
-                 <DialogContent sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-                    {selectedCard?.qrCodeData ? (
-                        <img src={selectedCard.qrCodeData} alt={`QR Code for ${selectedCard.name}`} style={{ width: '250px', height: '250px' }} />
-                    ) : (
-                        <Typography>QR Kodu bulunamadı.</Typography>
+            {/* Yeni QrCodeModal Komponentini Kullan */}
+            <QrCodeModal
+                open={qrModalOpen}
+                onClose={handleCloseQrModal}
+                url={selectedQrUrl} // Dinamik olarak oluşturulan URL
+                // title={selectedCard ? `Kartvizit QR Kodu (${selectedCard.name})` : 'Kartvizit QR Kodu'} // İsteğe bağlı: Başlık ekleyebiliriz
+            />
+
+            {/* İçeri Aktarma Modalı */}
+            <Dialog open={importModalOpen} onClose={handleCloseImportModal} maxWidth="sm" fullWidth>
+                <DialogTitle>Excel'den Kartları İçe Aktar</DialogTitle>
+                <DialogContent>
+                    <FormControl fullWidth margin="dense" required disabled={importLoading}>
+                        <InputLabel id="import-company-select-label">Kartların Ekleneceği Şirket</InputLabel>
+                        <Select
+                            labelId="import-company-select-label"
+                            id="importCompanyId"
+                            name="importCompanyId"
+                            value={selectedImportCompanyId}
+                            label="Kartların Ekleneceği Şirket"
+                            onChange={(e) => setSelectedImportCompanyId(e.target.value)}
+                        >
+                            <MenuItem value="" disabled><em>Şirket Seçin...</em></MenuItem>
+                            {companies.map((company) => (
+                                <MenuItem key={company.id} value={company.id}>
+                                    {company.name}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+
+                    <Box sx={{ mt: 2, mb: 1 }}>
+                        <Button
+                            variant="outlined"
+                            component="label" // Input'u gizleyip butonu tetikleyici yapar
+                            fullWidth
+                            disabled={importLoading}
+                            startIcon={<UploadFileIcon />}
+                        >
+                            Excel Dosyası Seç (.xlsx, .xls)
+                            <input 
+                                type="file" 
+                                hidden 
+                                accept=".xlsx, .xls" 
+                                onChange={handleFileChange} 
+                                ref={fileInputRef} 
+                            />
+                        </Button>
+                        {selectedFile && (
+                            <Typography variant="body2" sx={{ mt: 1 }}>
+                                Seçilen dosya: {selectedFile.name}
+                            </Typography>
+                        )}
+                    </Box>
+
+                    {/* Hata Listesi */}
+                    {importErrors.length > 0 && (
+                        <Box sx={{ maxHeight: 150, overflowY: 'auto', border: '1px solid red', p: 1, mt: 2 }}>
+                            <Typography color="error" variant="subtitle2">İçe Aktarma Hataları:</Typography>
+                            <List dense disablePadding>
+                                {importErrors.map((err, index) => (
+                                    <ListItem key={index} disableGutters dense>
+                                        <ListItemText 
+                                            primary={`Satır ${err.row}${err.name ? ' (' + err.name + ')' : ''}: ${err.error}`}
+                                            primaryTypographyProps={{ variant: 'caption', color: 'error' }}
+                                        />
+                                    </ListItem>
+                                ))}
+                            </List>
+                        </Box>
                     )}
-                 </DialogContent>
-                 <DialogActions sx={{ px: 3, pb: 2 }}>
-                    <Button onClick={handleCloseQrModal}>Kapat</Button>
-                 </DialogActions>
-             </Dialog>
+
+                </DialogContent>
+                <DialogActions sx={{ px: 3, pb: 2 }}>
+                    <Button onClick={handleCloseImportModal} disabled={importLoading}>İptal</Button>
+                    <Button 
+                        onClick={handleImportSubmit} 
+                        variant="contained" 
+                        disabled={!selectedImportCompanyId || !selectedFile || importLoading}
+                        startIcon={importLoading ? <CircularProgress size={20} color="inherit" /> : <UploadFileIcon />}
+                    >
+                        {importLoading ? 'İçe Aktarılıyor...' : 'Kartları İçe Aktar'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
         </Paper>
     );
