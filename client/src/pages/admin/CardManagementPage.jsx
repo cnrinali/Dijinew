@@ -4,6 +4,7 @@ import { useNotification } from '../../context/NotificationContext';
 // QR Kod Modal komponentini import et
 import QrCodeModal from '../../components/QrCodeModal';
 import * as XLSX from 'xlsx'; // xlsx kütüphanesini import et
+import JSZip from 'jszip'; // JSZip kütüphanesini import et
 import { DataGrid, useGridApiRef } from '@mui/x-data-grid';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -64,6 +65,7 @@ function CardManagementPage() {
     const [formData, setFormData] = useState(initialFormData);
     const [formLoading, setFormLoading] = useState(false);
     const [formError, setFormError] = useState(''); // Form içi hata mesajı
+    const [zipLoading, setZipLoading] = useState(false); // QR ZIP indirme için yükleme durumu
 
     const { showNotification } = useNotification();
 
@@ -485,6 +487,68 @@ function CardManagementPage() {
     };
     // --- Import Fonksiyonları Bitti ---\
 
+    // QR Kodlarını Toplu İndirme Fonksiyonu
+    const handleDownloadAllQrs = async () => {
+        if (!cards || cards.length === 0) {
+            showNotification("İndirilecek QR kod bulunamadı.", "warning");
+            return;
+        }
+
+        setZipLoading(true);
+        const zip = new JSZip();
+
+        for (const card of cards) {
+            if (card.qrCodeData && typeof card.qrCodeData === 'string' && card.qrCodeData.startsWith('data:image/png;base64,')) {
+                const base64Data = card.qrCodeData.split(',')[1];
+                
+                let fileName = 'qr_code.png';
+                if (card.userName && String(card.userName).trim() !== '') {
+                    fileName = `${String(card.userName).replace(/[^a-zA-Z0-9_.-]/g, '_')}.png`;
+                } else if (card.name && String(card.name).trim() !== '') {
+                    // Kullanıcı adı yoksa kart adını kullan, geçersiz karakterleri değiştir
+                    fileName = `${String(card.name).replace(/[^a-zA-Z0-9_.-]/g, '_')}.png`;
+                } else {
+                    fileName = `kart_qr_${card.id}.png`;
+                }
+
+                // Aynı isimde dosya varsa sonuna bir sayaç ekleyerek benzersiz yap
+                let counter = 1;
+                let originalFileName = fileName.substring(0, fileName.lastIndexOf('.'));
+                let extension = fileName.substring(fileName.lastIndexOf('.'));
+                while (zip.file(fileName)) {
+                    fileName = `${originalFileName}_${counter}${extension}`;
+                    counter++;
+                }
+
+                zip.file(fileName, base64Data, { base64: true });
+            } else {
+                console.warn(`Kart ID ${card.id} için geçerli QR kod datası bulunamadı, atlanıyor.`);
+            }
+        }
+
+        try {
+            if (Object.keys(zip.files).length === 0) {
+                showNotification("İndirilecek geçerli QR kodu bulunamadı.", "warning");
+                setZipLoading(false);
+                return;
+            }
+            const zipBlob = await zip.generateAsync({ type: "blob" });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(zipBlob);
+            link.download = 'kartvizit_qr_kodlari.zip';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+            showNotification('Tüm QR kodlar başarıyla zip olarak indirildi!', 'success');
+        } catch (error) {
+            console.error("QR ZIP oluşturma/indirme hatası:", error);
+            showNotification('QR kodları indirilirken bir hata oluştu.', 'error');
+        } finally {
+            setZipLoading(false);
+        }
+    };
+
     // DataGrid Kolonları
     const columns = [
         { field: 'id', headerName: 'ID', width: 70 }, 
@@ -553,6 +617,16 @@ function CardManagementPage() {
                         disabled={loading || cards.length === 0}
                      >
                          Excel'e Aktar (Görünür)
+                     </Button>
+                     <Button
+                        variant="outlined"
+                        startIcon={<FileDownloadIcon />}
+                        onClick={handleDownloadAllQrs}
+                        sx={{ mr: 1 }}
+                        disabled={loading || zipLoading || cards.length === 0}
+                     >
+                        {zipLoading ? <CircularProgress size={20} color="inherit" sx={{mr:1}} /> : null}
+                        Toplu QR İndir
                      </Button>
                      <Button
                         variant="outlined"
