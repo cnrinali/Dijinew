@@ -5,7 +5,7 @@ const config = {
     user: process.env.DB_USER,
     password: process.env.DB_PASS,
     server: process.env.DB_HOST,
-    database: process.env.DB_NAME,
+    database: process.env.DB_DATABASE,
     options: {
         encrypt: true, // Azure'da çalıştırıyorsanız true yapın
         trustServerCertificate: true // Localhost veya güvenilir olmayan sertifika için true
