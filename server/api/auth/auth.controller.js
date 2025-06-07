@@ -19,7 +19,7 @@ const generateToken = (id, role, companyId) => {
 // @route   POST /api/auth/register
 // @access  Public
 const registerUser = async (req, res) => {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
 
     // 1. Giriş doğrulaması
     if (!name || !email || !password) {
@@ -29,10 +29,10 @@ const registerUser = async (req, res) => {
     try {
         const pool = await getPool();
 
-        // 2. Kullanıcı var mı kontrolü (MSSQL için)
+        // 2. Kullanıcı var mı kontrolü
         const userExistsResult = await pool.request()
             .input('email', sql.NVarChar, email)
-            .query('SELECT TOP 1 id FROM Users WHERE email = @email'); // Varsayılan tablo adı: Users
+            .query('SELECT TOP 1 id FROM Users WHERE email = @email');
 
         if (userExistsResult.recordset.length > 0) {
             return res.status(400).json({ message: 'Bu e-posta adresi zaten kullanımda' });
@@ -42,24 +42,23 @@ const registerUser = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // 4. Kullanıcı oluşturma (MSSQL için)
-        // Not: Henüz Users tablosu yok, bu sorgu varsayımsaldır.
-        // Gerçek tablo yapınıza göre OUTPUT inserted.id kısmını ayarlamanız gerekebilir.
+        // 4. Kullanıcı oluşturma (role eklendi)
         const insertUserResult = await pool.request()
             .input('name', sql.NVarChar, name)
             .input('email', sql.NVarChar, email)
             .input('password', sql.NVarChar, hashedPassword)
-            // .input('role', sql.NVarChar, 'user') // Varsayılan rol eklenebilir
-            .query('INSERT INTO Users (name, email, password) OUTPUT inserted.id VALUES (@name, @email, @password)');
+            .input('role', sql.NVarChar, role || 'user') // Varsayılan rol 'user'
+            .query('INSERT INTO Users (name, email, password, role) OUTPUT inserted.id, inserted.role VALUES (@name, @email, @password, @role)');
 
         if (insertUserResult.recordset && insertUserResult.recordset.length > 0) {
-            const userId = insertUserResult.recordset[0].id;
+            const user = insertUserResult.recordset[0];
             // 5. Yanıt döndürme (JWT ile)
             res.status(201).json({
-                id: userId,
+                id: user.id,
                 name: name,
                 email: email,
-                token: generateToken(userId, null, null), // JWT oluştur ve gönder
+                role: user.role,
+                token: generateToken(user.id, user.role, null),
             });
         } else {
             throw new Error('Kullanıcı oluşturulamadı.');
@@ -67,8 +66,7 @@ const registerUser = async (req, res) => {
 
     } catch (error) {
         console.error("Kayıt hatası:", error);
-        // MSSQL özel hata kodlarını kontrol edebiliriz (örn: unique constraint)
-        if (error.number === 2627 || error.number === 2601) { // Unique constraint violation
+        if (error.number === 2627 || error.number === 2601) {
              return res.status(400).json({ message: 'Bu e-posta adresi zaten kullanımda' });
         }
         res.status(500).json({ message: 'Sunucu hatası oluştu' });
@@ -245,10 +243,39 @@ const resetPassword = async (req, res) => {
     }
 };
 
+// @desc    Update user role
+// @route   PUT /api/auth/update-role
+// @access  Private/Admin
+const updateUserRole = async (req, res) => {
+    const { userId, role } = req.body;
+
+    if (!userId || !role) {
+        return res.status(400).json({ message: 'Kullanıcı ID ve rol gereklidir' });
+    }
+
+    try {
+        const pool = await getPool();
+        const result = await pool.request()
+            .input('userId', sql.Int, userId)
+            .input('role', sql.NVarChar, role)
+            .query('UPDATE Users SET role = @role WHERE id = @userId');
+
+        if (result.rowsAffected[0] === 0) {
+            return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
+        }
+
+        res.status(200).json({ message: 'Kullanıcı rolü güncellendi' });
+    } catch (error) {
+        console.error("Rol güncelleme hatası:", error);
+        res.status(500).json({ message: 'Rol güncellenirken bir hata oluştu' });
+    }
+};
+
 module.exports = {
     registerUser,
     loginUser,
     logoutUser,
     forgotPassword,
     resetPassword,
+    updateUserRole
 }; 

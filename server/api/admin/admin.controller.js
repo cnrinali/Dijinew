@@ -185,8 +185,8 @@ const createUserAdmin = async (req, res) => {
         return res.status(400).json({ message: 'İsim, e-posta, şifre ve rol zorunludur.' });
     }
 
-    // Rol kontrolü (sadece admin ve user olabilir)
-    const validRoles = ['admin', 'user'];
+    // Rol kontrolü (sadece admin, user ve corporate olabilir)
+    const validRoles = ['admin', 'user', 'corporate'];
     if (!validRoles.includes(role)) {
         return res.status(400).json({ message: `Geçersiz rol. Rol ${validRoles.join(' veya ')} olmalıdır.` });
     }

@@ -157,7 +157,7 @@ function CardListPage() {
                         color="primary" 
                         startIcon={<AddIcon />} 
                         component={RouterLink} 
-                        to="/cards/create"
+                        to="/cards/new"
                     >
                         Yeni Kart Oluştur
                     </Button>

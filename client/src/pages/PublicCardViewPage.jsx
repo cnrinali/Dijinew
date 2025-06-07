@@ -36,14 +36,15 @@ function PublicCardViewPage() {
     const [cardData, setCardData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const { slugOrId } = useParams();
+    const { slug } = useParams();
+    console.log('Slug or ID:', slug);
 
     useEffect(() => {
         const fetchPublicCard = async () => {
             setLoading(true);
             setError('');
             try {
-                const data = await cardService.getPublicCard(slugOrId);
+                const data = await cardService.getPublicCard(slug);
                 console.log('[PublicCardViewPage] Gelen Kart Verisi:', data);
                 setCardData(data);
             } catch (err) {
@@ -55,13 +56,13 @@ function PublicCardViewPage() {
             }
         };
 
-        if (slugOrId) {
+        if (slug) {
             fetchPublicCard();
         } else {
             setError('Kartvizit kimliği veya özel URL belirtilmemiş.');
             setLoading(false);
         }
-    }, [slugOrId]);
+    }, [slug]);
 
     if (loading) {
         return (

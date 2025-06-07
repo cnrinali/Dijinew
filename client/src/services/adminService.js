@@ -129,6 +129,50 @@ const deleteCard = async (id) => {
     return response.data;
 };
 
+// Excel ve QR Kod İşlemleri
+const exportCardsToExcel = async () => {
+    const response = await axios.get(`${API_URL}/cards/export`, {
+        ...getAuthConfig(),
+        responseType: 'blob'
+    });
+    
+    // Dosyayı indir
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'kartvizitler.xlsx');
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+};
+
+const importCardsFromExcel = async (formData) => {
+    const response = await axios.post(`${API_URL}/cards/import`, formData, {
+        ...getAuthConfig(),
+        headers: {
+            ...getAuthConfig().headers,
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+    return response.data;
+};
+
+const generateBulkQRCodes = async () => {
+    const response = await axios.get(`${API_URL}/cards/qr-codes`, {
+        ...getAuthConfig(),
+        responseType: 'blob'
+    });
+    
+    // ZIP dosyasını indir
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'qr-codes.zip');
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+};
+
 // --- Diğer Admin İşlemleri Buraya Eklenebilir ---
 
 
@@ -151,4 +195,7 @@ export {
     updateUserAdmin,
     // Diğerleri
     getDashboardStats,
+    exportCardsToExcel,
+    importCardsFromExcel,
+    generateBulkQRCodes
 };

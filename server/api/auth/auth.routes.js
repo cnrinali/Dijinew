@@ -1,19 +1,23 @@
 const express = require('express');
 const router = express.Router();
+const { protect, authorize } = require('../../middleware/authMiddleware');
 const {
     registerUser,
     loginUser,
     logoutUser,
     forgotPassword,
-    resetPassword
+    resetPassword,
+    updateUserRole
 } = require('./auth.controller');
 
-// const { protect } = require('../../middleware/authMiddleware'); // Yetkilendirme için (sonra eklenecek)
-
+// Public routes
 router.post('/register', registerUser);
 router.post('/login', loginUser);
-router.post('/logout', logoutUser); // Belki protect middleware eklenecek
 router.post('/forgot', forgotPassword);
 router.put('/reset/:resetToken', resetPassword);
+
+// Protected routes
+router.post('/logout', protect, logoutUser);
+router.put('/update-role', protect, authorize('admin'), updateUserRole);
 
 module.exports = router; 

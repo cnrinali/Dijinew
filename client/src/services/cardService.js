@@ -18,8 +18,8 @@ const createAuthHeaders = () => {
         console.error("Token bulunamadı, istek gönderilemiyor.");
         return {}; // Veya hata fırlat
     }
-    return { 
-        headers: { Authorization: `Bearer ${token}` } 
+    return {
+        headers: { Authorization: `Bearer ${token}` }
     };
 };
 
@@ -64,7 +64,7 @@ const deleteCard = async (id) => {
 };
 
 // Yeni fonksiyon: Herkese açık kartvizit bilgisini getir
-const getPublicCard = async (slugOrId) => {
+export const getPublicCard = async (slugOrId) => {
     // Bu istek için token GEREKMEZ
     const response = await axios.get(`/api/public/${slugOrId}`);
     return response.data;
@@ -85,8 +85,8 @@ const cardService = {
     getCardById,
     updateCard,
     deleteCard,
-    getPublicCard,
-    toggleCardStatus
+    toggleCardStatus,
+    getPublicCard
 };
 
-export default cardService; 
+export default cardService;

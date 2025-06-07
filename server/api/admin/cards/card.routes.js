@@ -1,25 +1,38 @@
 const express = require('express');
-const router = express.Router({ mergeParams: true }); // mergeParams ekledik (nested route için)
-const { protect, authorize } = require('../../../middleware/authMiddleware'); // Auth middleware
+const router = express.Router({ mergeParams: true });
+const { protect, authorize } = require('../../../middleware/authMiddleware');
+const multer = require('multer');
 const {
     getCards,
     createCard,
     updateCard,
-    deleteCard
+    deleteCard,
+    exportCardsToExcel,
+    importCardsFromExcel,
+    generateBulkQRCodes,
+    getCardQRCode
 } = require('./card.controller');
+const upload = require('../../../middleware/uploadMiddleware');
 
 // Tüm kart route'ları admin yetkisi gerektirir
 router.use(protect);
 router.use(authorize('admin'));
 
-// Route'ları tanımla
+// Özel route'ları önce tanımla
+router.get('/export', (req, res, next) => { console.log('Route: /api/admin/cards/export hit'); next(); }, exportCardsToExcel);
+router.get('/qr-codes', (req, res, next) => { console.log('Route: /api/admin/cards/qr-codes hit'); next(); }, generateBulkQRCodes);
+router.post('/import', upload.single('file'), (req, res, next) => { console.log('Route: /api/admin/cards/import hit'); next(); }, importCardsFromExcel);
+
+// Temel CRUD route'ları
 router.route('/')
-    .get(getCards)      // GET /api/admin/cards veya GET /api/admin/companies/:companyId/cards
-    .post(createCard);     // POST /api/admin/cards
+    .get((req, res, next) => { console.log('Route: /api/admin/cards/ (GET) hit'); next(); }, getCards)
+    .post((req, res, next) => { console.log('Route: /api/admin/cards/ (POST) hit'); next(); }, createCard);
 
 router.route('/:id')
-    // GET /api/admin/cards/:id (Şimdilik tek kart getirme yok, listeleme yeterli)
-    .put(updateCard)    // PUT /api/admin/cards/:id
-    .delete(deleteCard); // DELETE /api/admin/cards/:id
+    .put((req, res, next) => { console.log(`Route: /api/admin/cards/${req.params.id} (PUT) hit`); next(); }, updateCard)
+    .delete((req, res, next) => { console.log(`Route: /api/admin/cards/${req.params.id} (DELETE) hit`); next(); }, deleteCard);
+
+// Tekil QR kod route'u en sonda olmalı
+router.get('/:id/qr', (req, res, next) => { console.log(`Route: /api/admin/cards/${req.params.id}/qr hit`); next(); }, getCardQRCode);
 
 module.exports = router; 
