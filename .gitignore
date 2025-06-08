@@ -32,3 +32,4 @@ yarn-error.log # Client yarn error logs
 *.njsproj
 *.sln
 *.sublime-* 
+.vercel
