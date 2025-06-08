@@ -18,6 +18,7 @@ import QrCardPage from './pages/QrCardPage';
 import CardListPage from './pages/CardListPage';
 import PublicCardViewPage from './pages/PublicCardViewPage';
 import CreateCardPage from './pages/CreateCardPage';
+import EditCardPage from './pages/EditCardPage';
 
 const navItems = [
   { label: 'Ana Sayfa', path: '/', public: true },
@@ -182,6 +183,7 @@ function AppContent() {
           {/* User Routes */}
           <Route path="/cards" element={user && user.role === 'user' ? <CardListPage /> : <Navigate to="/login" />} />
           <Route path="/cards/new" element={user && (user.role === 'user' || user.role === 'corporate' || user.role === 'admin') ? <CreateCardPage /> : <Navigate to="/login" />} />
+          <Route path="/cards/edit/:id" element={user && (user.role === 'user' || user.role === 'corporate' || user.role === 'admin') ? <EditCardPage /> : <Navigate to="/login" />} />
 
           {/* QR Card Route */}
           <Route path="/qr/:slug" element={<QrCardPage />} />

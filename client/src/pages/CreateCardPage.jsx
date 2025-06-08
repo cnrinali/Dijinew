@@ -166,6 +166,10 @@ function CreateCardPage() {
                 if (errorMsg.toLowerCase().includes('slug already exists')) {
                     errorMsg = 'Girdiğiniz özel URL zaten kullanılıyor.';
                 }
+                // Bireysel kullanıcı kart limiti hatası
+                if (errorMsg.includes('Bireysel kullanıcılar sadece bir kartvizit oluşturabilir')) {
+                    errorMsg = 'Bireysel kullanıcılar sadece bir kartvizit oluşturabilir. Mevcut kartınızı düzenleyebilirsiniz.';
+                }
             }
             showNotification(errorMsg, 'error');
             console.error("Kart oluşturma hatası:", error.response || error);

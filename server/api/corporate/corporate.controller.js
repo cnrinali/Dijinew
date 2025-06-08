@@ -135,6 +135,29 @@ const createCompanyCard = async (req, res) => {
                 // finalCardTitle zaten req.body.title'a eşit
             }
             
+            // Şirket kart limitini ve mevcut kart sayısını kontrol et
+            const cardLimitCheckRequest = new sql.Request(transaction);
+            cardLimitCheckRequest.input('companyId', sql.Int, corporateCompanyId);
+            const cardLimitCheckResult = await cardLimitCheckRequest.query(`
+                SELECT 
+                    c.cardLimit, 
+                    (SELECT COUNT(id) FROM Cards WHERE companyId = @companyId) as currentCardCount 
+                FROM Companies c 
+                WHERE c.id = @companyId
+            `);
+
+            if (cardLimitCheckResult.recordset.length === 0) {
+                await transaction.rollback();
+                return res.status(404).json({ message: 'Şirket bulunamadı.' });
+            }
+
+            const { cardLimit, currentCardCount } = cardLimitCheckResult.recordset[0];
+
+            if (currentCardCount >= cardLimit) {
+                await transaction.rollback();
+                return res.status(400).json({ message: `Kart ekleme limitine ulaşıldı (${cardLimit}).` });
+            }
+            
             // Slug benzersiz mi kontrol et (varsa)
             if (slugToCheck) {
                 const isUnique = await checkSlugUniqueness(slugToCheck, null, transaction);
@@ -246,6 +269,29 @@ const createCompanyUser = async (req, res) => {
         await transaction.begin();
 
         try {
+            // Şirket limitini ve mevcut kullanıcı sayısını kontrol et
+            const companyCheckRequest = new sql.Request(transaction);
+            companyCheckRequest.input('companyId', sql.Int, corporateCompanyId);
+            const companyCheckResult = await companyCheckRequest.query(`
+                SELECT 
+                    c.userLimit, 
+                    (SELECT COUNT(id) FROM Users WHERE companyId = @companyId) as currentUserCount 
+                FROM Companies c 
+                WHERE c.id = @companyId
+            `);
+
+            if (companyCheckResult.recordset.length === 0) {
+                await transaction.rollback();
+                return res.status(404).json({ message: 'Şirket bulunamadı.' });
+            }
+
+            const { userLimit, currentUserCount } = companyCheckResult.recordset[0];
+
+            if (currentUserCount >= userLimit) {
+                await transaction.rollback();
+                return res.status(400).json({ message: `Kullanıcı ekleme limitine ulaşıldı (${userLimit}).` });
+            }
+
             const emailCheckRequest = new sql.Request(transaction);
             emailCheckRequest.input('email', sql.NVarChar, email);
             const emailCheckResult = await emailCheckRequest.query('SELECT TOP 1 id FROM Users WHERE email = @email');

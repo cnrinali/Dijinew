@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import cardService from '../services/cardService';
 import { QRCodeSVG } from 'qrcode.react'; // QR Kod kütüphanesi
-// import { useAuth } from '../context/AuthContext.jsx'; // Şimdilik kullanılmıyor
+import { useAuth } from '../context/AuthContext.jsx'; // Auth context'i ekledik
 
 // MUI Imports
 import Box from '@mui/material/Box';
@@ -45,6 +45,7 @@ import QrCodeModal from '../components/QrCodeModal';
 
 function CardListPage() {
     console.log('CardListPage: Bileşen render ediliyor.');
+    const { user } = useAuth(); // Auth context'ten user bilgisini al
 
     const [cards, setCards] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -152,15 +153,18 @@ function CardListPage() {
                     </Typography>
                 </Grid>
                 <Grid item>
-                    <Button 
-                        variant="contained" 
-                        color="primary" 
-                        startIcon={<AddIcon />} 
-                        component={RouterLink} 
-                        to="/cards/new"
-                    >
-                        Yeni Kart Oluştur
-                    </Button>
+                    {/* Bireysel kullanıcılar için kart sayısı kontrolü */}
+                    {(!user || user.role !== 'user' || cards.length === 0) && (
+                        <Button 
+                            variant="contained" 
+                            color="primary" 
+                            startIcon={<AddIcon />} 
+                            component={RouterLink} 
+                            to="/cards/new"
+                        >
+                            Yeni Kart Oluştur
+                        </Button>
+                    )}
                 </Grid>
             </Grid>
             

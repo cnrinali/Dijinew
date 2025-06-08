@@ -77,6 +77,17 @@ const createCard = async (req, res) => {
     try {
         const pool = await getPool();
 
+        // Bireysel kullanıcılar için kart sayısı kontrolü
+        if (req.user.role === 'user') {
+            const cardCountResult = await pool.request()
+                .input('userId', sql.Int, userId)
+                .query('SELECT COUNT(*) as cardCount FROM Cards WHERE userId = @userId');
+            
+            if (cardCountResult.recordset[0].cardCount > 0) {
+                return res.status(400).json({ message: 'Bireysel kullanıcılar sadece bir kartvizit oluşturabilir.' });
+            }
+        }
+
         // 1. customSlug gönderildiyse ve geçerliyse, benzersizliğini kontrol et
         if (customSlug) {
             const slugCheck = await pool.request()
