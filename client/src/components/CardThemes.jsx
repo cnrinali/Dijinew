@@ -791,6 +791,373 @@ export const CreativeTheme = ({ cardData }) => {
     );
 };
 
+// Dark Tema
+export const DarkTheme = ({ cardData }) => {
+    return (
+        <Card sx={{ maxWidth: 500, width: '100%', mt: 2, backgroundColor: '#1a1a1a', color: 'white' }}>
+            {cardData.coverImageUrl && (
+                <CardMedia
+                    component="img"
+                    height="160"
+                    image={cardData.coverImageUrl}
+                    alt="Kapak Fotoğrafı"
+                    sx={{ objectFit: 'cover', filter: 'brightness(0.8)' }}
+                />
+            )}
+            <CardContent sx={{ textAlign: 'center', position: 'relative', pt: cardData.profileImageUrl ? 6 : 2, backgroundColor: '#1a1a1a' }}>
+                {cardData.profileImageUrl && (
+                    <Avatar
+                        alt={cardData.name || 'Profil'}
+                        src={cardData.profileImageUrl}
+                        sx={{
+                            width: 100,
+                            height: 100,
+                            position: 'absolute',
+                            top: -50,
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            border: '3px solid #333',
+                            bgcolor: 'grey.700'
+                        }}
+                    />
+                )}
+                <Typography gutterBottom variant="h5" component="div" sx={{ mt: cardData.profileImageUrl ? 2 : 0, color: 'white' }}>
+                    {cardData.name || 'İsim Belirtilmemiş'}
+                </Typography>
+                {cardData.title && (
+                    <Typography variant="body1" sx={{ color: '#b0b0b0' }}>
+                        {cardData.title}
+                    </Typography>
+                )}
+                {cardData.company && (
+                    <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 0.5, color: '#888' }}>
+                        <BusinessIcon sx={{ mr: 0.5, fontSize: '1rem' }} />
+                        {cardData.company}
+                    </Typography>
+                )}
+            </CardContent>
+
+            {cardData.bio && (
+                <>
+                    <Divider sx={{ backgroundColor: '#333' }} />
+                    <CardContent sx={{ textAlign: 'left', backgroundColor: '#1a1a1a' }}>
+                        <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', color: 'white' }}>
+                            <InfoIcon sx={{ mr: 1 }} /> Hakkında
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#b0b0b0' }}>
+                            {cardData.bio}
+                        </Typography>
+                    </CardContent>
+                </>
+            )}
+
+            <Divider sx={{ backgroundColor: '#333' }} />
+
+            <CardContent sx={{ pt: 1, pb: 1, backgroundColor: '#1a1a1a' }}>
+                <List dense>
+                    {cardData.phone && (
+                        <ListItem sx={{ color: 'white' }}>
+                            <ListItemIcon><PhoneIcon sx={{ color: '#4CAF50' }} /></ListItemIcon>
+                            <ListItemText primary={cardData.phone} sx={{ color: 'white' }} />
+                        </ListItem>
+                    )}
+                    {cardData.email && (
+                        <ListItem component={Link} href={`mailto:${cardData.email}`} sx={{ color: 'white', textDecoration: 'none' }}>
+                            <ListItemIcon><EmailIcon sx={{ color: '#2196F3' }} /></ListItemIcon>
+                            <ListItemText primary={cardData.email} sx={{ color: 'white' }} />
+                        </ListItem>
+                    )}
+                    {cardData.website && (
+                        <ListItem component={Link} href={cardData.website} target="_blank" rel="noopener noreferrer" sx={{ color: 'white', textDecoration: 'none' }}>
+                            <ListItemIcon><LanguageIcon sx={{ color: '#FF9800' }} /></ListItemIcon>
+                            <ListItemText primary={cardData.website} sx={{ color: 'white' }} />
+                        </ListItem>
+                    )}
+                    {cardData.address && (
+                        <ListItem sx={{ color: 'white' }}>
+                            <ListItemIcon><LocationOnIcon sx={{ color: '#F44336' }} /></ListItemIcon>
+                            <ListItemText primary={cardData.address} sx={{ color: 'white' }} />
+                        </ListItem>
+                    )}
+                </List>
+            </CardContent>
+
+            {(cardData.linkedinUrl || cardData.twitterUrl || cardData.instagramUrl) && (
+                <>
+                    <Divider variant="middle" sx={{ backgroundColor: '#333' }} />
+                    <CardContent sx={{ py: 1, textAlign: 'center', backgroundColor: '#1a1a1a' }}>
+                        <Stack direction="row" spacing={1} justifyContent="center">
+                            {cardData.linkedinUrl && (
+                                <IconButton component="a" href={cardData.linkedinUrl} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" sx={{ color: '#0077B5' }}>
+                                    <LinkedInIcon />
+                                </IconButton>
+                            )}
+                            {cardData.twitterUrl && (
+                                <IconButton component="a" href={cardData.twitterUrl} target="_blank" rel="noopener noreferrer" aria-label="Twitter" sx={{ color: '#1DA1F2' }}>
+                                    <TwitterIcon />
+                                </IconButton>
+                            )}
+                            {cardData.instagramUrl && (
+                                <IconButton component="a" href={cardData.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Instagram" sx={{ color: '#E1306C' }}>
+                                    <InstagramIcon />
+                                </IconButton>
+                            )}
+                        </Stack>
+                    </CardContent>
+                </>
+            )}
+
+            <Divider sx={{ backgroundColor: '#333' }} />
+            <CardContent sx={{ py: '8px !important', textAlign: 'center', backgroundColor: '#1a1a1a' }}>
+                <Typography variant="caption" sx={{ color: '#888' }}>
+                    {cardData.cardName}
+                </Typography>
+            </CardContent>
+        </Card>
+    );
+};
+
+// Mavi Tema
+export const BlueTheme = ({ cardData }) => {
+    return (
+        <Card sx={{ maxWidth: 500, width: '100%', mt: 2, backgroundColor: '#f0f8ff', border: '2px solid #2196F3' }}>
+            {cardData.coverImageUrl && (
+                <CardMedia
+                    component="img"
+                    height="160"
+                    image={cardData.coverImageUrl}
+                    alt="Kapak Fotoğrafı"
+                    sx={{ objectFit: 'cover', filter: 'hue-rotate(220deg) saturate(1.2)' }}
+                />
+            )}
+            <CardContent sx={{ textAlign: 'center', position: 'relative', pt: cardData.profileImageUrl ? 6 : 2, backgroundColor: '#f0f8ff' }}>
+                {cardData.profileImageUrl && (
+                    <Avatar
+                        alt={cardData.name || 'Profil'}
+                        src={cardData.profileImageUrl}
+                        sx={{
+                            width: 100,
+                            height: 100,
+                            position: 'absolute',
+                            top: -50,
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            border: '3px solid #2196F3',
+                            bgcolor: 'blue.100'
+                        }}
+                    />
+                )}
+                <Typography gutterBottom variant="h5" component="div" sx={{ mt: cardData.profileImageUrl ? 2 : 0, color: '#1976D2' }}>
+                    {cardData.name || 'İsim Belirtilmemiş'}
+                </Typography>
+                {cardData.title && (
+                    <Typography variant="body1" sx={{ color: '#1565C0' }}>
+                        {cardData.title}
+                    </Typography>
+                )}
+                {cardData.company && (
+                    <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 0.5, color: '#1976D2' }}>
+                        <BusinessIcon sx={{ mr: 0.5, fontSize: '1rem' }} />
+                        {cardData.company}
+                    </Typography>
+                )}
+            </CardContent>
+
+            {cardData.bio && (
+                <>
+                    <Divider sx={{ backgroundColor: '#2196F3' }} />
+                    <CardContent sx={{ textAlign: 'left', backgroundColor: '#f0f8ff' }}>
+                        <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', color: '#1976D2' }}>
+                            <InfoIcon sx={{ mr: 1 }} /> Hakkında
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#1565C0' }}>
+                            {cardData.bio}
+                        </Typography>
+                    </CardContent>
+                </>
+            )}
+
+            <Divider sx={{ backgroundColor: '#2196F3' }} />
+
+            <CardContent sx={{ pt: 1, pb: 1, backgroundColor: '#f0f8ff' }}>
+                <List dense>
+                    {cardData.phone && (
+                        <ListItem>
+                            <ListItemIcon><PhoneIcon sx={{ color: '#2196F3' }} /></ListItemIcon>
+                            <ListItemText primary={cardData.phone} sx={{ color: '#1976D2' }} />
+                        </ListItem>
+                    )}
+                    {cardData.email && (
+                        <ListItem component={Link} href={`mailto:${cardData.email}`} sx={{ textDecoration: 'none' }}>
+                            <ListItemIcon><EmailIcon sx={{ color: '#2196F3' }} /></ListItemIcon>
+                            <ListItemText primary={cardData.email} sx={{ color: '#1976D2' }} />
+                        </ListItem>
+                    )}
+                    {cardData.website && (
+                        <ListItem component={Link} href={cardData.website} target="_blank" rel="noopener noreferrer" sx={{ textDecoration: 'none' }}>
+                            <ListItemIcon><LanguageIcon sx={{ color: '#2196F3' }} /></ListItemIcon>
+                            <ListItemText primary={cardData.website} sx={{ color: '#1976D2' }} />
+                        </ListItem>
+                    )}
+                    {cardData.address && (
+                        <ListItem>
+                            <ListItemIcon><LocationOnIcon sx={{ color: '#2196F3' }} /></ListItemIcon>
+                            <ListItemText primary={cardData.address} sx={{ color: '#1976D2' }} />
+                        </ListItem>
+                    )}
+                </List>
+            </CardContent>
+
+            {(cardData.linkedinUrl || cardData.twitterUrl || cardData.instagramUrl) && (
+                <>
+                    <Divider variant="middle" sx={{ backgroundColor: '#2196F3' }} />
+                    <CardContent sx={{ py: 1, textAlign: 'center', backgroundColor: '#f0f8ff' }}>
+                        <Stack direction="row" spacing={1} justifyContent="center">
+                            {cardData.linkedinUrl && (
+                                <IconButton component="a" href={cardData.linkedinUrl} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" sx={{ color: '#0077B5', backgroundColor: 'white', '&:hover': { backgroundColor: '#e3f2fd' } }}>
+                                    <LinkedInIcon />
+                                </IconButton>
+                            )}
+                            {cardData.twitterUrl && (
+                                <IconButton component="a" href={cardData.twitterUrl} target="_blank" rel="noopener noreferrer" aria-label="Twitter" sx={{ color: '#1DA1F2', backgroundColor: 'white', '&:hover': { backgroundColor: '#e3f2fd' } }}>
+                                    <TwitterIcon />
+                                </IconButton>
+                            )}
+                            {cardData.instagramUrl && (
+                                <IconButton component="a" href={cardData.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Instagram" sx={{ color: '#E1306C', backgroundColor: 'white', '&:hover': { backgroundColor: '#e3f2fd' } }}>
+                                    <InstagramIcon />
+                                </IconButton>
+                            )}
+                        </Stack>
+                    </CardContent>
+                </>
+            )}
+
+            <Divider sx={{ backgroundColor: '#2196F3' }} />
+            <CardContent sx={{ py: '8px !important', textAlign: 'center', backgroundColor: '#f0f8ff' }}>
+                <Typography variant="caption" sx={{ color: '#1565C0' }}>
+                    {cardData.cardName}
+                </Typography>
+            </CardContent>
+        </Card>
+    );
+};
+
+// Dark Modern Tema
+export const DarkModernTheme = ({ cardData }) => {
+    return (
+        <Box sx={{ maxWidth: 500, width: '100%', mt: 2 }}>
+            {/* Üst Bölüm - Profil Fotoğrafı ve Temel Bilgiler */}
+            <Paper 
+                sx={{ 
+                    p: 3, 
+                    textAlign: 'center',
+                    background: 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)',
+                    color: 'white',
+                    borderRadius: '20px 20px 0 0'
+                }}
+            >
+                <Avatar
+                    alt={cardData.name || 'Profil'}
+                    src={cardData.profileImageUrl}
+                    sx={{
+                        width: 100,
+                        height: 100,
+                        mx: 'auto',
+                        mb: 2,
+                        border: '4px solid white'
+                    }}
+                />
+                <Typography variant="h5" component="div" sx={{ fontWeight: 'bold', mb: 1 }}>
+                    {cardData.name || 'İsim Belirtilmemiş'}
+                </Typography>
+                {cardData.title && (
+                    <Typography variant="body1" sx={{ mb: 1, opacity: 0.9 }}>
+                        {cardData.title}
+                    </Typography>
+                )}
+                {cardData.company && (
+                    <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                        {cardData.company}
+                    </Typography>
+                )}
+            </Paper>
+
+            {/* Alt Bölüm - İletişim Bilgileri */}
+            <Paper sx={{ borderRadius: '0 0 20px 20px', overflow: 'hidden', backgroundColor: '#1a1a1a', color: 'white' }}>
+                {cardData.bio && (
+                    <CardContent sx={{ pt: 2, pb: 1, backgroundColor: '#1a1a1a' }}>
+                        <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#b0b0b0', textAlign: 'center' }}>
+                            {cardData.bio}
+                        </Typography>
+                    </CardContent>
+                )}
+
+                <CardContent sx={{ pt: 1, backgroundColor: '#1a1a1a' }}>
+                    <Stack spacing={2}>
+                        {cardData.phone && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <PhoneIcon sx={{ color: '#4CAF50' }} />
+                                <Typography variant="body2" sx={{ color: 'white' }}>{cardData.phone}</Typography>
+                            </Box>
+                        )}
+                        {cardData.email && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <EmailIcon sx={{ color: '#2196F3' }} />
+                                <Link href={`mailto:${cardData.email}`} sx={{ textDecoration: 'none', color: 'white' }}>
+                                    <Typography variant="body2">{cardData.email}</Typography>
+                                </Link>
+                            </Box>
+                        )}
+                        {cardData.website && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <LanguageIcon sx={{ color: '#FF9800' }} />
+                                <Link href={cardData.website} target="_blank" rel="noopener noreferrer" sx={{ textDecoration: 'none', color: 'white' }}>
+                                    <Typography variant="body2">{cardData.website}</Typography>
+                                </Link>
+                            </Box>
+                        )}
+                        {cardData.address && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <LocationOnIcon sx={{ color: '#F44336' }} />
+                                <Typography variant="body2" sx={{ color: 'white' }}>{cardData.address}</Typography>
+                            </Box>
+                        )}
+                    </Stack>
+                </CardContent>
+
+                {(cardData.linkedinUrl || cardData.twitterUrl || cardData.instagramUrl) && (
+                    <CardContent sx={{ pt: 1, pb: 2, textAlign: 'center', backgroundColor: '#1a1a1a' }}>
+                        <Stack direction="row" spacing={1} justifyContent="center">
+                            {cardData.linkedinUrl && (
+                                <IconButton component="a" href={cardData.linkedinUrl} target="_blank" rel="noopener noreferrer" sx={{ backgroundColor: '#0077B5', color: 'white', '&:hover': { backgroundColor: '#005885' } }}>
+                                    <LinkedInIcon />
+                                </IconButton>
+                            )}
+                            {cardData.twitterUrl && (
+                                <IconButton component="a" href={cardData.twitterUrl} target="_blank" rel="noopener noreferrer" sx={{ backgroundColor: '#1DA1F2', color: 'white', '&:hover': { backgroundColor: '#0d8bd9' } }}>
+                                    <TwitterIcon />
+                                </IconButton>
+                            )}
+                            {cardData.instagramUrl && (
+                                <IconButton component="a" href={cardData.instagramUrl} target="_blank" rel="noopener noreferrer" sx={{ backgroundColor: '#E1306C', color: 'white', '&:hover': { backgroundColor: '#c12958' } }}>
+                                    <InstagramIcon />
+                                </IconButton>
+                            )}
+                        </Stack>
+                    </CardContent>
+                )}
+
+                <Box sx={{ textAlign: 'center', p: 1, backgroundColor: '#1a1a1a', borderTop: '1px solid #333' }}>
+                    <Typography variant="caption" sx={{ color: '#888' }}>
+                        {cardData.cardName}
+                    </Typography>
+                </Box>
+            </Paper>
+        </Box>
+    );
+};
+
 // Tema seçici fonksiyonu
 export const getThemeComponent = (theme) => {
     switch (theme) {
@@ -804,9 +1171,13 @@ export const getThemeComponent = (theme) => {
             return BusinessTheme;
         case 'creative':
             return CreativeTheme;
-        case 'light':
         case 'dark':
+            return DarkTheme;
         case 'blue':
+            return BlueTheme;
+        case 'darkmodern':
+            return DarkModernTheme;
+        case 'light':
         default:
             return DefaultTheme;
     }

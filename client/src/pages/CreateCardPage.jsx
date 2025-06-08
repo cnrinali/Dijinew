@@ -369,6 +369,7 @@ function CreateCardPage() {
                                     <MenuItem value="business">İş</MenuItem>
                                     <MenuItem value="creative">Yaratıcı</MenuItem>
                                     <MenuItem value="dark">Koyu</MenuItem>
+                                    <MenuItem value="darkmodern">Koyu Modern</MenuItem>
                                     <MenuItem value="blue">Mavi</MenuItem>
                                 </Select>
                             </FormControl>
