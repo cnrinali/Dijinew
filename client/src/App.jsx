@@ -24,7 +24,8 @@ const navItems = [
   { label: 'Ana Sayfa', path: '/', public: true },
   { label: 'Giriş Yap', path: '/login', public: true, hideWhenLoggedIn: true },
   { label: 'Kayıt Ol', path: '/register', public: true, hideWhenLoggedIn: true },
-  { label: 'Profilim', path: '/profile', roles: ['user', 'admin', 'corporate'] }, 
+  { label: 'Profilim', path: '/profile', roles: ['user', 'admin', 'corporate'] },
+  { label: 'Dijital Kartım', path: '/cards', roles: ['user'] },
   { label: 'Admin Panel', path: '/admin/dashboard', roles: ['admin'] },
   { label: 'Kurumsal Panel', path: '/corporate/dashboard', roles: ['corporate'] },
 ];
