@@ -405,7 +405,17 @@ const getPublicCard = async (req, res) => {
             return res.status(404).json({ message: 'Aktif kartvizit bulunamadı' });
         }
 
-        res.status(200).json(result.recordset[0]);
+        const card = result.recordset[0];
+
+        // Kartın banka hesap bilgilerini de çek
+        const bankAccountsResult = await pool.request()
+            .input('cardId', sql.Int, card.id)
+            .query('SELECT * FROM CardBankAccounts WHERE cardId = @cardId ORDER BY createdAt ASC');
+
+        // Kartın sonucuna banka hesaplarını ekle
+        card.bankAccounts = bankAccountsResult.recordset;
+
+        res.status(200).json(card);
 
     } catch (error) {
         console.error("Herkese açık kartvizit getirme hatası:", error);
@@ -466,6 +476,241 @@ const toggleCardStatus = async (req, res) => {
     }
 };
 
+// @desc    Get card bank accounts
+// @route   GET /api/cards/:cardId/bank-accounts
+// @access  Private
+const getCardBankAccounts = async (req, res) => {
+    const userId = req.user.id;
+    const cardId = req.params.cardId;
+
+    if (isNaN(parseInt(cardId))) {
+        return res.status(400).json({ message: 'Geçersiz Kart ID' });
+    }
+
+    try {
+        const pool = await getPool();
+
+        // Önce kartın kullanıcıya ait olup olmadığını kontrol et
+        const cardCheck = await pool.request()
+            .input('cardId', sql.Int, parseInt(cardId))
+            .input('userId', sql.Int, userId)
+            .query('SELECT TOP 1 id FROM Cards WHERE id = @cardId AND userId = @userId');
+
+        if (cardCheck.recordset.length === 0) {
+            return res.status(404).json({ message: 'Kartvizit bulunamadı veya size ait değil' });
+        }
+
+        // Kartın banka hesaplarını getir
+        const result = await pool.request()
+            .input('cardId', sql.Int, parseInt(cardId))
+            .query('SELECT * FROM CardBankAccounts WHERE cardId = @cardId ORDER BY createdAt DESC');
+
+        res.status(200).json(result.recordset);
+
+    } catch (error) {
+        console.error("Kart banka hesapları getirme hatası:", error);
+        res.status(500).json({ message: 'Sunucu hatası oluştu' });
+    }
+};
+
+// @desc    Add card bank account
+// @route   POST /api/cards/:cardId/bank-accounts
+// @access  Private
+const addCardBankAccount = async (req, res) => {
+    const userId = req.user.id;
+    const cardId = req.params.cardId;
+    const { bankName, iban, accountName } = req.body;
+
+    if (isNaN(parseInt(cardId))) {
+        return res.status(400).json({ message: 'Geçersiz Kart ID' });
+    }
+
+    // Gelen veriyi doğrula
+    if (!bankName || !iban || !accountName) {
+        return res.status(400).json({ message: 'Banka adı, IBAN ve hesap sahibi adı zorunludur.' });
+    }
+
+    // IBAN formatını kontrol et
+    const cleanIban = iban.replace(/\s/g, '').toUpperCase();
+    if (!cleanIban.match(/^TR\d{24}$/)) {
+        return res.status(400).json({ message: 'Geçersiz IBAN formatı. IBAN TR ile başlamalı ve 26 karakter olmalıdır.' });
+    }
+
+    try {
+        const pool = await getPool();
+
+        // Önce kartın kullanıcıya ait olup olmadığını kontrol et
+        const cardCheck = await pool.request()
+            .input('cardId', sql.Int, parseInt(cardId))
+            .input('userId', sql.Int, userId)
+            .query('SELECT TOP 1 id FROM Cards WHERE id = @cardId AND userId = @userId');
+
+        if (cardCheck.recordset.length === 0) {
+            return res.status(404).json({ message: 'Kartvizit bulunamadı veya size ait değil' });
+        }
+
+        // Aynı IBAN'ın kart için zaten eklenmiş olup olmadığını kontrol et
+        const existingAccount = await pool.request()
+            .input('cardId', sql.Int, parseInt(cardId))
+            .input('iban', sql.NVarChar, cleanIban)
+            .query('SELECT TOP 1 id FROM CardBankAccounts WHERE cardId = @cardId AND iban = @iban');
+
+        if (existingAccount.recordset.length > 0) {
+            return res.status(400).json({ message: 'Bu IBAN numarası bu kartta zaten eklenmiş.' });
+        }
+
+        // Yeni banka hesabını ekle
+        const insertResult = await pool.request()
+            .input('cardId', sql.Int, parseInt(cardId))
+            .input('bankName', sql.NVarChar, bankName)
+            .input('iban', sql.NVarChar, cleanIban)
+            .input('accountName', sql.NVarChar, accountName)
+            .query(`
+                INSERT INTO CardBankAccounts (cardId, bankName, iban, accountName)
+                OUTPUT inserted.*
+                VALUES (@cardId, @bankName, @iban, @accountName)
+            `);
+
+        res.status(201).json(insertResult.recordset[0]);
+
+    } catch (error) {
+        console.error("Kart banka hesabı ekleme hatası:", error);
+        if (error.number === 2601 || error.number === 2627) { // Unique constraint
+            return res.status(400).json({ message: 'Bu IBAN numarası bu kartta zaten eklenmiş.' });
+        }
+        res.status(500).json({ message: 'Sunucu hatası oluştu' });
+    }
+};
+
+// @desc    Update card bank account
+// @route   PUT /api/cards/:cardId/bank-accounts/:accountId
+// @access  Private
+const updateCardBankAccount = async (req, res) => {
+    const userId = req.user.id;
+    const cardId = req.params.cardId;
+    const accountId = req.params.accountId;
+    const { bankName, iban, accountName } = req.body;
+
+    if (isNaN(parseInt(cardId)) || isNaN(parseInt(accountId))) {
+        return res.status(400).json({ message: 'Geçersiz Kart ID veya Hesap ID' });
+    }
+
+    // Gelen veriyi doğrula
+    if (!bankName || !iban || !accountName) {
+        return res.status(400).json({ message: 'Banka adı, IBAN ve hesap sahibi adı zorunludur.' });
+    }
+
+    // IBAN formatını kontrol et
+    const cleanIban = iban.replace(/\s/g, '').toUpperCase();
+    if (!cleanIban.match(/^TR\d{24}$/)) {
+        return res.status(400).json({ message: 'Geçersiz IBAN formatı. IBAN TR ile başlamalı ve 26 karakter olmalıdır.' });
+    }
+
+    try {
+        const pool = await getPool();
+
+        // Önce kartın kullanıcıya ait olup olmadığını kontrol et
+        const cardCheck = await pool.request()
+            .input('cardId', sql.Int, parseInt(cardId))
+            .input('userId', sql.Int, userId)
+            .query('SELECT TOP 1 id FROM Cards WHERE id = @cardId AND userId = @userId');
+
+        if (cardCheck.recordset.length === 0) {
+            return res.status(404).json({ message: 'Kartvizit bulunamadı veya size ait değil' });
+        }
+
+        // Aynı IBAN'ın kart için başka bir hesapta eklenmiş olup olmadığını kontrol et
+        const existingAccount = await pool.request()
+            .input('cardId', sql.Int, parseInt(cardId))
+            .input('iban', sql.NVarChar, cleanIban)
+            .input('accountId', sql.Int, parseInt(accountId))
+            .query('SELECT TOP 1 id FROM CardBankAccounts WHERE cardId = @cardId AND iban = @iban AND id != @accountId');
+
+        if (existingAccount.recordset.length > 0) {
+            return res.status(400).json({ message: 'Bu IBAN numarası bu kartta başka bir hesapta kayıtlı.' });
+        }
+
+        // Banka hesabını güncelle
+        const updateResult = await pool.request()
+            .input('cardId', sql.Int, parseInt(cardId))
+            .input('accountId', sql.Int, parseInt(accountId))
+            .input('bankName', sql.NVarChar, bankName)
+            .input('iban', sql.NVarChar, cleanIban)
+            .input('accountName', sql.NVarChar, accountName)
+            .query(`
+                UPDATE CardBankAccounts 
+                SET bankName = @bankName, iban = @iban, accountName = @accountName, updatedAt = GETDATE()
+                OUTPUT inserted.*
+                WHERE id = @accountId AND cardId = @cardId
+            `);
+
+        if (updateResult.recordset.length === 0) {
+            return res.status(404).json({ message: 'Güncellenecek banka hesabı bulunamadı.' });
+        }
+
+        res.status(200).json(updateResult.recordset[0]);
+
+    } catch (error) {
+        console.error("Kart banka hesabı güncelleme hatası:", error);
+        if (error.number === 2601 || error.number === 2627) { // Unique constraint
+            return res.status(400).json({ message: 'Bu IBAN numarası bu kartta zaten kullanılıyor.' });
+        }
+        res.status(500).json({ message: 'Sunucu hatası oluştu' });
+    }
+};
+
+// @desc    Delete card bank account
+// @route   DELETE /api/cards/:cardId/bank-accounts/:accountId
+// @access  Private
+const deleteCardBankAccount = async (req, res) => {
+    const userId = req.user.id;
+    const cardId = req.params.cardId;
+    const accountId = req.params.accountId;
+
+    if (isNaN(parseInt(cardId)) || isNaN(parseInt(accountId))) {
+        return res.status(400).json({ message: 'Geçersiz Kart ID veya Hesap ID' });
+    }
+
+    try {
+        const pool = await getPool();
+
+        // Önce kartın kullanıcıya ait olup olmadığını kontrol et
+        const cardCheck = await pool.request()
+            .input('cardId', sql.Int, parseInt(cardId))
+            .input('userId', sql.Int, userId)
+            .query('SELECT TOP 1 id FROM Cards WHERE id = @cardId AND userId = @userId');
+
+        if (cardCheck.recordset.length === 0) {
+            return res.status(404).json({ message: 'Kartvizit bulunamadı veya size ait değil' });
+        }
+
+        // Hesabın karta ait olup olmadığını kontrol et
+        const accountCheck = await pool.request()
+            .input('accountId', sql.Int, parseInt(accountId))
+            .input('cardId', sql.Int, parseInt(cardId))
+            .query('SELECT TOP 1 id FROM CardBankAccounts WHERE id = @accountId AND cardId = @cardId');
+
+        if (accountCheck.recordset.length === 0) {
+            return res.status(404).json({ message: 'Silinecek banka hesabı bulunamadı.' });
+        }
+
+        // Banka hesabını sil
+        const deleteResult = await pool.request()
+            .input('accountId', sql.Int, parseInt(accountId))
+            .query('DELETE FROM CardBankAccounts WHERE id = @accountId');
+
+        if (deleteResult.rowsAffected && deleteResult.rowsAffected[0] > 0) {
+            res.status(200).json({ message: 'Banka hesabı başarıyla silindi', id: accountId });
+        } else {
+            return res.status(404).json({ message: 'Silinecek banka hesabı bulunamadı (tekrar kontrol)' });
+        }
+
+    } catch (error) {
+        console.error("Kart banka hesabı silme hatası:", error);
+        res.status(500).json({ message: 'Sunucu hatası oluştu' });
+    }
+};
+
 module.exports = {
     getCards,
     createCard,
@@ -473,5 +718,9 @@ module.exports = {
     updateCard,
     deleteCard,
     getPublicCard,
-    toggleCardStatus
+    toggleCardStatus,
+    getCardBankAccounts,
+    addCardBankAccount,
+    updateCardBankAccount,
+    deleteCardBankAccount
 }; 

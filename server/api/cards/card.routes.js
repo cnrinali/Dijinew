@@ -38,4 +38,13 @@ router.route('/:id')
 // Yeni rota: Kart durumunu değiştirme
 router.patch('/:id/status', cardController.toggleCardStatus);
 
+// Banka hesap bilgileri rotaları
+router.route('/:cardId/bank-accounts')
+    .get(cardController.getCardBankAccounts)    // GET /api/cards/:cardId/bank-accounts
+    .post(cardController.addCardBankAccount);   // POST /api/cards/:cardId/bank-accounts
+
+router.route('/:cardId/bank-accounts/:accountId')
+    .put(cardController.updateCardBankAccount)    // PUT /api/cards/:cardId/bank-accounts/:accountId
+    .delete(cardController.deleteCardBankAccount); // DELETE /api/cards/:cardId/bank-accounts/:accountId
+
 module.exports = router; 

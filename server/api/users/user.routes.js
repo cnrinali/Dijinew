@@ -3,7 +3,11 @@ const router = express.Router();
 const { 
     getUserProfile, 
     updateUserProfile, 
-    changePassword 
+    changePassword,
+    getUserBankAccounts,
+    addUserBankAccount,
+    updateUserBankAccount,
+    deleteUserBankAccount
 } = require('./user.controller');
 const { protect } = require('../../middleware/authMiddleware'); // Path'in doğru olduğundan emin olun
 
@@ -15,5 +19,11 @@ router.put('/profile', protect, updateUserProfile);
 
 // Şifreyi değiştir
 router.put('/change-password', protect, changePassword);
+
+// Banka hesap bilgileri
+router.get('/bank-accounts', protect, getUserBankAccounts);
+router.post('/bank-accounts', protect, addUserBankAccount);
+router.put('/bank-accounts/:id', protect, updateUserBankAccount);
+router.delete('/bank-accounts/:id', protect, deleteUserBankAccount);
 
 module.exports = router; 

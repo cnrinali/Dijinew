@@ -79,6 +79,40 @@ const toggleCardStatus = async (cardId, isActive) => {
     return response.data; // Başarı mesajı ve güncellenmiş kart durumu döner
 };
 
+// Banka hesap bilgileri fonksiyonları
+
+// Get card bank accounts
+const getCardBankAccounts = async (cardId) => {
+    const config = createAuthHeaders();
+    if (!config.headers) throw new Error("Yetkilendirme token'ı bulunamadı");
+    const response = await axios.get(`${API_URL}/${cardId}/bank-accounts`, config);
+    return response.data;
+};
+
+// Add card bank account
+const addCardBankAccount = async (cardId, bankData) => {
+    const config = createAuthHeaders();
+    if (!config.headers) throw new Error("Yetkilendirme token'ı bulunamadı");
+    const response = await axios.post(`${API_URL}/${cardId}/bank-accounts`, bankData, config);
+    return response.data;
+};
+
+// Update card bank account
+const updateCardBankAccount = async (cardId, accountId, bankData) => {
+    const config = createAuthHeaders();
+    if (!config.headers) throw new Error("Yetkilendirme token'ı bulunamadı");
+    const response = await axios.put(`${API_URL}/${cardId}/bank-accounts/${accountId}`, bankData, config);
+    return response.data;
+};
+
+// Delete card bank account
+const deleteCardBankAccount = async (cardId, accountId) => {
+    const config = createAuthHeaders();
+    if (!config.headers) throw new Error("Yetkilendirme token'ı bulunamadı");
+    const response = await axios.delete(`${API_URL}/${cardId}/bank-accounts/${accountId}`, config);
+    return response.data;
+};
+
 const cardService = {
     getCards,
     createCard,
@@ -86,7 +120,11 @@ const cardService = {
     updateCard,
     deleteCard,
     toggleCardStatus,
-    getPublicCard
+    getPublicCard,
+    getCardBankAccounts,
+    addCardBankAccount,
+    updateCardBankAccount,
+    deleteCardBankAccount
 };
 
 export default cardService;

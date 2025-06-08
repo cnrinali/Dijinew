@@ -28,6 +28,8 @@ import InfoIcon from '@mui/icons-material/Info';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import InstagramIcon from '@mui/icons-material/Instagram';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import { formatIban } from '../constants/turkishBanks';
 
 // Default tema (şu anki)
 export const DefaultTheme = ({ cardData }) => {
@@ -119,6 +121,37 @@ export const DefaultTheme = ({ cardData }) => {
                     )}
                 </List>
             </CardContent>
+
+            {cardData.bankAccounts && cardData.bankAccounts.length > 0 && (
+                <>
+                    <Divider />
+                    <CardContent sx={{ pt: 1, pb: 1 }}>
+                        <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                            <AccountBalanceIcon sx={{ mr: 1 }} /> Banka Hesapları
+                        </Typography>
+                        <List dense>
+                            {cardData.bankAccounts.map((account, index) => (
+                                <ListItem key={index} sx={{ py: 0.5 }}>
+                                    <ListItemIcon><AccountBalanceIcon fontSize="small" /></ListItemIcon>
+                                    <ListItemText 
+                                        primary={account.bankName}
+                                        secondary={
+                                            <Box>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    {formatIban(account.iban)}
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    {account.accountName}
+                                                </Typography>
+                                            </Box>
+                                        }
+                                    />
+                                </ListItem>
+                            ))}
+                        </List>
+                    </CardContent>
+                </>
+            )}
 
             {(cardData.linkedinUrl || cardData.twitterUrl || cardData.instagramUrl) && (
                 <>
@@ -237,6 +270,34 @@ export const ModernTheme = ({ cardData }) => {
                         )}
                     </Stack>
 
+                    {/* Banka Hesapları */}
+                    {cardData.bankAccounts && cardData.bankAccounts.length > 0 && (
+                        <>
+                            <Divider sx={{ my: 2 }} />
+                            <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', color: 'primary.main', fontWeight: 'bold' }}>
+                                <AccountBalanceIcon sx={{ mr: 1 }} /> Banka Hesapları
+                            </Typography>
+                            <Stack spacing={1.5}>
+                                {cardData.bankAccounts.map((account, index) => (
+                                    <Box key={index} sx={{ display: 'flex', alignItems: 'flex-start' }}>
+                                        <AccountBalanceIcon sx={{ mr: 2, mt: 0.5, color: 'primary.main', fontSize: '1.2rem' }} />
+                                        <Box>
+                                            <Typography variant="body2" sx={{ fontWeight: 'medium', mb: 0.5 }}>
+                                                {account.bankName}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                                {formatIban(account.iban)}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                                {account.accountName}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                ))}
+                            </Stack>
+                        </>
+                    )}
+
                     {(cardData.linkedinUrl || cardData.twitterUrl || cardData.instagramUrl) && (
                         <>
                             <Divider sx={{ my: 2 }} />
@@ -337,6 +398,31 @@ export const MinimalistTheme = ({ cardData }) => {
                     </Typography>
                 )}
             </Stack>
+
+            {/* Banka Hesapları */}
+            {cardData.bankAccounts && cardData.bankAccounts.length > 0 && (
+                <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid', borderColor: 'grey.200' }}>
+                    <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                        <AccountBalanceIcon sx={{ mr: 1, fontSize: '1rem' }} /> Banka Hesapları
+                    </Typography>
+                    <Stack spacing={1.5}>
+                        {cardData.bankAccounts.map((account, index) => (
+                            <Box key={index}>
+                                <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', fontWeight: 'medium', mb: 0.5 }}>
+                                    <AccountBalanceIcon sx={{ mr: 1, fontSize: '1rem', color: 'text.secondary' }} />
+                                    {account.bankName}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" sx={{ ml: 3, fontSize: '0.875rem' }}>
+                                    {formatIban(account.iban)}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" sx={{ ml: 3, fontSize: '0.875rem' }}>
+                                    {account.accountName}
+                                </Typography>
+                            </Box>
+                        ))}
+                    </Stack>
+                </Box>
+            )}
 
             {(cardData.linkedinUrl || cardData.twitterUrl || cardData.instagramUrl) && (
                 <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid', borderColor: 'grey.200' }}>
@@ -455,6 +541,35 @@ export const IconGridTheme = ({ cardData }) => {
                             <Typography variant="caption" display="block">PAYLAŞ</Typography>
                         </Box>
                     </Stack>
+
+                    {/* Banka Hesapları Satırı */}
+                    {cardData.bankAccounts && cardData.bankAccounts.length > 0 && (
+                        <Stack direction="row" spacing={1} justifyContent="flex-start" sx={{ flexWrap: 'wrap', gap: 1 }}>
+                            {cardData.bankAccounts.map((account, index) => (
+                                <Box 
+                                    key={index}
+                                    sx={{ 
+                                        textAlign: 'center', 
+                                        cursor: 'pointer', 
+                                        p: 1, 
+                                        borderRadius: 2, 
+                                        backgroundColor: 'indigo.50', 
+                                        minWidth: 120,
+                                        border: '1px solid',
+                                        borderColor: 'indigo.200'
+                                    }}
+                                >
+                                    <AccountBalanceIcon sx={{ fontSize: 28, color: 'indigo.main', mb: 0.5 }} />
+                                    <Typography variant="caption" display="block" sx={{ fontWeight: 'bold' }}>
+                                        {account.bankName.toUpperCase().substring(0, 10)}
+                                    </Typography>
+                                    <Typography variant="caption" display="block" sx={{ fontSize: '0.7rem', color: 'text.secondary' }}>
+                                        {formatIban(account.iban).substring(0, 15)}...
+                                    </Typography>
+                                </Box>
+                            ))}
+                        </Stack>
+                    )}
 
                     {/* Sosyal Medya Satırı */}
                     {(cardData.linkedinUrl || cardData.twitterUrl || cardData.instagramUrl) && (
@@ -587,6 +702,30 @@ export const BusinessTheme = ({ cardData }) => {
                                 </Box>
                                 <Typography variant="body2">{cardData.address}</Typography>
                             </Box>
+                        )}
+
+                        {/* Banka Hesapları */}
+                        {cardData.bankAccounts && cardData.bankAccounts.length > 0 && (
+                            <>
+                                {cardData.bankAccounts.map((account, index) => (
+                                    <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <Box sx={{ backgroundColor: '#1e3a8a', p: 1, borderRadius: 1 }}>
+                                            <AccountBalanceIcon sx={{ color: 'white', fontSize: 20 }} />
+                                        </Box>
+                                        <Box>
+                                            <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                                                {account.bankName}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                                {formatIban(account.iban)}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                                {account.accountName}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                ))}
+                            </>
                         )}
                     </Stack>
 
@@ -724,6 +863,28 @@ export const CreativeTheme = ({ cardData }) => {
                                     <LocationOnIcon sx={{ color: '#e53e3e' }} />
                                     <Typography variant="body2">{cardData.address}</Typography>
                                 </Box>
+                            )}
+
+                            {/* Banka Hesapları */}
+                            {cardData.bankAccounts && cardData.bankAccounts.length > 0 && (
+                                <>
+                                    {cardData.bankAccounts.map((account, index) => (
+                                        <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1, borderRadius: 2, backgroundColor: '#f7fafc' }}>
+                                            <AccountBalanceIcon sx={{ color: '#805ad5' }} />
+                                            <Box>
+                                                <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                                                    {account.bankName}
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                                    {formatIban(account.iban)}
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                                    {account.accountName}
+                                                </Typography>
+                                            </Box>
+                                        </Box>
+                                    ))}
+                                </>
                             )}
                         </Stack>
 
@@ -882,6 +1043,38 @@ export const DarkTheme = ({ cardData }) => {
                 </List>
             </CardContent>
 
+            {cardData.bankAccounts && cardData.bankAccounts.length > 0 && (
+                <>
+                    <Divider sx={{ backgroundColor: '#333' }} />
+                    <CardContent sx={{ pt: 1, pb: 1, backgroundColor: '#1a1a1a' }}>
+                        <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', color: 'white', mb: 1 }}>
+                            <AccountBalanceIcon sx={{ mr: 1, color: '#FFD700' }} /> Banka Hesapları
+                        </Typography>
+                        <List dense>
+                            {cardData.bankAccounts.map((account, index) => (
+                                <ListItem key={index} sx={{ py: 0.5 }}>
+                                    <ListItemIcon><AccountBalanceIcon sx={{ color: '#FFD700' }} fontSize="small" /></ListItemIcon>
+                                    <ListItemText 
+                                        primary={account.bankName}
+                                        secondary={
+                                            <Box>
+                                                <Typography variant="body2" sx={{ color: '#b0b0b0' }}>
+                                                    {formatIban(account.iban)}
+                                                </Typography>
+                                                <Typography variant="body2" sx={{ color: '#b0b0b0' }}>
+                                                    {account.accountName}
+                                                </Typography>
+                                            </Box>
+                                        }
+                                        sx={{ color: 'white' }}
+                                    />
+                                </ListItem>
+                            ))}
+                        </List>
+                    </CardContent>
+                </>
+            )}
+
             {(cardData.linkedinUrl || cardData.twitterUrl || cardData.instagramUrl) && (
                 <>
                     <Divider variant="middle" sx={{ backgroundColor: '#333' }} />
@@ -1008,6 +1201,38 @@ export const BlueTheme = ({ cardData }) => {
                 </List>
             </CardContent>
 
+            {cardData.bankAccounts && cardData.bankAccounts.length > 0 && (
+                <>
+                    <Divider sx={{ backgroundColor: '#2196F3' }} />
+                    <CardContent sx={{ pt: 1, pb: 1, backgroundColor: '#f0f8ff' }}>
+                        <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', color: '#1976D2', mb: 1 }}>
+                            <AccountBalanceIcon sx={{ mr: 1 }} /> Banka Hesapları
+                        </Typography>
+                        <List dense>
+                            {cardData.bankAccounts.map((account, index) => (
+                                <ListItem key={index} sx={{ py: 0.5 }}>
+                                    <ListItemIcon><AccountBalanceIcon sx={{ color: '#2196F3' }} fontSize="small" /></ListItemIcon>
+                                    <ListItemText 
+                                        primary={account.bankName}
+                                        secondary={
+                                            <Box>
+                                                <Typography variant="body2" sx={{ color: '#1565C0' }}>
+                                                    {formatIban(account.iban)}
+                                                </Typography>
+                                                <Typography variant="body2" sx={{ color: '#1565C0' }}>
+                                                    {account.accountName}
+                                                </Typography>
+                                            </Box>
+                                        }
+                                        sx={{ color: '#1976D2' }}
+                                    />
+                                </ListItem>
+                            ))}
+                        </List>
+                    </CardContent>
+                </>
+            )}
+
             {(cardData.linkedinUrl || cardData.twitterUrl || cardData.instagramUrl) && (
                 <>
                     <Divider variant="middle" sx={{ backgroundColor: '#2196F3' }} />
@@ -1122,6 +1347,28 @@ export const DarkModernTheme = ({ cardData }) => {
                                 <LocationOnIcon sx={{ color: '#F44336' }} />
                                 <Typography variant="body2" sx={{ color: 'white' }}>{cardData.address}</Typography>
                             </Box>
+                        )}
+
+                        {/* Banka Hesapları */}
+                        {cardData.bankAccounts && cardData.bankAccounts.length > 0 && (
+                            <>
+                                {cardData.bankAccounts.map((account, index) => (
+                                    <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <AccountBalanceIcon sx={{ color: '#FFD700' }} />
+                                        <Box>
+                                            <Typography variant="body2" sx={{ color: 'white', fontWeight: 'medium' }}>
+                                                {account.bankName}
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ color: '#b0b0b0', fontSize: '0.875rem' }}>
+                                                {formatIban(account.iban)}
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ color: '#b0b0b0', fontSize: '0.875rem' }}>
+                                                {account.accountName}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                ))}
+                            </>
                         )}
                     </Stack>
                 </CardContent>

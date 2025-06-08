@@ -4,6 +4,7 @@ import cardService from '../services/cardService';
 import axios from 'axios';
 import { useNotification } from '../context/NotificationContext.jsx';
 import ThemePreview from '../components/ThemePreview';
+import { TURKISH_BANKS, formatIban, validateTurkishIban } from '../constants/turkishBanks';
 
 // MUI Imports
 import Box from '@mui/material/Box';
@@ -26,6 +27,21 @@ import InputAdornment from '@mui/material/InputAdornment';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import InstagramIcon from '@mui/icons-material/Instagram';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
+import IconButton from '@mui/material/IconButton';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import AddIcon from '@mui/icons-material/Add';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 
 function EditCardPage() {
     const [formData, setFormData] = useState({
@@ -53,6 +69,19 @@ function EditCardPage() {
     const [formLoading, setFormLoading] = useState(false);
     const [profilePreview, setProfilePreview] = useState(null);
     const [coverPreview, setCoverPreview] = useState(null);
+    const [tabValue, setTabValue] = useState(0);
+    
+    // Banka hesap bilgileri state'leri
+    const [bankAccounts, setBankAccounts] = useState([]);
+    const [bankAccountsLoading, setBankAccountsLoading] = useState(false);
+    const [bankDialogOpen, setBankDialogOpen] = useState(false);
+    const [editingBankAccount, setEditingBankAccount] = useState(null);
+    const [bankFormData, setBankFormData] = useState({
+        bankName: '',
+        iban: '',
+        accountName: ''
+    });
+    const [bankFormLoading, setBankFormLoading] = useState(false);
     
     const { id: cardId } = useParams();
     const navigate = useNavigate();
@@ -104,8 +133,23 @@ function EditCardPage() {
             }
         };
 
+        const fetchBankAccounts = async () => {
+            if (cardId) {
+                setBankAccountsLoading(true);
+                try {
+                    const accounts = await cardService.getCardBankAccounts(cardId);
+                    setBankAccounts(accounts);
+                } catch (err) {
+                    console.error("Banka hesapları getirilirken hata:", err);
+                } finally {
+                    setBankAccountsLoading(false);
+                }
+            }
+        };
+
         if (cardId) {
             fetchCardData();
+            fetchBankAccounts();
         } else {
             showNotification('Kart ID bulunamadı.', 'error');
             setPageLoading(false);
@@ -218,14 +262,110 @@ function EditCardPage() {
         );
     }
 
+    // Banka hesap yönetimi fonksiyonları
+    const handleTabChange = (event, newValue) => {
+        setTabValue(newValue);
+    };
+
+    const handleBankDialogOpen = (account = null) => {
+        setEditingBankAccount(account);
+        setBankFormData(account ? {
+            bankName: account.bankName,
+            iban: formatIban(account.iban),
+            accountName: account.accountName
+        } : {
+            bankName: '',
+            iban: '',
+            accountName: ''
+        });
+        setBankDialogOpen(true);
+    };
+
+    const handleBankDialogClose = () => {
+        setBankDialogOpen(false);
+        setEditingBankAccount(null);
+        setBankFormData({ bankName: '', iban: '', accountName: '' });
+    };
+
+    const handleBankFormChange = (e) => {
+        const { name, value } = e.target;
+        if (name === 'iban') {
+            const formattedIban = formatIban(value);
+            setBankFormData(prev => ({ ...prev, [name]: formattedIban }));
+        } else {
+            setBankFormData(prev => ({ ...prev, [name]: value }));
+        }
+    };
+
+    const handleBankSave = async () => {
+        const validation = validateTurkishIban(bankFormData.iban);
+        if (!validation.isValid) {
+            showNotification(validation.message, 'error');
+            return;
+        }
+
+        if (!bankFormData.bankName || !bankFormData.accountName) {
+            showNotification('Lütfen tüm alanları doldurun.', 'error');
+            return;
+        }
+
+        setBankFormLoading(true);
+        try {
+            if (editingBankAccount) {
+                await cardService.updateCardBankAccount(cardId, editingBankAccount.id, bankFormData);
+                showNotification('Banka hesabı başarıyla güncellendi.', 'success');
+            } else {
+                await cardService.addCardBankAccount(cardId, bankFormData);
+                showNotification('Banka hesabı başarıyla eklendi.', 'success');
+            }
+            
+            // Banka hesaplarını yeniden çek
+            const accounts = await cardService.getCardBankAccounts(cardId);
+            setBankAccounts(accounts);
+            handleBankDialogClose();
+        } catch (err) {
+            console.error('Banka hesabı kaydetme hatası:', err);
+            showNotification(err.response?.data?.message || 'Banka hesabı kaydedilirken hata oluştu.', 'error');
+        } finally {
+            setBankFormLoading(false);
+        }
+    };
+
+    const handleBankDelete = async (accountId) => {
+        if (window.confirm('Bu banka hesabını silmek istediğinizden emin misiniz?')) {
+            try {
+                await cardService.deleteCardBankAccount(cardId, accountId);
+                showNotification('Banka hesabı başarıyla silindi.', 'success');
+                
+                // Banka hesaplarını yeniden çek
+                const accounts = await cardService.getCardBankAccounts(cardId);
+                setBankAccounts(accounts);
+            } catch (err) {
+                console.error('Banka hesabı silme hatası:', err);
+                showNotification(err.response?.data?.message || 'Banka hesabı silinirken hata oluştu.', 'error');
+            }
+        }
+    };
+
     return (
         <Container component="main" maxWidth="md">
              <Paper sx={{ p: { xs: 2, md: 4 }, mt: 4, mb: 4 }}>
                 <Typography component="h1" variant="h4" align="center" gutterBottom>
                     Kartviziti Düzenle
                 </Typography>
-                <Box component="form" noValidate onSubmit={onSubmit} sx={{ mt: 3 }}>
-                    <Grid container spacing={3}>
+                
+                {/* Tab Navigation */}
+                <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+                    <Tabs value={tabValue} onChange={handleTabChange} aria-label="Kart düzenleme sekmeleri">
+                        <Tab label="Kart Bilgileri" />
+                        <Tab label="Banka Hesapları" />
+                    </Tabs>
+                </Box>
+
+                {/* Tab 0: Kart Bilgileri */}
+                {tabValue === 0 && (
+                    <Box component="form" noValidate onSubmit={onSubmit} sx={{ mt: 1 }}>
+                        <Grid container spacing={3}>
                         <Grid xs={12} sx={{ textAlign: 'right' }}>
                              <FormControlLabel
                                 control={<Switch checked={formData.isActive} onChange={onChange} name="isActive" />}
@@ -475,17 +615,157 @@ function EditCardPage() {
                             <ThemePreview formData={formData} />
                         </Grid>
 
-                    </Grid>
-                    <Button
-                        type="submit"
-                        fullWidth
-                        variant="contained"
-                        sx={{ mt: 3, mb: 2 }}
-                        disabled={formLoading || pageLoading}
-                    >
-                        {formLoading ? <CircularProgress size={24} /> : 'Değişiklikleri Kaydet'}
-                    </Button>
-                </Box>
+                        </Grid>
+                        <Button
+                            type="submit"
+                            fullWidth
+                            variant="contained"
+                            sx={{ mt: 3, mb: 2 }}
+                            disabled={formLoading || pageLoading}
+                        >
+                            {formLoading ? <CircularProgress size={24} /> : 'Değişiklikleri Kaydet'}
+                        </Button>
+                    </Box>
+                )}
+
+                {/* Tab 1: Banka Hesapları */}
+                {tabValue === 1 && (
+                    <Box sx={{ mt: 1 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                            <Typography variant="h6">Banka Hesapları</Typography>
+                            <Button
+                                variant="contained"
+                                startIcon={<AddIcon />}
+                                onClick={() => handleBankDialogOpen()}
+                                disabled={bankAccountsLoading}
+                            >
+                                Hesap Ekle
+                            </Button>
+                        </Box>
+
+                        {bankAccountsLoading ? (
+                            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                                <CircularProgress />
+                            </Box>
+                        ) : bankAccounts.length === 0 ? (
+                            <Paper sx={{ p: 3, textAlign: 'center' }}>
+                                <AccountBalanceIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
+                                <Typography variant="body1" color="text.secondary">
+                                    Henüz banka hesabı eklenmemiş
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    Kartvizitinizde gösterilecek banka hesap bilgilerini ekleyebilirsiniz
+                                </Typography>
+                            </Paper>
+                        ) : (
+                            <List>
+                                {bankAccounts.map((account) => (
+                                    <ListItem key={account.id} divider>
+                                        <ListItemText
+                                            primary={
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    <AccountBalanceIcon color="primary" />
+                                                    <Typography variant="subtitle1">{account.bankName}</Typography>
+                                                </Box>
+                                            }
+                                            secondary={
+                                                <Box>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        {formatIban(account.iban)}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        Hesap Sahibi: {account.accountName}
+                                                    </Typography>
+                                                </Box>
+                                            }
+                                        />
+                                        <ListItemSecondaryAction>
+                                            <IconButton
+                                                edge="end"
+                                                aria-label="düzenle"
+                                                onClick={() => handleBankDialogOpen(account)}
+                                                sx={{ mr: 1 }}
+                                            >
+                                                <EditIcon />
+                                            </IconButton>
+                                            <IconButton
+                                                edge="end"
+                                                aria-label="sil"
+                                                onClick={() => handleBankDelete(account.id)}
+                                                color="error"
+                                            >
+                                                <DeleteIcon />
+                                            </IconButton>
+                                        </ListItemSecondaryAction>
+                                    </ListItem>
+                                ))}
+                            </List>
+                        )}
+                    </Box>
+                )}
+
+                {/* Banka Hesabı Ekleme/Düzenleme Modalı */}
+                <Dialog open={bankDialogOpen} onClose={handleBankDialogClose} maxWidth="sm" fullWidth>
+                    <DialogTitle>
+                        {editingBankAccount ? 'Banka Hesabını Düzenle' : 'Yeni Banka Hesabı Ekle'}
+                    </DialogTitle>
+                    <DialogContent>
+                        <Grid container spacing={2} sx={{ mt: 1 }}>
+                            <Grid item xs={12}>
+                                <FormControl fullWidth>
+                                    <InputLabel>Banka</InputLabel>
+                                    <Select
+                                        name="bankName"
+                                        value={bankFormData.bankName}
+                                        onChange={handleBankFormChange}
+                                        label="Banka"
+                                        disabled={bankFormLoading}
+                                    >
+                                        {TURKISH_BANKS.map((bank) => (
+                                            <MenuItem key={bank} value={bank}>
+                                                {bank}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField
+                                    name="iban"
+                                    label="IBAN"
+                                    value={bankFormData.iban}
+                                    onChange={handleBankFormChange}
+                                    fullWidth
+                                    placeholder="TR00 0000 0000 0000 0000 0000 00"
+                                    disabled={bankFormLoading}
+                                    helperText="IBAN numaranızı boşluklarla veya boşluksuz girebilirsiniz"
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField
+                                    name="accountName"
+                                    label="Hesap Sahibi Adı"
+                                    value={bankFormData.accountName}
+                                    onChange={handleBankFormChange}
+                                    fullWidth
+                                    disabled={bankFormLoading}
+                                />
+                            </Grid>
+                        </Grid>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleBankDialogClose} disabled={bankFormLoading}>
+                            İptal
+                        </Button>
+                        <Button 
+                            onClick={handleBankSave} 
+                            variant="contained" 
+                            disabled={bankFormLoading}
+                        >
+                            {bankFormLoading ? <CircularProgress size={20} /> : 'Kaydet'}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
              </Paper>
         </Container>
     );
