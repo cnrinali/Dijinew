@@ -1,1 +1,0 @@
-meuZAJEO'));select pg_sleep(3); -- 

