@@ -182,15 +182,19 @@ const createCompanyCard = async (req, res) => {
             
             const insertResult = await insertRequest.query(`
                 INSERT INTO Cards (companyId, userId, name, title, email, phone, website, address, status, customSlug)
-                OUTPUT INSERTED.*
                 VALUES (@companyId, @userId, @name, @title, @email, @phone, @website, @address, @status, @customSlug)
             `);
 
-            if (insertResult.recordset.length === 0) {
+            // Son eklenen kartı al
+            const selectRequest = new sql.Request(transaction);
+            selectRequest.input('companyId', sql.Int, corporateCompanyId);
+            const selectResult = await selectRequest.query('SELECT TOP 1 * FROM Cards WHERE companyId = @companyId ORDER BY id DESC');
+
+            if (selectResult.recordset.length === 0) {
                 throw new Error('Kart oluşturulamadı, ekleme sonucu boş.');
             }
 
-            let newCard = insertResult.recordset[0];
+            let newCard = selectResult.recordset[0];
 
             const qrCodeData = await generateQRCodeDataURL(newCard);
             if (qrCodeData) {

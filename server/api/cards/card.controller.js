@@ -103,7 +103,7 @@ const createCard = async (req, res) => {
         }
 
         // 2. Kartı oluştur
-        const result = await pool.request()
+        const insertResult = await pool.request()
             .input('userId', sql.Int, userId)
             .input('cardName', sql.NVarChar, cardName)
             .input('profileImageUrl', sql.NVarChar, profileImageUrl)
@@ -125,14 +125,17 @@ const createCard = async (req, res) => {
             .query(`
                 INSERT INTO Cards 
                 (userId, cardName, profileImageUrl, coverImageUrl, name, title, company, bio, phone, email, website, address, theme, customSlug, isActive, linkedinUrl, twitterUrl, instagramUrl)
-                OUTPUT inserted.* 
                 VALUES 
                 (@userId, @cardName, @profileImageUrl, @coverImageUrl, @name, @title, @company, @bio, @phone, @email, @website, @address, @theme, @customSlug, 1, @linkedinUrl, @twitterUrl, @instagramUrl);
             `);
-            // NOT: Alan listesini ve VALUES listesini tekrar kontrol edin.
 
-        if (result.recordset && result.recordset.length > 0) {
-            res.status(201).json(result.recordset[0]);
+        // 3. Son eklenen kartı al
+        const selectResult = await pool.request()
+            .input('userId', sql.Int, userId)
+            .query('SELECT TOP 1 * FROM Cards WHERE userId = @userId ORDER BY id DESC');
+
+        if (selectResult.recordset && selectResult.recordset.length > 0) {
+            res.status(201).json(selectResult.recordset[0]);
         } else {
             throw new Error('Kartvizit oluşturulamadı.');
         }
@@ -291,13 +294,16 @@ const updateCard = async (req, res) => {
                     linkedinUrl = @linkedinUrl,
                     twitterUrl = @twitterUrl,
                     instagramUrl = @instagramUrl
-                OUTPUT inserted.* 
                 WHERE id = @cardId;
             `);
-            // NOT: SET listesini kontrol edin.
 
-         if (updateResult.recordset && updateResult.recordset.length > 0) {
-            res.status(200).json(updateResult.recordset[0]); 
+        // 4. Güncellenmiş kartı ayrı bir sorgu ile çek
+        const selectResult = await pool.request()
+            .input('cardId', sql.Int, parseInt(cardId))
+            .query('SELECT * FROM Cards WHERE id = @cardId');
+
+        if (selectResult.recordset && selectResult.recordset.length > 0) {
+            res.status(200).json(selectResult.recordset[0]); 
         } else {
             throw new Error('Kartvizit güncellenemedi.');
         }
@@ -429,25 +435,29 @@ const toggleCardStatus = async (req, res) => {
         const pool = await getPool();
 
         // Kartın kullanıcıya ait olup olmadığını kontrol et ve güncelle
-        const result = await pool.request()
+        const updateResult = await pool.request()
             .input('cardId', sql.Int, parseInt(cardId))
             .input('userId', sql.Int, userId)
             .input('isActive', sql.Bit, isActive) // SQL Server'da boolean için BIT kullanılır
             .query(`
                 UPDATE Cards 
                 SET isActive = @isActive 
-                OUTPUT inserted.id, inserted.isActive 
                 WHERE id = @cardId AND userId = @userId;
             `);
 
-        if (result.recordset.length === 0) {
+        if (updateResult.rowsAffected[0] === 0) {
             // Güncelleme yapılamadı (kart bulunamadı veya kullanıcıya ait değil)
             return res.status(404).json({ message: 'Kartvizit bulunamadı veya bu işlem için yetkiniz yok' });
         }
 
+        // Güncellenmiş kartı al
+        const selectResult = await pool.request()
+            .input('cardId', sql.Int, parseInt(cardId))
+            .query('SELECT id, isActive FROM Cards WHERE id = @cardId');
+
         res.status(200).json({
             message: `Kartvizit başarıyla ${isActive ? 'aktif' : 'pasif'} hale getirildi.`,
-            card: result.recordset[0]
+            card: selectResult.recordset[0]
         });
 
     } catch (error) {

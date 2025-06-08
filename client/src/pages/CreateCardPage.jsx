@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import cardService from '../services/cardService';
 import axios from 'axios';
 import { useNotification } from '../context/NotificationContext.jsx';
+import ThemePreview from '../components/ThemePreview';
 
 // MUI Imports
 import Box from '@mui/material/Box';
@@ -58,8 +59,6 @@ function CreateCardPage() {
     const [profileImageLoading, setProfileImageLoading] = useState(false);
     const [coverImageLoading, setCoverImageLoading] = useState(false);
     const [uploadError, setUploadError] = useState('');
-    const [profilePreview, setProfilePreview] = useState(null);
-    const [logoPreview, setLogoPreview] = useState(null);
     const navigate = useNavigate();
     const { showNotification } = useNotification();
 
@@ -72,24 +71,7 @@ function CreateCardPage() {
             const file = e.target.files[0];
             setFormData((prevState) => ({ ...prevState, [e.target.name]: file })); // State'e dosyayı ata
 
-            // Önizleme oluştur
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                if (e.target.name === 'profileImage') {
-                    setProfilePreview(reader.result); // Önizleme state'ini güncelle
-                } else if (e.target.name === 'logoImage') {
-                    setLogoPreview(reader.result); // Önizleme state'ini güncelle
-                }
-            };
-            if (file) {
-                reader.readAsDataURL(file);
-            } else { // Dosya seçimi iptal edilirse önizlemeyi kaldır
-                if (e.target.name === 'profileImage') {
-                    setProfilePreview(null);
-                } else if (e.target.name === 'logoImage') {
-                    setLogoPreview(null);
-                }
-            }
+            // Dosya seçildi, form state'ini güncelle
         } else {
             setFormData((prevState) => ({ ...prevState, [e.target.name]: e.target.value }));
         }
@@ -380,7 +362,12 @@ function CreateCardPage() {
                                     name="theme"
                                     onChange={onChange}
                                 >
-                                    <MenuItem value="light">Açık</MenuItem>
+                                    <MenuItem value="light">Varsayılan (Açık)</MenuItem>
+                                    <MenuItem value="modern">Modern</MenuItem>
+                                    <MenuItem value="minimalist">Minimalist</MenuItem>
+                                    <MenuItem value="icongrid">İkon Grid</MenuItem>
+                                    <MenuItem value="business">İş</MenuItem>
+                                    <MenuItem value="creative">Yaratıcı</MenuItem>
                                     <MenuItem value="dark">Koyu</MenuItem>
                                     <MenuItem value="blue">Mavi</MenuItem>
                                 </Select>
@@ -444,6 +431,11 @@ function CreateCardPage() {
                                     ),
                                 }}
                             />
+                        </Grid>
+
+                        {/* Tema Önizlemesi */}
+                        <Grid xs={12}>
+                            <ThemePreview formData={formData} />
                         </Grid>
                     </Grid>
                     <Button

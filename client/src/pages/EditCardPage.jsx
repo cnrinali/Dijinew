@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import cardService from '../services/cardService';
 import axios from 'axios';
 import { useNotification } from '../context/NotificationContext.jsx';
+import ThemePreview from '../components/ThemePreview';
 
 // MUI Imports
 import Box from '@mui/material/Box';
@@ -398,7 +399,12 @@ function EditCardPage() {
                                     name="theme"
                                     onChange={onChange}
                                 >
-                                    <MenuItem value="light">Açık</MenuItem>
+                                    <MenuItem value="light">Varsayılan (Açık)</MenuItem>
+                                    <MenuItem value="modern">Modern</MenuItem>
+                                    <MenuItem value="minimalist">Minimalist</MenuItem>
+                                    <MenuItem value="icongrid">İkon Grid</MenuItem>
+                                    <MenuItem value="business">İş</MenuItem>
+                                    <MenuItem value="creative">Yaratıcı</MenuItem>
                                     <MenuItem value="dark">Koyu</MenuItem>
                                     <MenuItem value="blue">Mavi</MenuItem>
                                 </Select>
@@ -461,6 +467,11 @@ function EditCardPage() {
                                     ),
                                 }}
                             />
+                        </Grid>
+
+                        {/* Tema Önizlemesi */}
+                        <Grid xs={12}>
+                            <ThemePreview formData={formData} />
                         </Grid>
 
                     </Grid>
