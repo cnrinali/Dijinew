@@ -1,4 +1,4 @@
-import express from 'express';
+const express = require('express');
 
 const app = express();
 
@@ -42,4 +42,4 @@ app.post('/auth/login', async (req, res) => {
   }
 });
 
-export default app; 
+module.exports = app; 
