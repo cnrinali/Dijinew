@@ -1,6 +1,7 @@
 {
   "name": "dijinew",
   "version": "1.0.0",
+  "type": "module",
   "description": "Digital Business Card Application",
   "dependencies": {
     "archiver": "^7.0.1",

@@ -1,4 +1,4 @@
-const { getPool, sql } = require('../../config/db');
+import { getPool, sql } from '../../config/db.js';
 
 export default async function handler(req, res) {
     // CORS headers

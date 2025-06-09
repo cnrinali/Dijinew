@@ -1,5 +1,5 @@
-const jwt = require('jsonwebtoken');
-const { getPool, sql } = require('../config/db');
+import jwt from 'jsonwebtoken';
+import { getPool, sql } from '../config/db.js';
 
 const verifyAuth = async (req) => {
     let token;
@@ -47,4 +47,4 @@ const requireAuth = async (req, res) => {
     }
 };
 
-module.exports = { verifyAuth, requireAuth }; 
+export { verifyAuth, requireAuth }; 

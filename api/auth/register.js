@@ -1,6 +1,6 @@
-const { getPool, sql } = require('../../config/db');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+import { getPool, sql } from '../../config/db.js';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 // Helper function to generate JWT
 const generateToken = (id, role, companyId) => {

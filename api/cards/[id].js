@@ -1,5 +1,5 @@
-const { getPool, sql } = require('../../config/db');
-const { requireAuth } = require('../../utils/authUtils');
+import { getPool, sql } from '../../config/db.js';
+import { requireAuth } from '../../utils/authUtils.js';
 
 // Slug doğrulama fonksiyonu
 const validateAndCleanSlug = (slug) => {
