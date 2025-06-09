@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import cardService from '../services/cardService';
 import axios from 'axios';
 import { useNotification } from '../context/NotificationContext.jsx';
+import { API_ENDPOINTS } from '../config/api.js';
 import ThemePreview from '../components/ThemePreview';
 
 // MUI Imports
@@ -95,7 +96,7 @@ function CreateCardPage() {
                 },
             };
 
-            const { data } = await axios.post('/api/upload', fileFormData, config);
+            const { data } = await axios.post(API_ENDPOINTS.UPLOAD, fileFormData, config);
 
             // Gelen dosya yolunu state'e kaydet
             setFormData((prevState) => ({

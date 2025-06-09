@@ -1,7 +1,7 @@
 import axios from 'axios';
+import { API_ENDPOINTS } from '../config/api.js';
 
-const API_URL = '/api/auth/'; // Vite proxy ayarı ile bu çalışacak (sonra ayarlanacak)
-// veya const API_URL = 'http://localhost:5001/api/auth/'; // Tam URL
+const API_URL = API_ENDPOINTS.AUTH + '/'; // https://dijinew.onrender.com/api/auth/
 
 // Register user
 const register = async (userData) => {
@@ -23,10 +23,11 @@ const login = async (userData) => {
 };
 
 // Logout user
-const logout = () => {
+const logout = async () => {
     localStorage.removeItem('user');
     // Gerekirse backend'e de logout isteği atılabilir
     // await axios.post(API_URL + 'logout');
+    return true;
 };
 
 // Forgot password request
@@ -37,10 +38,9 @@ const forgotPassword = async (emailData) => {
 };
 
 // Reset password
-const resetPassword = async (resetData) => {
+const resetPassword = async (resetToken, password) => {
     // resetData = { password: 'newPassword123' }
     // resetToken URL'den alınacak
-    const { resetToken, password } = resetData;
     const response = await axios.put(API_URL + 'reset/' + resetToken, { password });
     return response.data; // { message: 'Şifreniz başarıyla güncellendi.' }
 };

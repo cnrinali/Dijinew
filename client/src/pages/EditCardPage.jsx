@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import cardService from '../services/cardService';
 import axios from 'axios';
+import { API_ENDPOINTS } from '../config/api.js';
 import { useNotification } from '../context/NotificationContext.jsx';
 import ThemePreview from '../components/ThemePreview';
 import { TURKISH_BANKS, formatIban, validateTurkishIban } from '../constants/turkishBanks';
@@ -195,7 +196,7 @@ function EditCardPage() {
             const profileFormData = new FormData();
             profileFormData.append('image', formData.profileImage);
             uploadPromises.push(
-                axios.post('/api/upload', profileFormData, { headers: { 'Content-Type': 'multipart/form-data' } })
+                axios.post(API_ENDPOINTS.UPLOAD, profileFormData, { headers: { 'Content-Type': 'multipart/form-data' } })
                      .then(res => { profileImagePath = res.data.filePath; })
                      .catch(err => { 
                          console.error("Profil resmi yükleme hatası:", err);
@@ -207,7 +208,7 @@ function EditCardPage() {
             const coverFormData = new FormData();
             coverFormData.append('image', formData.coverImage);
             uploadPromises.push(
-                axios.post('/api/upload', coverFormData, { headers: { 'Content-Type': 'multipart/form-data' } })
+                axios.post(API_ENDPOINTS.UPLOAD, coverFormData, { headers: { 'Content-Type': 'multipart/form-data' } })
                      .then(res => { coverImagePath = res.data.filePath; })
                      .catch(err => { 
                          console.error("Kapak resmi yükleme hatası:", err);

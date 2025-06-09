@@ -1,28 +1,20 @@
 import axios from 'axios';
+import { API_ENDPOINTS } from '../config/api.js';
 
 // Axios instance'ı veya temel URL'yi merkezi bir yerden almak daha iyi olabilir.
-// Şimdilik doğrudan kullanalım.
-const API_BASE_URL = '/api'; // vite.config.js dosyasındaki proxy ayarına göre
+const API_BASE_URL = API_ENDPOINTS.CORPORATE; // https://dijinew.onrender.com/api/corporate
 
+// Token'ı localStorage'dan al ve header'a ekle
 const getAuthConfig = () => {
-    const storedUserData = localStorage.getItem('user'); 
-    if (storedUserData) {
-        try {
-            const userData = JSON.parse(storedUserData);
-            if (userData && userData.token) {
-                return {
-                    headers: {
-                        Authorization: `Bearer ${userData.token}`,
-                    },
-                };
-            }
-        } catch (error) {
-            console.error("Error parsing user data from localStorage:", error);
-            // Hatalı veri varsa temizleyebilir veya logout tetiklenebilir
-            localStorage.removeItem('user'); 
-        }
-    }
-    return {};
+  const user = JSON.parse(localStorage.getItem('user'));
+  if (user && user.token) {
+    return {
+      headers: {
+        'Authorization': `Bearer ${user.token}`
+      }
+    };
+  }
+  return {}; // Token yoksa boş config döndür
 };
 
 // @desc    Get cards for the logged-in corporate user's company
@@ -31,7 +23,7 @@ export const getMyCompanyCards = async (params = {}) => {
     // params: { search, isActive, page, limit } gibi filtreleme/sayfalama parametreleri olabilir
     try {
         const config = getAuthConfig();
-        const response = await axios.get(`${API_BASE_URL}/corporate/cards`, {
+        const response = await axios.get(`${API_BASE_URL}/cards`, {
             ...config,
             params, //örn: /api/corporate/cards?search=abc&page=2
         });
@@ -47,7 +39,7 @@ export const getMyCompanyCards = async (params = {}) => {
 export const createMyCompanyCard = async (cardData) => {
     try {
         const config = getAuthConfig();
-        const response = await axios.post(`${API_BASE_URL}/corporate/cards`, cardData, config);
+        const response = await axios.post(`${API_BASE_URL}/cards`, cardData, config);
         return response.data;
     } catch (error) {
         console.error('Error creating company card (corporateService):', error.response?.data || error.message);
@@ -63,7 +55,7 @@ export const getMyCompanyUsersForSelection = async () => {
         const config = getAuthConfig();
         // Backend'de bu endpoint'in sadece id, name, email gibi temel bilgileri dönmesi idealdir.
         // companyId filtrelemesi backend'de otomatik olarak req.user.companyId ile yapılmalı.
-        const response = await axios.get(`${API_BASE_URL}/corporate/users`, { 
+        const response = await axios.get(`${API_BASE_URL}/users`, { 
             ...config,
             // params: { brief: true } // Eğer backend destekliyorsa sadece temel alanları istemek için
         });
@@ -81,7 +73,7 @@ export const createMyCompanyUser = async (userData) => {
     // userData: { name, email, password, role ('user') }
     try {
         const config = getAuthConfig();
-        const response = await axios.post(`${API_BASE_URL}/corporate/users`, userData, config);
+        const response = await axios.post(`${API_BASE_URL}/users`, userData, config);
         return response.data; // Yeni oluşturulan kullanıcıyı döndürür
     } catch (error) {
         console.error('Error creating company user (corporateService):', error.response?.data || error.message);

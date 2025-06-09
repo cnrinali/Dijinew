@@ -1,30 +1,46 @@
 import axios from 'axios';
+import { API_ENDPOINTS } from '../config/api.js';
 
-// Helper to get auth config
+// Token'ı localStorage'dan al ve header'a ekle
 const getAuthConfig = () => {
-    let token = null;
-    try {
-        const storedUserData = localStorage.getItem('user'); // Anahtarı 'user' olarak değiştir
-        if (storedUserData) {
-            const userData = JSON.parse(storedUserData);
-            token = userData?.token; // userData içindeki token alanını al
-        }
-    } catch (error) {
-        console.error("Error parsing user data from localStorage:", error);
-        localStorage.removeItem('user'); // Hatalı veriyi temizle
-    }
-
-    console.log('Token from parsed user data:', token);
+  const user = JSON.parse(localStorage.getItem('user'));
+  if (user && user.token) {
     return {
-        headers: {
-            // Token yoksa bile Authorization başlığını göndermemek daha doğru olabilir,
-            // ancak şimdilik null token ile gönderelim, backend zaten reddedecektir.
-            Authorization: `Bearer ${token}`
-        }
+      headers: {
+        'Authorization': `Bearer ${user.token}`
+      }
     };
+  }
+  return {}; // Token yoksa boş config döndür
 };
 
-const API_URL = '/api/admin'; // Base URL for admin API
+// Admin servisleri için dosya hiyerarşisi ve fonksiyon yapısı güzel düzenlenmiş
+// Bu service'i refactor ederken dikkatli olmak gerekiyor.
+
+// Excel export için FormData'yı response type ile kullanmak gerekiyor.
+// File download için özel header'lar eklenecek.
+
+const API_URL = API_ENDPOINTS.ADMIN; // https://dijinew.onrender.com/api/admin
+
+// Admin stats endpoint'i
+export const getAdminStats = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/stats`, getAuthConfig());
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
+
+// User management
+export const getAllUsers = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/users`, getAuthConfig());
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
 
 // --- Dashboard --- 
 // Get Dashboard Stats (TODO: Backend'de /stats endpoint'inin olduğundan emin olun)
