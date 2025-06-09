@@ -722,8 +722,8 @@ function EditCardPage() {
                                         disabled={bankFormLoading}
                                     >
                                         {TURKISH_BANKS.map((bank) => (
-                                            <MenuItem key={bank} value={bank}>
-                                                {bank}
+                                            <MenuItem key={bank.name} value={bank.name}>
+                                                {bank.name}
                                             </MenuItem>
                                         ))}
                                     </Select>

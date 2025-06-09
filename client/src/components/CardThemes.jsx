@@ -29,7 +29,7 @@ import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
-import { formatIban } from '../constants/turkishBanks';
+import { formatIban, getBankLogo } from '../constants/turkishBanks';
 
 // Default tema (şu anki)
 export const DefaultTheme = ({ cardData }) => {
@@ -130,24 +130,42 @@ export const DefaultTheme = ({ cardData }) => {
                             <AccountBalanceIcon sx={{ mr: 1 }} /> Banka Hesapları
                         </Typography>
                         <List dense>
-                            {cardData.bankAccounts.map((account, index) => (
-                                <ListItem key={index} sx={{ py: 0.5 }}>
-                                    <ListItemIcon><AccountBalanceIcon fontSize="small" /></ListItemIcon>
-                                    <ListItemText 
-                                        primary={account.bankName}
-                                        secondary={
-                                            <Box>
-                                                <Typography variant="body2" color="text.secondary">
-                                                    {formatIban(account.iban)}
-                                                </Typography>
-                                                <Typography variant="body2" color="text.secondary">
-                                                    {account.accountName}
-                                                </Typography>
-                                            </Box>
-                                        }
-                                    />
-                                </ListItem>
-                            ))}
+                            {cardData.bankAccounts.map((account, index) => {
+                                const bankLogo = getBankLogo(account.bankName);
+                                return (
+                                    <ListItem key={index} sx={{ py: 0.5 }}>
+                                        <ListItemIcon>
+                                            {bankLogo ? (
+                                                <Box
+                                                    component="img"
+                                                    src={bankLogo}
+                                                    alt={account.bankName}
+                                                    sx={{
+                                                        width: 24,
+                                                        height: 24,
+                                                        objectFit: 'contain'
+                                                    }}
+                                                />
+                                            ) : (
+                                                <AccountBalanceIcon fontSize="small" />
+                                            )}
+                                        </ListItemIcon>
+                                        <ListItemText 
+                                            primary={account.bankName}
+                                            secondary={
+                                                <Box>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        {formatIban(account.iban)}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        {account.accountName}
+                                                    </Typography>
+                                                </Box>
+                                            }
+                                        />
+                                    </ListItem>
+                                );
+                            })}
                         </List>
                     </CardContent>
                 </>
@@ -278,22 +296,40 @@ export const ModernTheme = ({ cardData }) => {
                                 <AccountBalanceIcon sx={{ mr: 1 }} /> Banka Hesapları
                             </Typography>
                             <Stack spacing={1.5}>
-                                {cardData.bankAccounts.map((account, index) => (
-                                    <Box key={index} sx={{ display: 'flex', alignItems: 'flex-start' }}>
-                                        <AccountBalanceIcon sx={{ mr: 2, mt: 0.5, color: 'primary.main', fontSize: '1.2rem' }} />
-                                        <Box>
-                                            <Typography variant="body2" sx={{ fontWeight: 'medium', mb: 0.5 }}>
-                                                {account.bankName}
-                                            </Typography>
-                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
-                                                {formatIban(account.iban)}
-                                            </Typography>
-                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
-                                                {account.accountName}
-                                            </Typography>
+                                {cardData.bankAccounts.map((account, index) => {
+                                    const bankLogo = getBankLogo(account.bankName);
+                                    return (
+                                        <Box key={index} sx={{ display: 'flex', alignItems: 'flex-start' }}>
+                                            {bankLogo ? (
+                                                <Box
+                                                    component="img"
+                                                    src={bankLogo}
+                                                    alt={account.bankName}
+                                                    sx={{
+                                                        width: 28,
+                                                        height: 28,
+                                                        objectFit: 'contain',
+                                                        mr: 2,
+                                                        mt: 0.5
+                                                    }}
+                                                />
+                                            ) : (
+                                                <AccountBalanceIcon sx={{ mr: 2, mt: 0.5, color: 'primary.main', fontSize: '1.2rem' }} />
+                                            )}
+                                            <Box>
+                                                <Typography variant="body2" sx={{ fontWeight: 'medium', mb: 0.5 }}>
+                                                    {account.bankName}
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                                    {formatIban(account.iban)}
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                                    {account.accountName}
+                                                </Typography>
+                                            </Box>
                                         </Box>
-                                    </Box>
-                                ))}
+                                    );
+                                })}
                             </Stack>
                         </>
                     )}
@@ -406,20 +442,37 @@ export const MinimalistTheme = ({ cardData }) => {
                         <AccountBalanceIcon sx={{ mr: 1, fontSize: '1rem' }} /> Banka Hesapları
                     </Typography>
                     <Stack spacing={1.5}>
-                        {cardData.bankAccounts.map((account, index) => (
-                            <Box key={index}>
-                                <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', fontWeight: 'medium', mb: 0.5 }}>
-                                    <AccountBalanceIcon sx={{ mr: 1, fontSize: '1rem', color: 'text.secondary' }} />
-                                    {account.bankName}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary" sx={{ ml: 3, fontSize: '0.875rem' }}>
-                                    {formatIban(account.iban)}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary" sx={{ ml: 3, fontSize: '0.875rem' }}>
-                                    {account.accountName}
-                                </Typography>
-                            </Box>
-                        ))}
+                        {cardData.bankAccounts.map((account, index) => {
+                            const bankLogo = getBankLogo(account.bankName);
+                            return (
+                                <Box key={index}>
+                                    <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', fontWeight: 'medium', mb: 0.5 }}>
+                                        {bankLogo ? (
+                                            <Box
+                                                component="img"
+                                                src={bankLogo}
+                                                alt={account.bankName}
+                                                sx={{
+                                                    width: 20,
+                                                    height: 20,
+                                                    objectFit: 'contain',
+                                                    mr: 1
+                                                }}
+                                            />
+                                        ) : (
+                                            <AccountBalanceIcon sx={{ mr: 1, fontSize: '1rem', color: 'text.secondary' }} />
+                                        )}
+                                        {account.bankName}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary" sx={{ ml: 3, fontSize: '0.875rem' }}>
+                                        {formatIban(account.iban)}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary" sx={{ ml: 3, fontSize: '0.875rem' }}>
+                                        {account.accountName}
+                                    </Typography>
+                                </Box>
+                            );
+                        })}
                     </Stack>
                 </Box>
             )}
@@ -545,29 +598,46 @@ export const IconGridTheme = ({ cardData }) => {
                     {/* Banka Hesapları Satırı */}
                     {cardData.bankAccounts && cardData.bankAccounts.length > 0 && (
                         <Stack direction="row" spacing={1} justifyContent="flex-start" sx={{ flexWrap: 'wrap', gap: 1 }}>
-                            {cardData.bankAccounts.map((account, index) => (
-                                <Box 
-                                    key={index}
-                                    sx={{ 
-                                        textAlign: 'center', 
-                                        cursor: 'pointer', 
-                                        p: 1, 
-                                        borderRadius: 2, 
-                                        backgroundColor: 'indigo.50', 
-                                        minWidth: 120,
-                                        border: '1px solid',
-                                        borderColor: 'indigo.200'
-                                    }}
-                                >
-                                    <AccountBalanceIcon sx={{ fontSize: 28, color: 'indigo.main', mb: 0.5 }} />
-                                    <Typography variant="caption" display="block" sx={{ fontWeight: 'bold' }}>
-                                        {account.bankName.toUpperCase().substring(0, 10)}
-                                    </Typography>
-                                    <Typography variant="caption" display="block" sx={{ fontSize: '0.7rem', color: 'text.secondary' }}>
-                                        {formatIban(account.iban).substring(0, 15)}...
-                                    </Typography>
-                                </Box>
-                            ))}
+                            {cardData.bankAccounts.map((account, index) => {
+                                const bankLogo = getBankLogo(account.bankName);
+                                return (
+                                    <Box 
+                                        key={index}
+                                        sx={{ 
+                                            textAlign: 'center', 
+                                            cursor: 'pointer', 
+                                            p: 1, 
+                                            borderRadius: 2, 
+                                            backgroundColor: 'indigo.50', 
+                                            minWidth: 120,
+                                            border: '1px solid',
+                                            borderColor: 'indigo.200'
+                                        }}
+                                    >
+                                        {bankLogo ? (
+                                            <Box
+                                                component="img"
+                                                src={bankLogo}
+                                                alt={account.bankName}
+                                                sx={{
+                                                    width: 32,
+                                                    height: 32,
+                                                    objectFit: 'contain',
+                                                    mb: 0.5
+                                                }}
+                                            />
+                                        ) : (
+                                            <AccountBalanceIcon sx={{ fontSize: 28, color: 'indigo.main', mb: 0.5 }} />
+                                        )}
+                                        <Typography variant="caption" display="block" sx={{ fontWeight: 'bold' }}>
+                                            {account.bankName.toUpperCase().substring(0, 10)}
+                                        </Typography>
+                                        <Typography variant="caption" display="block" sx={{ fontSize: '0.7rem', color: 'text.secondary' }}>
+                                            {formatIban(account.iban).substring(0, 15)}...
+                                        </Typography>
+                                    </Box>
+                                );
+                            })}
                         </Stack>
                     )}
 
@@ -707,24 +777,41 @@ export const BusinessTheme = ({ cardData }) => {
                         {/* Banka Hesapları */}
                         {cardData.bankAccounts && cardData.bankAccounts.length > 0 && (
                             <>
-                                {cardData.bankAccounts.map((account, index) => (
-                                    <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                        <Box sx={{ backgroundColor: '#1e3a8a', p: 1, borderRadius: 1 }}>
-                                            <AccountBalanceIcon sx={{ color: 'white', fontSize: 20 }} />
+                                {cardData.bankAccounts.map((account, index) => {
+                                    const bankLogo = getBankLogo(account.bankName);
+                                    return (
+                                        <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Box sx={{ backgroundColor: '#1e3a8a', p: 1, borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                {bankLogo ? (
+                                                    <Box
+                                                        component="img"
+                                                        src={bankLogo}
+                                                        alt={account.bankName}
+                                                        sx={{
+                                                            width: 20,
+                                                            height: 20,
+                                                            objectFit: 'contain',
+                                                            filter: 'brightness(0) invert(1)' // Beyaz yapmak için
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <AccountBalanceIcon sx={{ color: 'white', fontSize: 20 }} />
+                                                )}
+                                            </Box>
+                                            <Box>
+                                                <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                                                    {account.bankName}
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                                    {formatIban(account.iban)}
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                                    {account.accountName}
+                                                </Typography>
+                                            </Box>
                                         </Box>
-                                        <Box>
-                                            <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-                                                {account.bankName}
-                                            </Typography>
-                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
-                                                {formatIban(account.iban)}
-                                            </Typography>
-                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
-                                                {account.accountName}
-                                            </Typography>
-                                        </Box>
-                                    </Box>
-                                ))}
+                                    );
+                                })}
                             </>
                         )}
                     </Stack>
@@ -868,22 +955,38 @@ export const CreativeTheme = ({ cardData }) => {
                             {/* Banka Hesapları */}
                             {cardData.bankAccounts && cardData.bankAccounts.length > 0 && (
                                 <>
-                                    {cardData.bankAccounts.map((account, index) => (
-                                        <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1, borderRadius: 2, backgroundColor: '#f7fafc' }}>
-                                            <AccountBalanceIcon sx={{ color: '#805ad5' }} />
-                                            <Box>
-                                                <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-                                                    {account.bankName}
-                                                </Typography>
-                                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
-                                                    {formatIban(account.iban)}
-                                                </Typography>
-                                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
-                                                    {account.accountName}
-                                                </Typography>
+                                    {cardData.bankAccounts.map((account, index) => {
+                                        const bankLogo = getBankLogo(account.bankName);
+                                        return (
+                                            <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1, borderRadius: 2, backgroundColor: '#f7fafc' }}>
+                                                {bankLogo ? (
+                                                    <Box
+                                                        component="img"
+                                                        src={bankLogo}
+                                                        alt={account.bankName}
+                                                        sx={{
+                                                            width: 24,
+                                                            height: 24,
+                                                            objectFit: 'contain'
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <AccountBalanceIcon sx={{ color: '#805ad5' }} />
+                                                )}
+                                                <Box>
+                                                    <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                                                        {account.bankName}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                                        {formatIban(account.iban)}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                                        {account.accountName}
+                                                    </Typography>
+                                                </Box>
                                             </Box>
-                                        </Box>
-                                    ))}
+                                        );
+                                    })}
                                 </>
                             )}
                         </Stack>
@@ -1051,25 +1154,44 @@ export const DarkTheme = ({ cardData }) => {
                             <AccountBalanceIcon sx={{ mr: 1, color: '#FFD700' }} /> Banka Hesapları
                         </Typography>
                         <List dense>
-                            {cardData.bankAccounts.map((account, index) => (
-                                <ListItem key={index} sx={{ py: 0.5 }}>
-                                    <ListItemIcon><AccountBalanceIcon sx={{ color: '#FFD700' }} fontSize="small" /></ListItemIcon>
-                                    <ListItemText 
-                                        primary={account.bankName}
-                                        secondary={
-                                            <Box>
-                                                <Typography variant="body2" sx={{ color: '#b0b0b0' }}>
-                                                    {formatIban(account.iban)}
-                                                </Typography>
-                                                <Typography variant="body2" sx={{ color: '#b0b0b0' }}>
-                                                    {account.accountName}
-                                                </Typography>
-                                            </Box>
-                                        }
-                                        sx={{ color: 'white' }}
-                                    />
-                                </ListItem>
-                            ))}
+                            {cardData.bankAccounts.map((account, index) => {
+                                const bankLogo = getBankLogo(account.bankName);
+                                return (
+                                    <ListItem key={index} sx={{ py: 0.5 }}>
+                                        <ListItemIcon>
+                                            {bankLogo ? (
+                                                <Box
+                                                    component="img"
+                                                    src={bankLogo}
+                                                    alt={account.bankName}
+                                                    sx={{
+                                                        width: 24,
+                                                        height: 24,
+                                                        objectFit: 'contain',
+                                                        filter: 'brightness(0) saturate(100%) invert(77%) sepia(98%) saturate(1042%) hue-rotate(4deg) brightness(105%) contrast(104%)' // Altın rengi filtre
+                                                    }}
+                                                />
+                                            ) : (
+                                                <AccountBalanceIcon sx={{ color: '#FFD700' }} fontSize="small" />
+                                            )}
+                                        </ListItemIcon>
+                                        <ListItemText 
+                                            primary={account.bankName}
+                                            secondary={
+                                                <Box>
+                                                    <Typography variant="body2" sx={{ color: '#b0b0b0' }}>
+                                                        {formatIban(account.iban)}
+                                                    </Typography>
+                                                    <Typography variant="body2" sx={{ color: '#b0b0b0' }}>
+                                                        {account.accountName}
+                                                    </Typography>
+                                                </Box>
+                                            }
+                                            sx={{ color: 'white' }}
+                                        />
+                                    </ListItem>
+                                );
+                            })}
                         </List>
                     </CardContent>
                 </>
@@ -1209,11 +1331,28 @@ export const BlueTheme = ({ cardData }) => {
                             <AccountBalanceIcon sx={{ mr: 1 }} /> Banka Hesapları
                         </Typography>
                         <List dense>
-                            {cardData.bankAccounts.map((account, index) => (
-                                <ListItem key={index} sx={{ py: 0.5 }}>
-                                    <ListItemIcon><AccountBalanceIcon sx={{ color: '#2196F3' }} fontSize="small" /></ListItemIcon>
-                                    <ListItemText 
-                                        primary={account.bankName}
+                            {cardData.bankAccounts.map((account, index) => {
+                                const bankLogo = getBankLogo(account.bankName);
+                                return (
+                                    <ListItem key={index} sx={{ py: 0.5 }}>
+                                        <ListItemIcon>
+                                            {bankLogo ? (
+                                                <Box
+                                                    component="img"
+                                                    src={bankLogo}
+                                                    alt={account.bankName}
+                                                    sx={{
+                                                        width: 24,
+                                                        height: 24,
+                                                        objectFit: 'contain'
+                                                    }}
+                                                />
+                                            ) : (
+                                                <AccountBalanceIcon sx={{ color: '#2196F3' }} fontSize="small" />
+                                            )}
+                                        </ListItemIcon>
+                                        <ListItemText 
+                                            primary={account.bankName}
                                         secondary={
                                             <Box>
                                                 <Typography variant="body2" sx={{ color: '#1565C0' }}>
@@ -1227,7 +1366,8 @@ export const BlueTheme = ({ cardData }) => {
                                         sx={{ color: '#1976D2' }}
                                     />
                                 </ListItem>
-                            ))}
+                                );
+                            })}
                         </List>
                     </CardContent>
                 </>
@@ -1352,22 +1492,39 @@ export const DarkModernTheme = ({ cardData }) => {
                         {/* Banka Hesapları */}
                         {cardData.bankAccounts && cardData.bankAccounts.length > 0 && (
                             <>
-                                {cardData.bankAccounts.map((account, index) => (
-                                    <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                        <AccountBalanceIcon sx={{ color: '#FFD700' }} />
-                                        <Box>
-                                            <Typography variant="body2" sx={{ color: 'white', fontWeight: 'medium' }}>
-                                                {account.bankName}
-                                            </Typography>
-                                            <Typography variant="body2" sx={{ color: '#b0b0b0', fontSize: '0.875rem' }}>
-                                                {formatIban(account.iban)}
-                                            </Typography>
-                                            <Typography variant="body2" sx={{ color: '#b0b0b0', fontSize: '0.875rem' }}>
-                                                {account.accountName}
-                                            </Typography>
+                                {cardData.bankAccounts.map((account, index) => {
+                                    const bankLogo = getBankLogo(account.bankName);
+                                    return (
+                                        <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            {bankLogo ? (
+                                                <Box
+                                                    component="img"
+                                                    src={bankLogo}
+                                                    alt={account.bankName}
+                                                    sx={{
+                                                        width: 24,
+                                                        height: 24,
+                                                        objectFit: 'contain',
+                                                        filter: 'brightness(0) saturate(100%) invert(77%) sepia(98%) saturate(1042%) hue-rotate(4deg) brightness(105%) contrast(104%)' // Altın rengi filtre
+                                                    }}
+                                                />
+                                            ) : (
+                                                <AccountBalanceIcon sx={{ color: '#FFD700' }} />
+                                            )}
+                                            <Box>
+                                                <Typography variant="body2" sx={{ color: 'white', fontWeight: 'medium' }}>
+                                                    {account.bankName}
+                                                </Typography>
+                                                <Typography variant="body2" sx={{ color: '#b0b0b0', fontSize: '0.875rem' }}>
+                                                    {formatIban(account.iban)}
+                                                </Typography>
+                                                <Typography variant="body2" sx={{ color: '#b0b0b0', fontSize: '0.875rem' }}>
+                                                    {account.accountName}
+                                                </Typography>
+                                            </Box>
                                         </Box>
-                                    </Box>
-                                ))}
+                                    );
+                                })}
                             </>
                         )}
                     </Stack>
