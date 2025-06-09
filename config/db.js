@@ -1,15 +1,14 @@
-import sql from 'mssql';
-import dotenv from 'dotenv';
-dotenv.config();
+const sql = require('mssql');
+require('dotenv').config({ path: '../.env' }); // Ana dizindeki .env dosyasını yükle
 
 const config = {
     user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
+    password: process.env.DB_PASS,
     server: process.env.DB_HOST,
     database: process.env.DB_DATABASE,
     options: {
-        encrypt: process.env.DB_ENCRYPT === 'true',
-        trustServerCertificate: process.env.DB_TRUST_SERVER_CERTIFICATE === 'true'
+        encrypt: true, // Azure'da çalıştırıyorsanız true yapın
+        trustServerCertificate: true // Localhost veya güvenilir olmayan sertifika için true
     }
 };
 
@@ -53,4 +52,4 @@ const getPool = async () => {
     return pool;
 };
 
-export { sql, getPool }; 
+module.exports = { sql, getPool }; 
