@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getCards, deleteCard, exportCardsToExcel, importCardsFromExcel, generateBulkQRCodes } from '../../services/adminService';
+import { getCards, deleteCard, exportCardsToExcel, importCardsFromExcel, generateBulkQRCodes, generateSingleQRCode } from '../../services/adminService';
 import { Link as RouterLink } from 'react-router-dom'; 
 
 // MUI Imports
@@ -108,49 +108,10 @@ function AdminCardListPage() {
 
     const handleSingleQRDownload = async (cardId) => {
         try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                throw new Error('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
-            }
-
-            const response = await fetch(`/api/admin/cards/${cardId}/qr`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    throw new Error('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
-                }
-                if (response.status === 404) {
-                    throw new Error('Kartvizit bulunamadı.');
-                }
-                throw new Error('QR kod indirilemedi');
-            }
-            
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            const contentDisposition = response.headers.get('Content-Disposition');
-            let filename = `qr-code-${cardId}.png`;
-            if (contentDisposition && contentDisposition.indexOf('filename=') !== -1) {
-                const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
-                if (filenameMatch && filenameMatch[1]) {
-                    filename = filenameMatch[1];
-                }
-            }
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
+            await generateSingleQRCode(cardId);
         } catch (err) {
             console.error("Tek QR kod indirme hatası:", err);
-            setError(err.message || 'QR kod indirme hatası.');
+            setError(err.response?.data?.message || err.message || 'QR kod indirme hatası.');
         }
     };
 

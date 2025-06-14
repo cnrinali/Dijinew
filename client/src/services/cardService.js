@@ -8,7 +8,7 @@ const API_URL = API_ENDPOINTS.CARDS; // https://dijinew.onrender.com/api/cards
 
 // Token'ı localStorage'dan al ve header'a ekle
 const getAuthConfig = () => {
-  const user = JSON.parse(localStorage.getItem('user'));
+    const user = JSON.parse(localStorage.getItem('user'));
   if (user && user.token) {
     return {
       headers: {

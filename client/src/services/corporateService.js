@@ -8,12 +8,12 @@ const API_BASE_URL = API_ENDPOINTS.CORPORATE; // https://dijinew.onrender.com/ap
 const getAuthConfig = () => {
   const user = JSON.parse(localStorage.getItem('user'));
   if (user && user.token) {
-    return {
-      headers: {
+                return {
+                    headers: {
         'Authorization': `Bearer ${user.token}`
       }
-    };
-  }
+                };
+    }
   return {}; // Token yoksa boş config döndür
 };
 

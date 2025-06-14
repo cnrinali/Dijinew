@@ -6,12 +6,12 @@ const getAuthConfig = () => {
   const user = JSON.parse(localStorage.getItem('user'));
   if (user && user.token) {
     return {
-      headers: {
+        headers: {
         'Authorization': `Bearer ${user.token}`
       }
     };
   }
-  return {}; // Token yoksa boş config döndür
+  throw new Error('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
 };
 
 // Admin servisleri için dosya hiyerarşisi ve fonksiyon yapısı güzel düzenlenmiş
@@ -29,8 +29,8 @@ export const getAdminStats = async () => {
     return response.data;
   } catch (error) {
     throw error.response?.data || error.message;
-  }
-};
+        }
+    };
 
 // User management
 export const getAllUsers = async () => {
@@ -189,6 +189,44 @@ const generateBulkQRCodes = async () => {
     link.remove();
 };
 
+// Tek QR kod indirme fonksiyonu
+const generateSingleQRCode = async (cardId) => {
+    const response = await axios.get(`${API_URL}/cards/${cardId}/qr`, {
+        ...getAuthConfig(),
+        responseType: 'blob'
+    });
+    
+    // QR kod dosyasını indir
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    
+    // Content-Disposition header'ından dosya adını al
+    const contentDisposition = response.headers['content-disposition'];
+    let filename = `qr-code-${cardId}.png`;
+    
+    if (contentDisposition) {
+        console.log('Content-Disposition header:', contentDisposition);
+        
+        // filename= veya filename*= formatlarını kontrol et
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+            filename = filenameMatch[1].replace(/['"]/g, '');
+            console.log('Extracted filename:', filename);
+        }
+    } else {
+        console.log('Content-Disposition header bulunamadı');
+    }
+    
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+    
+    console.log(`QR kod indirildi: ${filename}`);
+};
+
 // --- Diğer Admin İşlemleri Buraya Eklenebilir ---
 
 
@@ -213,5 +251,6 @@ export {
     getDashboardStats,
     exportCardsToExcel,
     importCardsFromExcel,
-    generateBulkQRCodes
+    generateBulkQRCodes,
+    generateSingleQRCode
 };
