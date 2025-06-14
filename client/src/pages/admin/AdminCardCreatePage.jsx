@@ -255,11 +255,34 @@ function AdminCardCreatePage() {
     };
 
     return (
-        <Container component="main" maxWidth="md">
-            <Paper sx={{ p: { xs: 2, md: 4 }, mt: 4, mb: 4 }}>
-                <Typography variant="h5" component="h1" align="center" gutterBottom>
-                    Yeni Kartvizit Oluştur
-                </Typography>
+        <Box sx={{ p: 4 }}>
+            <Box sx={{ mb: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                    <Box
+                        sx={{
+                            p: 2,
+                            borderRadius: 2,
+                            background: 'linear-gradient(135deg, #1565C0 0%, #2196F3 100%)',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <AddIcon sx={{ fontSize: 28 }} />
+                    </Box>
+                    <Box sx={{ flex: 1 }}>
+                        <Typography variant="h4" component="h1" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                            Yeni Kartvizit Oluştur
+                        </Typography>
+                        <Typography variant="body1" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                            Yeni bir dijital kartvizit oluşturun
+                        </Typography>
+                    </Box>
+                </Box>
+            </Box>
+
+            <Paper sx={{ p: { xs: 2, md: 4 }, borderRadius: 3, border: '1px solid', borderColor: 'grey.200' }}>
 
                 {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
                 {uploadError && <Alert severity="error" sx={{ mb: 2 }}>{uploadError}</Alert>}
@@ -275,311 +298,445 @@ function AdminCardCreatePage() {
                 {/* Tab 0: Kart Bilgileri */}
                 {tabValue === 0 && (
                     <form onSubmit={handleSubmit}>
-                        <Grid container spacing={3}>
-                            <Grid item xs={12} sm={6} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                <Typography variant="h6" gutterBottom>Profil Fotoğrafı</Typography>
-                                <Avatar
-                                    src={formData.profileImageUrl || '/placeholder-avatar.png'}
-                                    sx={{ width: 150, height: 150, mb: 2, border: '1px solid lightgrey' }}
-                                />
-                                <input
-                                    type="file"
-                                    name="profileImageUrl"
-                                    ref={profileInputRef}
-                                    onChange={handleFileChange}
-                                    style={{ display: 'none' }}
-                                    accept="image/*"
-                                />
-                                <Button
-                                    variant="outlined"
-                                    onClick={() => profileInputRef.current.click()}
-                                    disabled={profileImageLoading || loading}
-                                    startIcon={profileImageLoading ? <CircularProgress size={20} /> : null}
-                                >
-                                    {profileImageLoading ? 'Yükleniyor...' : (formData.profileImageUrl ? 'Değiştir' : 'Profil Resmi Seç')}
-                                </Button>
-                            </Grid>
-
-                            <Grid item xs={12} sm={6} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: { xs: 2, sm: 0 } }}>
-                                <Typography variant="h6" gutterBottom>Kapak Fotoğrafı</Typography>
-                                <CardMedia
-                                    component="img"
-                                    image={formData.coverImageUrl || '/placeholder-cover.png'}
-                                    alt="Kapak Fotoğrafı Önizlemesi"
-                                    sx={{ width: '100%', height: 150, objectFit: 'cover', mb: 2, borderRadius: 1, border: '1px solid lightgrey' }}
-                                />
-                                <input
-                                    type="file"
-                                    name="coverImageUrl"
-                                    ref={coverInputRef}
-                                    onChange={handleFileChange}
-                                    style={{ display: 'none' }}
-                                    accept="image/*"
-                                />
-                                <Button
-                                    variant="outlined"
-                                    onClick={() => coverInputRef.current.click()}
-                                    disabled={coverImageLoading || loading}
-                                    startIcon={coverImageLoading ? <CircularProgress size={20} /> : null}
-                                >
-                                    {coverImageLoading ? 'Yükleniyor...' : (formData.coverImageUrl ? 'Kapak Fotoğrafını Değiştir' : 'Kapak Fotoğrafı Seç')}
-                                </Button>
-                            </Grid>
-
-                            <Grid xs={12} sm={6}>
-                                <TextField
-                                    required
-                                    name="cardName"
-                                    label="Kartvizit Adı"
-                                    value={formData.cardName}
-                                    onChange={handleChange}
-                                    fullWidth
-                                />
-                            </Grid>
-
-                            <Grid xs={12} sm={6}>
-                                <TextField
-                                    name="name"
-                                    label="İsim Soyisim"
-                                    value={formData.name}
-                                    onChange={handleChange}
-                                    fullWidth
-                                />
-                            </Grid>
-
-                            <Grid xs={12} sm={6}>
-                                <TextField
-                                    name="title"
-                                    label="Ünvan"
-                                    value={formData.title}
-                                    onChange={handleChange}
-                                    fullWidth
-                                />
-                            </Grid>
-
-                            <Grid xs={12} sm={6}>
-                                <TextField
-                                    name="company"
-                                    label="Şirket"
-                                    value={formData.company}
-                                    onChange={handleChange}
-                                    fullWidth
-                                />
-                            </Grid>
-
-                            <Grid xs={12} sm={6}>
-                                <TextField
-                                    name="phone"
-                                    label="Telefon"
-                                    value={formData.phone}
-                                    onChange={handleChange}
-                                    fullWidth
-                                />
-                            </Grid>
-
-                            <Grid xs={12} sm={6}>
-                                <TextField
-                                    name="email"
-                                    label="E-posta"
-                                    type="email"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    fullWidth
-                                />
-                            </Grid>
-
-                            <Grid xs={12}>
-                                <TextField
-                                    name="website"
-                                    label="Website"
-                                    value={formData.website}
-                                    onChange={handleChange}
-                                    fullWidth
-                                />
-                            </Grid>
-
-                            <Grid xs={12}>
-                                <TextField
-                                    name="address"
-                                    label="Adres"
-                                    value={formData.address}
-                                    onChange={handleChange}
-                                    multiline
-                                    rows={3}
-                                    fullWidth
-                                />
-                            </Grid>
-
-                            <Grid xs={12}>
-                                <TextField
-                                    name="bio"
-                                    label="Biyografi"
-                                    value={formData.bio}
-                                    onChange={handleChange}
-                                    multiline
-                                    rows={4}
-                                    fullWidth
-                                />
-                            </Grid>
-
-                            <Grid xs={12} sm={6}>
-                                <TextField
-                                    name="customSlug"
-                                    label="Özel URL"
-                                    value={formData.customSlug}
-                                    onChange={handleChange}
-                                    fullWidth
-                                    helperText="Boş bırakılırsa otomatik oluşturulur"
-                                />
-                            </Grid>
-
-                            <Grid xs={12} sm={6}>
-                                <FormControl fullWidth>
-                                    <InputLabel id="theme-select-label">Tema</InputLabel>
-                                    <Select
-                                        labelId="theme-select-label"
-                                        id="theme-select"
-                                        value={formData.theme}
-                                        label="Tema"
-                                        name="theme"
-                                        onChange={handleChange}
-                                    >
-                                        <MenuItem value="light">Varsayılan (Açık)</MenuItem>
-                                        <MenuItem value="modern">Modern</MenuItem>
-                                        <MenuItem value="minimalist">Minimalist</MenuItem>
-                                        <MenuItem value="icongrid">İkon Grid</MenuItem>
-                                        <MenuItem value="business">İş</MenuItem>
-                                        <MenuItem value="creative">Yaratıcı</MenuItem>
-                                        <MenuItem value="dark">Koyu</MenuItem>
-                                        <MenuItem value="darkmodern">Koyu Modern</MenuItem>
-                                        <MenuItem value="blue">Mavi</MenuItem>
-                                    </Select>
-                                </FormControl>
-                            </Grid>
-
-                            <Grid xs={12} sm={6}>
-                                <FormControl fullWidth>
-                                    <InputLabel>Şirket</InputLabel>
-                                    <Select
-                                        name="companyId"
-                                        value={formData.companyId}
-                                        onChange={handleChange}
-                                        label="Şirket"
-                                    >
-                                        <MenuItem value="">Şirket Seçin</MenuItem>
-                                        {companies.map(company => (
-                                            <MenuItem key={company.id} value={company.id}>
-                                                {company.name}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-                            </Grid>
-
-                            <Grid xs={12} sm={6}>
-                                <FormControl fullWidth>
-                                    <InputLabel>Kullanıcı</InputLabel>
-                                    <Select
-                                        name="userId"
-                                        value={formData.userId}
-                                        onChange={handleChange}
-                                        label="Kullanıcı"
-                                    >
-                                        <MenuItem value="">Kullanıcı Seçin</MenuItem>
-                                        {users.map(user => (
-                                            <MenuItem key={user.id} value={user.id}>
-                                                {user.name} ({user.email})
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-                            </Grid>
-
-                            <Grid item xs={12}>
-                                <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>Sosyal Medya (isteğe bağlı)</Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6} md={4}>
-                                <TextField
-                                    name="linkedinUrl"
-                                    fullWidth
-                                    id="linkedinUrl"
-                                    label="LinkedIn Profil URL"
-                                    value={formData.linkedinUrl}
-                                    onChange={handleChange}
-                                    disabled={loading}
-                                    InputProps={{
-                                        startAdornment: (
-                                            <InputAdornment position="start">
-                                                <LinkedInIcon />
-                                            </InputAdornment>
-                                        ),
-                                    }}
-                                />
-                            </Grid>
-                            <Grid item xs={12} sm={6} md={4}>
-                                <TextField
-                                    name="twitterUrl"
-                                    fullWidth
-                                    id="twitterUrl"
-                                    label="Twitter (X) Profil URL"
-                                    value={formData.twitterUrl}
-                                    onChange={handleChange}
-                                    disabled={loading}
-                                    InputProps={{
-                                        startAdornment: (
-                                            <InputAdornment position="start">
-                                                <TwitterIcon />
-                                            </InputAdornment>
-                                        ),
-                                    }}
-                                />
-                            </Grid>
-                            <Grid item xs={12} sm={6} md={4}>
-                                <TextField
-                                    name="instagramUrl"
-                                    fullWidth
-                                    id="instagramUrl"
-                                    label="Instagram Profil URL"
-                                    value={formData.instagramUrl}
-                                    onChange={handleChange}
-                                    disabled={loading}
-                                    InputProps={{
-                                        startAdornment: (
-                                            <InputAdornment position="start">
-                                                <InstagramIcon />
-                                            </InputAdornment>
-                                        ),
-                                    }}
-                                />
-                            </Grid>
-
-                            <Grid xs={12}>
-                                <FormControlLabel
-                                    control={
-                                        <Switch
-                                            checked={formData.status}
-                                            onChange={handleChange}
-                                            name="status"
+                        {/* Fotoğraf Yükleme Bölümü */}
+                        <Box sx={{ mb: 4 }}>
+                            <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'text.primary' }}>
+                                📸 Görsel Yükleme
+                            </Typography>
+                            <Grid container spacing={4}>
+                                <Grid item xs={12} md={6}>
+                                    <Box sx={{ 
+                                        border: '2px dashed', 
+                                        borderColor: 'grey.300', 
+                                        borderRadius: 3, 
+                                        p: 3, 
+                                        textAlign: 'center',
+                                        backgroundColor: 'grey.50'
+                                    }}>
+                                        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 500 }}>
+                                            Profil Fotoğrafı
+                                        </Typography>
+                                        <Avatar
+                                            src={formData.profileImageUrl || '/placeholder-avatar.png'}
+                                            sx={{ 
+                                                width: 120, 
+                                                height: 120, 
+                                                mx: 'auto', 
+                                                mb: 2,
+                                                border: '4px solid',
+                                                borderColor: 'background.paper',
+                                                boxShadow: 2
+                                            }}
                                         />
-                                    }
-                                    label="Kartvizit Aktif mi?"
-                                />
-                            </Grid>
+                                        <input
+                                            type="file"
+                                            name="profileImageUrl"
+                                            ref={profileInputRef}
+                                            onChange={handleFileChange}
+                                            style={{ display: 'none' }}
+                                            accept="image/*"
+                                        />
+                                        <Button
+                                            variant="outlined"
+                                            onClick={() => profileInputRef.current.click()}
+                                            disabled={profileImageLoading || loading}
+                                            startIcon={profileImageLoading ? <CircularProgress size={16} /> : <AddIcon />}
+                                            sx={{ borderRadius: 2 }}
+                                        >
+                                            {profileImageLoading ? 'Yükleniyor...' : (formData.profileImageUrl ? 'Değiştir' : 'Profil Resmi Seç')}
+                                        </Button>
+                                    </Box>
+                                </Grid>
 
-                            <Grid item xs={12}>
-                                <ThemePreview formData={formData} />
+                                <Grid item xs={12} md={6}>
+                                    <Box sx={{ 
+                                        border: '2px dashed', 
+                                        borderColor: 'grey.300', 
+                                        borderRadius: 3, 
+                                        p: 3, 
+                                        textAlign: 'center',
+                                        backgroundColor: 'grey.50'
+                                    }}>
+                                        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 500 }}>
+                                            Kapak Fotoğrafı
+                                        </Typography>
+                                        <CardMedia
+                                            component="img"
+                                            image={formData.coverImageUrl || '/placeholder-cover.png'}
+                                            alt="Kapak Fotoğrafı Önizlemesi"
+                                            sx={{ 
+                                                width: '100%', 
+                                                height: 120, 
+                                                objectFit: 'cover', 
+                                                mb: 2, 
+                                                borderRadius: 2,
+                                                boxShadow: 1
+                                            }}
+                                        />
+                                        <input
+                                            type="file"
+                                            name="coverImageUrl"
+                                            ref={coverInputRef}
+                                            onChange={handleFileChange}
+                                            style={{ display: 'none' }}
+                                            accept="image/*"
+                                        />
+                                        <Button
+                                            variant="outlined"
+                                            onClick={() => coverInputRef.current.click()}
+                                            disabled={coverImageLoading || loading}
+                                            startIcon={coverImageLoading ? <CircularProgress size={16} /> : <AddIcon />}
+                                            sx={{ borderRadius: 2 }}
+                                        >
+                                            {coverImageLoading ? 'Yükleniyor...' : (formData.coverImageUrl ? 'Kapak Fotoğrafını Değiştir' : 'Kapak Fotoğrafı Seç')}
+                                        </Button>
+                                    </Box>
+                                </Grid>
                             </Grid>
-                        </Grid>
-                        <Button
-                            type="submit"
-                            variant="contained"
-                            color="primary"
-                            disabled={loading}
-                            fullWidth
-                            sx={{ mt: 3, mb: 2 }}
-                        >
-                            {loading ? <CircularProgress size={24} /> : 'Kartvizit Oluştur'}
-                        </Button>
+                        </Box>
+
+                        {/* Temel Bilgiler */}
+                        <Box sx={{ mb: 4 }}>
+                            <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'text.primary' }}>
+                                👤 Temel Bilgiler
+                            </Typography>
+                            <Grid container spacing={3}>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        required
+                                        name="cardName"
+                                        label="Kartvizit Adı"
+                                        value={formData.cardName}
+                                        onChange={handleChange}
+                                        fullWidth
+                                        variant="outlined"
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                    />
+                                </Grid>
+
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        name="name"
+                                        label="İsim Soyisim"
+                                        value={formData.name}
+                                        onChange={handleChange}
+                                        fullWidth
+                                        variant="outlined"
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                    />
+                                </Grid>
+
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        name="title"
+                                        label="Ünvan"
+                                        value={formData.title}
+                                        onChange={handleChange}
+                                        fullWidth
+                                        variant="outlined"
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                    />
+                                </Grid>
+
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        name="company"
+                                        label="Şirket"
+                                        value={formData.company}
+                                        onChange={handleChange}
+                                        fullWidth
+                                        variant="outlined"
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                    />
+                                </Grid>
+
+                                <Grid item xs={12}>
+                                    <TextField
+                                        name="bio"
+                                        label="Biyografi / Açıklama"
+                                        value={formData.bio}
+                                        onChange={handleChange}
+                                        multiline
+                                        rows={3}
+                                        fullWidth
+                                        variant="outlined"
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                        placeholder="Kendinizi ve işinizi kısa bir şekilde tanıtın..."
+                                    />
+                                </Grid>
+                            </Grid>
+                        </Box>
+
+                        {/* İletişim Bilgileri */}
+                        <Box sx={{ mb: 4 }}>
+                            <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'text.primary' }}>
+                                📞 İletişim Bilgileri
+                            </Typography>
+                            <Grid container spacing={3}>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        name="phone"
+                                        label="Telefon"
+                                        value={formData.phone}
+                                        onChange={handleChange}
+                                        fullWidth
+                                        variant="outlined"
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                    />
+                                </Grid>
+
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        name="email"
+                                        label="E-posta"
+                                        type="email"
+                                        value={formData.email}
+                                        onChange={handleChange}
+                                        fullWidth
+                                        variant="outlined"
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                    />
+                                </Grid>
+
+                                <Grid item xs={12}>
+                                    <TextField
+                                        name="website"
+                                        label="Website"
+                                        value={formData.website}
+                                        onChange={handleChange}
+                                        fullWidth
+                                        variant="outlined"
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                        placeholder="https://www.example.com"
+                                    />
+                                </Grid>
+
+                                <Grid item xs={12}>
+                                    <TextField
+                                        name="address"
+                                        label="Adres"
+                                        value={formData.address}
+                                        onChange={handleChange}
+                                        multiline
+                                        rows={2}
+                                        fullWidth
+                                        variant="outlined"
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </Box>
+
+                        {/* Sosyal Medya */}
+                        <Box sx={{ mb: 4 }}>
+                            <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'text.primary' }}>
+                                📱 Sosyal Medya (İsteğe Bağlı)
+                            </Typography>
+                            <Grid container spacing={3}>
+                                <Grid item xs={12} md={4}>
+                                    <TextField
+                                        name="linkedinUrl"
+                                        fullWidth
+                                        label="LinkedIn Profil URL"
+                                        value={formData.linkedinUrl}
+                                        onChange={handleChange}
+                                        disabled={loading}
+                                        variant="outlined"
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    <LinkedInIcon color="primary" />
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={4}>
+                                    <TextField
+                                        name="twitterUrl"
+                                        fullWidth
+                                        label="Twitter (X) Profil URL"
+                                        value={formData.twitterUrl}
+                                        onChange={handleChange}
+                                        disabled={loading}
+                                        variant="outlined"
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    <TwitterIcon color="primary" />
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={4}>
+                                    <TextField
+                                        name="instagramUrl"
+                                        fullWidth
+                                        label="Instagram Profil URL"
+                                        value={formData.instagramUrl}
+                                        onChange={handleChange}
+                                        disabled={loading}
+                                        variant="outlined"
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    <InstagramIcon color="primary" />
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </Box>
+
+                        {/* Konfigürasyon */}
+                        <Box sx={{ mb: 4 }}>
+                            <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'text.primary' }}>
+                                ⚙️ Konfigürasyon
+                            </Typography>
+                            <Grid container spacing={3}>
+                                <Grid item xs={12} sm={6}>
+                                    <FormControl fullWidth variant="outlined">
+                                        <InputLabel>Şirket</InputLabel>
+                                        <Select
+                                            name="companyId"
+                                            value={formData.companyId}
+                                            onChange={handleChange}
+                                            label="Şirket"
+                                            sx={{ borderRadius: 2 }}
+                                        >
+                                            <MenuItem value="">Şirket Seçin</MenuItem>
+                                            {companies.map(company => (
+                                                <MenuItem key={company.id} value={company.id}>
+                                                    {company.name}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+
+                                <Grid item xs={12} sm={6}>
+                                    <FormControl fullWidth variant="outlined">
+                                        <InputLabel>Kullanıcı</InputLabel>
+                                        <Select
+                                            name="userId"
+                                            value={formData.userId}
+                                            onChange={handleChange}
+                                            label="Kullanıcı"
+                                            sx={{ borderRadius: 2 }}
+                                        >
+                                            <MenuItem value="">Kullanıcı Seçin</MenuItem>
+                                            {users.map(user => (
+                                                <MenuItem key={user.id} value={user.id}>
+                                                    {user.name} ({user.email})
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        name="customSlug"
+                                        label="Özel URL"
+                                        value={formData.customSlug}
+                                        onChange={handleChange}
+                                        fullWidth
+                                        variant="outlined"
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                        helperText="Boş bırakılırsa otomatik oluşturulur"
+                                    />
+                                </Grid>
+
+                                <Grid item xs={12} sm={6}>
+                                    <FormControl fullWidth variant="outlined">
+                                        <InputLabel>Tema</InputLabel>
+                                        <Select
+                                            value={formData.theme}
+                                            label="Tema"
+                                            name="theme"
+                                            onChange={handleChange}
+                                            sx={{ borderRadius: 2 }}
+                                        >
+                                            <MenuItem value="light">Varsayılan (Açık)</MenuItem>
+                                            <MenuItem value="modern">Modern</MenuItem>
+                                            <MenuItem value="minimalist">Minimalist</MenuItem>
+                                            <MenuItem value="icongrid">İkon Grid</MenuItem>
+                                            <MenuItem value="business">İş</MenuItem>
+                                            <MenuItem value="creative">Yaratıcı</MenuItem>
+                                            <MenuItem value="dark">Koyu</MenuItem>
+                                            <MenuItem value="darkmodern">Koyu Modern</MenuItem>
+                                            <MenuItem value="blue">Mavi</MenuItem>
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+
+                                <Grid item xs={12}>
+                                    <Box sx={{ 
+                                        p: 2, 
+                                        backgroundColor: 'grey.50', 
+                                        borderRadius: 2,
+                                        border: '1px solid',
+                                        borderColor: 'grey.200'
+                                    }}>
+                                        <FormControlLabel
+                                            control={
+                                                <Switch
+                                                    checked={formData.status}
+                                                    onChange={handleChange}
+                                                    name="status"
+                                                    color="primary"
+                                                />
+                                            }
+                                            label={
+                                                <Box>
+                                                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                                        Kartvizit Aktif mi?
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        Kartvizit hemen yayınlansın mı?
+                                                    </Typography>
+                                                </Box>
+                                            }
+                                        />
+                                    </Box>
+                                </Grid>
+                            </Grid>
+                        </Box>
+
+                        {/* Tema Önizlemesi */}
+                        <Box sx={{ mb: 4 }}>
+                            <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'text.primary' }}>
+                                👁️ Tema Önizlemesi
+                            </Typography>
+                            <ThemePreview formData={formData} />
+                        </Box>
+
+                        {/* Submit Button */}
+                        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                            <Button
+                                variant="outlined"
+                                onClick={() => navigate('/admin/cards')}
+                                disabled={loading}
+                                sx={{ minWidth: 120, borderRadius: 2 }}
+                            >
+                                İptal
+                            </Button>
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                color="primary"
+                                disabled={loading}
+                                sx={{ minWidth: 150, borderRadius: 2 }}
+                                size="large"
+                            >
+                                {loading ? <CircularProgress size={24} /> : 'Kartvizit Oluştur'}
+                            </Button>
+                        </Box>
                     </form>
                 )}
 
@@ -694,7 +851,7 @@ function AdminCardCreatePage() {
                     </DialogActions>
                 </Dialog>
             </Paper>
-        </Container>
+        </Box>
     );
 }
 

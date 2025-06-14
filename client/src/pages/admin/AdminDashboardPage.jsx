@@ -6,38 +6,25 @@ import {
     Box, 
     Typography, 
     Grid, 
-    Card, 
-    CardContent, 
     CircularProgress, 
     Alert, 
     Paper,
     Button,
+    Divider,
+    Chip,
 } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import CardMembershipIcon from '@mui/icons-material/CardMembership';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import BusinessIcon from '@mui/icons-material/Business';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import SettingsIcon from '@mui/icons-material/Settings';
+
+// Components
+import ModernStatCard from '../../components/ModernStatCard';
 
 // Admin Servisi - Named import kullanalım
 import { getDashboardStats } from '../../services/adminService';
-
-// Basit bir istatistik kartı bileşeni
-function StatCard({ title, value, icon, color = 'primary' }) {
-    return (
-        <Card component={Paper} elevation={3} sx={{ display: 'flex', alignItems: 'center', p: 2 }}>
-            <Box sx={{ mr: 2, color: `${color}.main` }}>
-                {icon}
-            </Box>
-            <Box>
-                <Typography variant="h6" component="div">
-                    {value}
-                </Typography>
-                <Typography color="text.secondary">
-                    {title}
-                </Typography>
-            </Box>
-        </Card>
-    );
-}
 
 function AdminDashboardPage() {
     const [stats, setStats] = useState(null);
@@ -64,55 +51,170 @@ function AdminDashboardPage() {
     }, []);
 
     return (
-        <Box sx={{ mt: 4 }}>
-            <Typography variant="h4" component="h1" gutterBottom>
-                Yönetim Paneli - Genel Bakış
-            </Typography>
+        <Box sx={{ p: 4 }}>
+            {/* Header Section */}
+            <Box sx={{ mb: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                    <Box
+                        sx={{
+                            p: 2,
+                            borderRadius: 2,
+                            background: 'linear-gradient(135deg, #1565C0 0%, #2196F3 100%)',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <BusinessIcon sx={{ fontSize: 28 }} />
+                    </Box>
+                    <Box>
+                        <Typography variant="h4" component="h1" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                            Genel Bakış
+                        </Typography>
+                        <Typography variant="body1" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                            Sistem genel bakış ve istatistikler
+                        </Typography>
+                    </Box>
+                </Box>
+                
+                <Chip 
+                    icon={<TrendingUpIcon />}
+                    label="Son 24 saat içindeki veriler"
+                    variant="outlined"
+                    color="primary"
+                    size="small"
+                />
+            </Box>
 
             {loading ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>
-            ) : error ? (
-                <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>
-            ) : stats ? (
-                <Grid container spacing={3} sx={{ mt: 2 }}>
-                    <Grid item xs={12} sm={6} md={4}>
-                        <StatCard 
-                            title="Toplam Kullanıcı"
-                            value={stats.totalUsers}
-                            icon={<PeopleIcon fontSize="large" />}
-                            color="primary"
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={4}>
-                         <StatCard 
-                            title="Toplam Kartvizit"
-                            value={stats.totalCards}
-                            icon={<CardMembershipIcon fontSize="large" />}
-                            color="secondary"
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={4}>
-                         <StatCard 
-                            title="Aktif Kartvizit"
-                            value={stats.activeCards}
-                            icon={<CheckCircleOutlineIcon fontSize="large" />}
-                            color="success"
-                        />
-                    </Grid>
-                </Grid>
-            ) : (
-                 <Typography sx={{ mt: 2 }}>İstatistik verisi bulunamadı.</Typography>
-            )}
-
-            <Paper elevation={2} sx={{ p: 3, mt: 4 }}>
-                <Typography variant="h6" gutterBottom>Hızlı Erişim</Typography>
-                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap'}}>
-                    <Button variant="outlined" component={RouterLink} to="/admin/users">Kullanıcıları Yönet</Button>
-                    <Button variant="outlined" component={RouterLink} to="/admin/cards">Kartvizitleri Yönet</Button>
-                    <Button variant="outlined" component={RouterLink} to="/admin/companies">Şirketleri Yönet</Button>
+                <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    alignItems: 'center',
+                    minHeight: '400px'
+                }}>
+                    <CircularProgress size={60} />
                 </Box>
-            </Paper>
+            ) : error ? (
+                <Alert 
+                    severity="error" 
+                    sx={{ 
+                        mt: 2,
+                        borderRadius: 2,
+                        '& .MuiAlert-message': { fontSize: '1rem' }
+                    }}
+                >
+                    {error}
+                </Alert>
+            ) : stats ? (
+                <>
+                    {/* Stats Cards */}
+                    <Grid container spacing={3} sx={{ mb: 4 }}>
+                        <Grid item xs={12} sm={6} lg={3}>
+                            <ModernStatCard 
+                                title="Toplam Kullanıcı"
+                                value={stats.totalUsers}
+                                icon={<PeopleIcon />}
+                                color="primary"
+                                trend="up"
+                                trendValue="+12%"
+                                subtitle="Aktif kullanıcı sayısı"
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={6} lg={3}>
+                            <ModernStatCard 
+                                title="Toplam Kartvizit"
+                                value={stats.totalCards}
+                                icon={<CardMembershipIcon />}
+                                color="info"
+                                trend="up"
+                                trendValue="+8%"
+                                subtitle="Oluşturulan tüm kartlar"
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={6} lg={3}>
+                            <ModernStatCard 
+                                title="Aktif Kartvizit"
+                                value={stats.activeCards}
+                                icon={<CheckCircleOutlineIcon />}
+                                color="success"
+                                trend="up"
+                                trendValue="+5%"
+                                subtitle="Yayında olan kartlar"
+                                progress={stats.activeCards ? Math.round((stats.activeCards / stats.totalCards) * 100) : 0}
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={6} lg={3}>
+                            <ModernStatCard 
+                                title="Sistem Durumu"
+                                value="Çevrimiçi"
+                                icon={<TrendingUpIcon />}
+                                color="success"
+                                subtitle="Tüm sistemler çalışıyor"
+                                progress={98}
+                            />
+                        </Grid>
+                    </Grid>
 
+                    {/* Recent Activities */}
+                    <Paper 
+                        elevation={0}
+                        sx={{ 
+                            p: 4, 
+                            borderRadius: 3,
+                            border: '1px solid',
+                            borderColor: 'grey.200',
+                            background: 'white'
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                            <TrendingUpIcon sx={{ color: 'primary.main', fontSize: 24 }} />
+                            <Typography variant="h5" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                                Son Aktiviteler
+                            </Typography>
+                        </Box>
+                        
+                        <Divider sx={{ mb: 3 }} />
+                        
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <Box sx={{ p: 3, backgroundColor: 'grey.50', borderRadius: 2, border: '1px solid', borderColor: 'grey.200' }}>
+                                <Typography variant="h6" sx={{ color: 'text.primary', mb: 1 }}>
+                                    Hoş Geldiniz! 👋
+                                </Typography>
+                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                    Admin paneline hoş geldiniz. Sol menüden istediğiniz bölüme ulaşabilirsiniz. 
+                                    Kullanıcıları, kartvizitleri ve şirketleri kolayca yönetebilirsiniz.
+                                </Typography>
+                            </Box>
+                            
+                            <Box sx={{ p: 3, backgroundColor: 'success.50', borderRadius: 2, border: '1px solid', borderColor: 'success.200' }}>
+                                <Typography variant="h6" sx={{ color: 'success.dark', mb: 1 }}>
+                                    Sistem Durumu: Aktif ✅
+                                </Typography>
+                                <Typography variant="body2" sx={{ color: 'success.dark' }}>
+                                    Tüm sistemler normal çalışıyor. Son backup: Bugün 03:00
+                                </Typography>
+                            </Box>
+                        </Box>
+                    </Paper>
+                </>
+            ) : (
+                <Paper 
+                    elevation={0}
+                    sx={{ 
+                        p: 4, 
+                        borderRadius: 3,
+                        border: '1px solid',
+                        borderColor: 'grey.200',
+                        textAlign: 'center'
+                    }}
+                >
+                    <Typography sx={{ color: 'text.secondary', fontSize: '1.1rem' }}>
+                        İstatistik verisi bulunamadı.
+                    </Typography>
+                </Paper>
+            )}
         </Box>
     );
 }

@@ -20,6 +20,7 @@ import Link from '@mui/material/Link';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import AddIcon from '@mui/icons-material/Add';
+import CardMembershipIcon from '@mui/icons-material/CardMembership';
 
 // Icon Imports
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -124,20 +125,41 @@ function AdminCardListPage() {
     }
 
     return (
-        <Box sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h4" component="h1">
-                    Kartvizit Yönetimi
-                </Typography>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    startIcon={<AddIcon />}
-                    component={RouterLink}
-                    to="/admin/cards/new"
-                >
-                    Yeni Kartvizit Ekle
-                </Button>
+        <Box sx={{ p: 4 }}>
+            <Box sx={{ mb: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                    <Box
+                        sx={{
+                            p: 2,
+                            borderRadius: 2,
+                            background: 'linear-gradient(135deg, #1565C0 0%, #2196F3 100%)',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <CardMembershipIcon sx={{ fontSize: 28 }} />
+                    </Box>
+                    <Box sx={{ flex: 1 }}>
+                        <Typography variant="h4" component="h1" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                            Kartvizit Yönetimi
+                        </Typography>
+                        <Typography variant="body1" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                            Tüm kartvizitleri görüntüleyin ve yönetin
+                        </Typography>
+                    </Box>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={<AddIcon />}
+                        component={RouterLink}
+                        to="/admin/cards/new"
+                        sx={{ minWidth: 200 }}
+                    >
+                        Yeni Kartvizit Ekle
+                    </Button>
+                </Box>
             </Box>
             
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}

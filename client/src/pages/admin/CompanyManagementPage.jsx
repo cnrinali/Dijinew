@@ -17,10 +17,17 @@ import DialogTitle from '@mui/material/DialogTitle';
 import TextField from '@mui/material/TextField';
 import Switch from '@mui/material/Switch';
 import FormControlLabel from '@mui/material/FormControlLabel';
-import { DataGrid, GridToolbar } from '@mui/x-data-grid';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Chip from '@mui/material/Chip';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import BusinessIcon from '@mui/icons-material/Business';
 
 function CompanyManagementPage() {
     const [companies, setCompanies] = useState([]);
@@ -162,80 +169,155 @@ function CompanyManagementPage() {
         }
     };
 
-    const columns = [
-        { field: 'id', headerName: 'ID', width: 70 },
-        { field: 'name', headerName: 'Şirket Adı', width: 200 },
-        {
-             field: 'status',
-             headerName: 'Durum',
-             width: 100,
-             type: 'boolean',
-             renderCell: (params) => (params.value ? 'Aktif' : 'Pasif') 
-        },
-        { field: 'phone', headerName: 'Telefon', width: 150 },
-        { field: 'website', headerName: 'Web Sitesi', width: 200 },
-        { field: 'address', headerName: 'Adres', flex: 1, minWidth: 200 },
-        { field: 'userLimit', headerName: 'Kullanıcı Lim.', type: 'number', width: 110, align: 'center', headerAlign: 'center' },
-        { field: 'cardLimit', headerName: 'Kart Lim.', type: 'number', width: 90, align: 'center', headerAlign: 'center' },
-        {
-            field: 'actions',
-            headerName: 'İşlemler',
-            width: 120,
-            sortable: false,
-            disableColumnMenu: true,
-            renderCell: (params) => (
-                <Box>
-                    <Tooltip title="Düzenle">
-                        <IconButton size="small" onClick={() => handleOpenModal(params.row)}>
-                            <EditIcon />
-                        </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Sil">
-                        <IconButton size="small" onClick={() => handleDeleteClick(params.row)}>
-                            <DeleteIcon />
-                        </IconButton>
-                    </Tooltip>
-                </Box>
-            ),
-        },
-    ];
+
 
     return (
-        <Paper sx={{ p: 3, height: '80vh', width: '100%' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h5" component="h1">Şirket Yönetimi</Typography>
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => handleOpenModal()}
-                >
-                    Yeni Şirket Ekle
-                </Button>
+        <Box sx={{ p: 4 }}>
+            <Box sx={{ mb: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                    <Box
+                        sx={{
+                            p: 2,
+                            borderRadius: 2,
+                            background: 'linear-gradient(135deg, #1565C0 0%, #2196F3 100%)',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <BusinessIcon sx={{ fontSize: 28 }} />
+                    </Box>
+                    <Box sx={{ flex: 1 }}>
+                        <Typography variant="h4" component="h1" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                            Şirket Yönetimi
+                        </Typography>
+                        <Typography variant="body1" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                            Şirketleri görüntüleyin ve yönetin
+                        </Typography>
+                    </Box>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={<AddIcon />}
+                        onClick={() => handleOpenModal()}
+                        sx={{ minWidth: 200 }}
+                    >
+                        Yeni Şirket Ekle
+                    </Button>
+                </Box>
             </Box>
 
             {loading ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-                    <CircularProgress />
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 8 }}>
+                    <CircularProgress size={60} />
                 </Box>
             ) : (
-                <DataGrid
-                    rows={companies}
-                    columns={columns}
-                    initialState={{
-                        pagination: {
-                            paginationModel: { page: 0, pageSize: 10 },
-                        },
-                    }}
-                    pageSizeOptions={[5, 10, 25]}
-                    slots={{ toolbar: GridToolbar }} // Filtreleme, export vb. için toolbar
-                    slotProps={{
-                      toolbar: {
-                        showQuickFilter: true, // Hızlı arama kutusu
-                      },
-                    }}
-                    disableRowSelectionOnClick
-                    autoHeight={false} // Paper'ın yüksekliğini kullan
-                />
+                <TableContainer component={Paper} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'grey.200' }}>
+                    <Table sx={{ minWidth: 650 }} aria-label="şirket tablosu">
+                        <TableHead sx={{ backgroundColor: 'grey.50' }}>
+                            <TableRow>
+                                <TableCell sx={{ fontWeight: 600 }}>ID</TableCell>
+                                <TableCell sx={{ fontWeight: 600 }}>Şirket Adı</TableCell>
+                                <TableCell sx={{ fontWeight: 600 }}>Durum</TableCell>
+                                <TableCell sx={{ fontWeight: 600 }}>Telefon</TableCell>
+                                <TableCell sx={{ fontWeight: 600 }}>Limitler</TableCell>
+                                <TableCell sx={{ fontWeight: 600 }}>İletişim</TableCell>
+                                <TableCell align="right" sx={{ fontWeight: 600 }}>İşlemler</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {companies.length > 0 ? (
+                                companies.map((company) => (
+                                    <TableRow
+                                        key={company.id}
+                                        sx={{ 
+                                            '&:last-child td, &:last-child th': { border: 0 },
+                                            '&:hover': { backgroundColor: 'grey.50' }
+                                        }}
+                                    >
+                                        <TableCell component="th" scope="row">{company.id}</TableCell>
+                                        <TableCell>
+                                            <Box>
+                                                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                                    {company.name}
+                                                </Typography>
+                                                {company.address && (
+                                                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                                        {company.address.length > 50 ? `${company.address.substring(0, 50)}...` : company.address}
+                                                    </Typography>
+                                                )}
+                                            </Box>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Chip
+                                                label={company.status ? 'Aktif' : 'Pasif'}
+                                                color={company.status ? 'success' : 'default'}
+                                                size="small"
+                                                variant="outlined"
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            {company.phone || '-'}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                                                <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
+                                                    👥 {company.userLimit} kullanıcı
+                                                </Typography>
+                                                <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
+                                                    🃏 {company.cardLimit} kart
+                                                </Typography>
+                                            </Box>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                                                {company.website && (
+                                                    <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
+                                                        🌐 {company.website.length > 25 ? `${company.website.substring(0, 25)}...` : company.website}
+                                                    </Typography>
+                                                )}
+                                                {!company.website && !company.phone && (
+                                                    <Typography variant="body2" color="text.secondary">-</Typography>
+                                                )}
+                                            </Box>
+                                        </TableCell>
+                                        <TableCell align="right">
+                                            <Tooltip title="Düzenle">
+                                                <IconButton 
+                                                    aria-label="edit" 
+                                                    size="small" 
+                                                    onClick={() => handleOpenModal(company)}
+                                                    sx={{ mr: 1 }}
+                                                >
+                                                    <EditIcon fontSize="inherit" />
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Tooltip title="Sil">
+                                                <IconButton 
+                                                    aria-label="delete" 
+                                                    onClick={() => handleDeleteClick(company)} 
+                                                    color="error" 
+                                                    size="small"
+                                                >
+                                                    <DeleteIcon fontSize="inherit" />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                                        <Typography variant="body1" color="text.secondary">
+                                            Henüz şirket bulunmuyor. Yeni şirket eklemek için yukarıdaki butonu kullanın.
+                                        </Typography>
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
             )}
 
             {/* Ekleme/Düzenleme Modalı */}
@@ -365,7 +447,7 @@ function CompanyManagementPage() {
                   </Button>
                 </DialogActions>
               </Dialog>
-        </Paper>
+        </Box>
     );
 }
 

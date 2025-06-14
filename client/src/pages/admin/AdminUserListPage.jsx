@@ -38,6 +38,7 @@ import FormControl from '@mui/material/FormControl';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
+import PeopleIcon from '@mui/icons-material/People';
 
 function AdminUserListPage() {
     const [users, setUsers] = useState([]);
@@ -201,68 +202,121 @@ function AdminUserListPage() {
     }
 
     return (
-        <Box sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h4" component="h1">Kullanıcı Yönetimi</Typography>
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => handleOpenModal()}
-                >
-                    Yeni Kullanıcı Ekle
-                </Button>
+        <Box sx={{ p: 4 }}>
+            <Box sx={{ mb: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                    <Box
+                        sx={{
+                            p: 2,
+                            borderRadius: 2,
+                            background: 'linear-gradient(135deg, #1565C0 0%, #2196F3 100%)',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <PeopleIcon sx={{ fontSize: 28 }} />
+                    </Box>
+                    <Box sx={{ flex: 1 }}>
+                        <Typography variant="h4" component="h1" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                            Kullanıcı Yönetimi
+                        </Typography>
+                        <Typography variant="body1" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                            Tüm kullanıcıları görüntüleyin ve yönetin
+                        </Typography>
+                    </Box>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={<AddIcon />}
+                        onClick={() => handleOpenModal()}
+                        sx={{ minWidth: 200 }}
+                    >
+                        Yeni Kullanıcı Ekle
+                    </Button>
+                </Box>
             </Box>
             
             {error && !modalOpen && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-            <TableContainer component={Paper}>
-                <Table sx={{ minWidth: 750 }} aria-label="simple table">
-                    <TableHead>
+            <TableContainer component={Paper} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'grey.200' }}>
+                <Table sx={{ minWidth: 750 }} aria-label="kullanıcı tablosu">
+                    <TableHead sx={{ backgroundColor: 'grey.50' }}>
                         <TableRow>
-                            <TableCell>ID</TableCell>
-                            <TableCell>İsim</TableCell>
-                            <TableCell>E-posta</TableCell>
-                            <TableCell>Rol</TableCell>
-                            <TableCell>Şirket</TableCell>
-                            <TableCell>Kayıt Tarihi</TableCell>
-                            <TableCell align="right">İşlemler</TableCell>
+                            <TableCell sx={{ fontWeight: 600 }}>ID</TableCell>
+                            <TableCell sx={{ fontWeight: 600 }}>İsim</TableCell>
+                            <TableCell sx={{ fontWeight: 600 }}>E-posta</TableCell>
+                            <TableCell sx={{ fontWeight: 600 }}>Rol</TableCell>
+                            <TableCell sx={{ fontWeight: 600 }}>Şirket</TableCell>
+                            <TableCell sx={{ fontWeight: 600 }}>Kayıt Tarihi</TableCell>
+                            <TableCell align="right" sx={{ fontWeight: 600 }}>İşlemler</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {users.map((user) => (
-                            <TableRow
-                                key={user.id}
-                                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                            >
-                                <TableCell component="th" scope="row">{user.id}</TableCell>
-                                <TableCell>{user.name}</TableCell>
-                                <TableCell>{user.email}</TableCell>
-                                <TableCell>{user.role}</TableCell>
-                                <TableCell>{user.companyName || 'Bireysel'}</TableCell>
-                                <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
-                                <TableCell align="right">
-                                     <Tooltip title="Düzenle">
-                                        <IconButton 
-                                            aria-label="edit" 
-                                            size="small" 
-                                            onClick={() => handleOpenModal(user)}
+                        {users.length > 0 ? (
+                            users.map((user) => (
+                                <TableRow
+                                    key={user.id}
+                                    sx={{ 
+                                        '&:last-child td, &:last-child th': { border: 0 },
+                                        '&:hover': { backgroundColor: 'grey.50' }
+                                    }}
+                                >
+                                    <TableCell component="th" scope="row">{user.id}</TableCell>
+                                    <TableCell>{user.name}</TableCell>
+                                    <TableCell>{user.email}</TableCell>
+                                    <TableCell>
+                                        <Box
+                                            sx={{
+                                                px: 2,
+                                                py: 0.5,
+                                                borderRadius: 1,
+                                                backgroundColor: user.role === 'admin' ? 'error.100' : 'primary.100',
+                                                color: user.role === 'admin' ? 'error.800' : 'primary.800',
+                                                fontSize: '0.875rem',
+                                                fontWeight: 500,
+                                                display: 'inline-block'
+                                            }}
                                         >
-                                             <EditIcon fontSize="inherit"/> 
-                                         </IconButton>
-                                     </Tooltip>
-                                     <Tooltip title="Sil">
-                                         <IconButton 
-                                            aria-label="delete" 
-                                            onClick={() => handleDeleteClick(user)} 
-                                            color="error" 
-                                            size="small"
-                                        >
-                                             <DeleteIcon fontSize="inherit"/> 
-                                         </IconButton>
-                                     </Tooltip>
+                                            {user.role}
+                                        </Box>
+                                    </TableCell>
+                                    <TableCell>{user.companyName || 'Bireysel'}</TableCell>
+                                    <TableCell>{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}</TableCell>
+                                    <TableCell align="right">
+                                         <Tooltip title="Düzenle">
+                                            <IconButton 
+                                                aria-label="edit" 
+                                                size="small" 
+                                                onClick={() => handleOpenModal(user)}
+                                                sx={{ mr: 1 }}
+                                            >
+                                                 <EditIcon fontSize="inherit"/> 
+                                             </IconButton>
+                                         </Tooltip>
+                                         <Tooltip title="Sil">
+                                             <IconButton 
+                                                aria-label="delete" 
+                                                onClick={() => handleDeleteClick(user)} 
+                                                color="error" 
+                                                size="small"
+                                            >
+                                                 <DeleteIcon fontSize="inherit"/> 
+                                             </IconButton>
+                                         </Tooltip>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                                    <Typography variant="body1" color="text.secondary">
+                                        Henüz kullanıcı bulunmuyor. Yeni kullanıcı eklemek için yukarıdaki butonu kullanın.
+                                    </Typography>
                                 </TableCell>
                             </TableRow>
-                        ))}
+                        )}
                     </TableBody>
                 </Table>
             </TableContainer>

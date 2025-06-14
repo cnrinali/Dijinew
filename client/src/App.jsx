@@ -1,8 +1,12 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link as RouterLink, Navigate } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Button, Container, Box, IconButton, Menu, MenuItem } from '@mui/material';
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
 import MenuIcon from '@mui/icons-material/Menu';
+import BusinessIcon from '@mui/icons-material/Business';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import modernTheme from './theme/modernTheme';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import HomePage from './pages/HomePage';
@@ -11,6 +15,7 @@ import AdminUserListPage from './pages/admin/AdminUserListPage';
 import AdminCompanyListPage from './pages/admin/CompanyManagementPage';
 import AdminCardListPage from './pages/admin/AdminCardListPage';
 import AdminCardCreatePage from './pages/admin/AdminCardCreatePage';
+import AdminLayout from './components/admin/AdminLayout';
 import UserProfilePage from './pages/ProfilePage';
 import CorporateDashboardPage from './pages/corporate/CorporateDashboardPage';
 import { NotificationProvider } from './context/NotificationContext.jsx';
@@ -72,23 +77,33 @@ function AppContent() {
             <AppBar position="static">
               <Container maxWidth="xl">
                 <Toolbar disableGutters>
-                  <Typography
-                    variant="h6"
-                    noWrap
+                  <Box
                     component={RouterLink}
                     to="/"
                     sx={{
                       mr: 2,
                       display: { xs: 'none', md: 'flex' },
-                      fontFamily: 'monospace',
-                      fontWeight: 700,
-                      letterSpacing: '.3rem',
-                      color: 'inherit',
+                      alignItems: 'center',
                       textDecoration: 'none',
+                      gap: 1,
                     }}
                   >
-                    LOGO
-                </Typography>
+                    <BusinessIcon sx={{ color: 'primary.main', fontSize: 32 }} />
+                    <Typography
+                      variant="h5"
+                      sx={{
+                        fontWeight: 700,
+                        color: 'text.primary',
+                        fontFamily: 'Inter, sans-serif',
+                        background: 'linear-gradient(135deg, #1565C0 0%, #2196F3 100%)',
+                        backgroundClip: 'text',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                      }}
+                    >
+                      DijiCard
+                    </Typography>
+                  </Box>
 
                   <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
                     <IconButton
@@ -117,6 +132,24 @@ function AppContent() {
                       onClose={handleCloseNavMenu}
                       sx={{
                         display: { xs: 'block', md: 'none' },
+                        '& .MuiPaper-root': {
+                          borderRadius: 2,
+                          mt: 1,
+                          border: '1px solid',
+                          borderColor: 'grey.200',
+                          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                        },
+                        '& .MuiMenuItem-root': {
+                          py: 1.5,
+                          px: 3,
+                          fontSize: '0.95rem',
+                          fontWeight: 500,
+                          color: 'text.secondary',
+                          '&:hover': {
+                            backgroundColor: 'primary.50',
+                            color: 'primary.main',
+                          },
+                        },
                       }}
                     >
                       {filteredNavItems.map((item) => (
@@ -131,32 +164,56 @@ function AppContent() {
                        )}
                     </Menu>
                   </Box>
-                  <Typography
-                    variant="h5"
-                    noWrap
+                  <Box
                     component={RouterLink}
                     to="/"
                     sx={{
                       mr: 2,
                       display: { xs: 'flex', md: 'none' },
                       flexGrow: 1,
-                      fontFamily: 'monospace',
-                      fontWeight: 700,
-                      letterSpacing: '.3rem',
-                      color: 'inherit',
+                      alignItems: 'center',
                       textDecoration: 'none',
+                      gap: 1,
                     }}
                   >
-                    LOGO
-                  </Typography>
-                  <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+                    <BusinessIcon sx={{ color: 'primary.main', fontSize: 28 }} />
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontWeight: 700,
+                        color: 'text.primary',
+                        fontFamily: 'Inter, sans-serif',
+                        background: 'linear-gradient(135deg, #1565C0 0%, #2196F3 100%)',
+                        backgroundClip: 'text',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                      }}
+                    >
+                      DijiCard
+                    </Typography>
+                  </Box>
+                  <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, gap: 1 }}>
                     {filteredNavItems.map((item) => (
                       <Button
                         key={item.label}
                         component={RouterLink}
                         to={item.path}
                         onClick={handleCloseNavMenu}
-                        sx={{ my: 2, color: 'white', display: 'block' }}
+                        sx={{ 
+                          mx: 1,
+                          px: 2,
+                          py: 1,
+                          color: 'text.secondary',
+                          textTransform: 'none',
+                          fontWeight: 500,
+                          borderRadius: 2,
+                          transition: 'all 0.2s ease-in-out',
+                          '&:hover': {
+                            backgroundColor: 'primary.50',
+                            color: 'primary.main',
+                            transform: 'translateY(-1px)',
+                          },
+                        }}
                       >
                         {item.label}
                       </Button>
@@ -165,14 +222,31 @@ function AppContent() {
 
                   {user && (
                     <Box sx={{ flexGrow: 0, display: { xs: 'none', md: 'flex' } }}>
-                  <Button color="inherit" onClick={logout}>Çıkış Yap</Button> 
+                      <Button 
+                        onClick={logout}
+                        variant="outlined"
+                        sx={{ 
+                          ml: 2,
+                          borderColor: 'error.main',
+                          color: 'error.main',
+                          textTransform: 'none',
+                          fontWeight: 500,
+                          '&:hover': {
+                            borderColor: 'error.dark',
+                            backgroundColor: 'error.50',
+                            color: 'error.dark',
+                          },
+                        }}
+                      >
+                        Çıkış Yap
+                      </Button> 
                     </Box>
-                )}
+                  )}
               </Toolbar>
               </Container>
             </AppBar>
 
-            <Container component="main" sx={{ mt: 2, mb: 2 }}>
+            <Container component="main" sx={{ py: 0, minHeight: 'calc(100vh - 64px)' }}>
               <Routes>
                 <Route path="/" element={<HomePage />} /> 
                 <Route path="/login" element={<LoginPage />} />
@@ -180,11 +254,11 @@ function AppContent() {
                 <Route path="/profile" element={user ? <UserProfilePage /> : <Navigate to="/login" />} />
                 
                 {/* Admin Routes */}
-                <Route path="/admin/dashboard" element={user && user.role === 'admin' ? <AdminDashboardPage /> : <Navigate to="/login" />} />
-                <Route path="/admin/users" element={user && user.role === 'admin' ? <AdminUserListPage /> : <Navigate to="/login" />} />
-                <Route path="/admin/companies" element={user && user.role === 'admin' ? <AdminCompanyListPage /> : <Navigate to="/login" />} />
-                <Route path="/admin/cards" element={user && user.role === 'admin' ? <AdminCardListPage /> : <Navigate to="/login" />} />
-                <Route path="/admin/cards/new" element={user && user.role === 'admin' ? <AdminCardCreatePage /> : <Navigate to="/login" />} />
+                <Route path="/admin/dashboard" element={user && user.role === 'admin' ? <AdminLayout><AdminDashboardPage /></AdminLayout> : <Navigate to="/login" />} />
+                <Route path="/admin/users" element={user && user.role === 'admin' ? <AdminLayout><AdminUserListPage /></AdminLayout> : <Navigate to="/login" />} />
+                <Route path="/admin/companies" element={user && user.role === 'admin' ? <AdminLayout><AdminCompanyListPage /></AdminLayout> : <Navigate to="/login" />} />
+                <Route path="/admin/cards" element={user && user.role === 'admin' ? <AdminLayout><AdminCardListPage /></AdminLayout> : <Navigate to="/login" />} />
+                <Route path="/admin/cards/new" element={user && user.role === 'admin' ? <AdminLayout><AdminCardCreatePage /></AdminLayout> : <Navigate to="/login" />} />
 
                 {/* Corporate Routes */}
                 <Route path="/corporate/dashboard" element={user && user.role === 'corporate' && user.companyId ? <CorporateDashboardPage /> : <Navigate to="/login" />} />
@@ -206,8 +280,11 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ThemeProvider theme={modernTheme}>
+      <CssBaseline />
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
