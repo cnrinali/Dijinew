@@ -69,7 +69,9 @@ const createCard = async (req, res) => {
         // Yeni sosyal medya alanları
         linkedinUrl = null,
         twitterUrl = null,
-        instagramUrl = null
+        instagramUrl = null,
+        // Kurumsal kullanıcı için seçilen kullanıcı ID'si
+        userId: selectedUserId = null
     } = req.body;
 
     const customSlug = validateAndCleanSlug(rawCustomSlug); // Slug'ı doğrula ve temizle
@@ -85,6 +87,31 @@ const createCard = async (req, res) => {
             
             if (cardCountResult.recordset[0].cardCount > 0) {
                 return res.status(400).json({ message: 'Bireysel kullanıcılar sadece bir kartvizit oluşturabilir.' });
+            }
+        }
+
+        // Kurumsal kullanıcı için özel işlemler
+        let finalUserId = userId;
+        let finalCompany = company;
+        
+        if (req.user.role === 'corporate') {
+            // Şirket bilgisini otomatik doldur
+            if (req.user.companyName) {
+                finalCompany = req.user.companyName;
+            }
+            
+            // Eğer belirli bir kullanıcı seçildiyse, o kullanıcının şirkete ait olduğunu kontrol et
+            if (selectedUserId) {
+                const userCheck = await pool.request()
+                    .input('selectedUserId', sql.Int, selectedUserId)
+                    .input('companyId', sql.Int, req.user.companyId)
+                    .query('SELECT TOP 1 id, name, email, phone FROM Users WHERE id = @selectedUserId AND companyId = @companyId');
+                
+                if (userCheck.recordset.length === 0) {
+                    return res.status(400).json({ message: 'Seçilen kullanıcı şirketinize ait değil.' });
+                }
+                
+                finalUserId = selectedUserId;
             }
         }
 
@@ -104,13 +131,13 @@ const createCard = async (req, res) => {
 
         // 2. Kartı oluştur
         const insertResult = await pool.request()
-            .input('userId', sql.Int, userId)
+            .input('userId', sql.Int, finalUserId)
             .input('cardName', sql.NVarChar, cardName)
             .input('profileImageUrl', sql.NVarChar, profileImageUrl)
             .input('coverImageUrl', sql.NVarChar, coverImageUrl)
             .input('name', sql.NVarChar, name)
             .input('title', sql.NVarChar, title)
-            .input('company', sql.NVarChar, company)
+            .input('company', sql.NVarChar, finalCompany)
             .input('bio', sql.NVarChar, bio)
             .input('phone', sql.NVarChar, phone)
             .input('email', sql.NVarChar, email)
@@ -131,11 +158,17 @@ const createCard = async (req, res) => {
 
         // 3. Son eklenen kartı al
         const selectResult = await pool.request()
-            .input('userId', sql.Int, userId)
+            .input('userId', sql.Int, finalUserId)
             .query('SELECT TOP 1 * FROM Cards WHERE userId = @userId ORDER BY id DESC');
 
         if (selectResult.recordset && selectResult.recordset.length > 0) {
-            res.status(201).json(selectResult.recordset[0]);
+            res.status(201).json({
+                success: true,
+                message: 'Kartvizit başarıyla oluşturuldu',
+                data: {
+                    card: selectResult.recordset[0]
+                }
+            });
         } else {
             throw new Error('Kartvizit oluşturulamadı.');
         }

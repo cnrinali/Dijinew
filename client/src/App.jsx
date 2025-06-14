@@ -57,7 +57,9 @@ function AppContent() {
 
   const isAdminRoute = location.pathname.startsWith('/admin') || 
                       location.pathname.startsWith('/corporate') ||
-                      (location.pathname === '/profile' && user?.role === 'admin');
+                      (location.pathname === '/profile' && user?.role === 'admin') ||
+                      (location.pathname.startsWith('/cards/') && user?.role === 'corporate') ||
+                      (location.pathname.startsWith('/cards/') && user?.role === 'admin');
 
   const filteredNavItems = navItems.filter(item => {
     if (item.public) {
@@ -302,8 +304,32 @@ function AppContent() {
 
                 {/* User Routes */}
                 <Route path="/cards" element={user && user.role === 'user' ? <CardListPage /> : <Navigate to="/login" />} />
-                <Route path="/cards/new" element={user && (user.role === 'user' || user.role === 'corporate' || user.role === 'admin') ? <CreateCardPage /> : <Navigate to="/login" />} />
-                <Route path="/cards/edit/:id" element={user && (user.role === 'user' || user.role === 'corporate' || user.role === 'admin') ? <EditCardPage /> : <Navigate to="/login" />} />
+                <Route path="/cards/new" element={
+                  user && (user.role === 'user' || user.role === 'corporate' || user.role === 'admin') ? (
+                    user.role === 'corporate' ? (
+                      <CorporateLayout><CreateCardPage /></CorporateLayout>
+                    ) : user.role === 'admin' ? (
+                      <AdminLayout><CreateCardPage /></AdminLayout>
+                    ) : (
+                      <CreateCardPage />
+                    )
+                  ) : (
+                    <Navigate to="/login" />
+                  )
+                } />
+                <Route path="/cards/edit/:id" element={
+                  user && (user.role === 'user' || user.role === 'corporate' || user.role === 'admin') ? (
+                    user.role === 'corporate' ? (
+                      <CorporateLayout><EditCardPage /></CorporateLayout>
+                    ) : user.role === 'admin' ? (
+                      <AdminLayout><EditCardPage /></AdminLayout>
+                    ) : (
+                      <EditCardPage />
+                    )
+                  ) : (
+                    <Navigate to="/login" />
+                  )
+                } />
 
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

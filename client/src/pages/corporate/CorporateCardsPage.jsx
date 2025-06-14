@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     getCorporateCards,
-    createCompanyCard,
     getCorporateUsers
 } from '../../services/corporateService';
 import { useNotification } from '../../context/NotificationContext';
@@ -19,17 +19,7 @@ import {
     Button,
     Chip,
     IconButton,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    TextField,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    Switch,
-    FormControlLabel,
+
     Grid,
     Card,
     CardContent,
@@ -53,19 +43,10 @@ import {
     Business as BusinessIcon
 } from '@mui/icons-material';
 
-const initialFormData = {
-    userId: '',
-    name: '',
-    title: '',
-    email: '',
-    phone: '',
-    website: '',
-    address: '',
-    isActive: true,
-    customSlug: ''
-};
+// Form data removed - now using /cards/new page
 
 function CorporateCardsPage() {
+    const navigate = useNavigate();
     const [cards, setCards] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -73,11 +54,7 @@ function CorporateCardsPage() {
     const [loadingUsers, setLoadingUsers] = useState(false);
     const { showNotification } = useNotification();
 
-    // Modal states
-    const [modalOpen, setModalOpen] = useState(false);
-    const [formData, setFormData] = useState(initialFormData);
-    const [formLoading, setFormLoading] = useState(false);
-    const [formError, setFormError] = useState('');
+    // Modal states - removed as we now navigate to /cards/new
 
     const fetchCards = useCallback(async () => {
         setLoading(true);
@@ -117,61 +94,7 @@ function CorporateCardsPage() {
         fetchUsers();
     }, [fetchCards, fetchUsers]);
 
-    const handleOpenModal = () => {
-        setFormData(initialFormData);
-        setFormError('');
-        setModalOpen(true);
-    };
-
-    const handleCloseModal = () => {
-        setModalOpen(false);
-        setFormError('');
-    };
-
-    const handleInputChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        let newFormData = { ...formData };
-        newFormData[name] = type === 'checkbox' || name === 'isActive' ? checked : value;
-
-        if (name === 'userId' && value) {
-            const selectedUser = companyUsers.find(user => user.id === parseInt(value));
-            if (selectedUser) {
-                newFormData.name = selectedUser.name || '';
-                newFormData.email = selectedUser.email || '';
-            }
-        }
-
-        setFormData(newFormData);
-    };
-
-    const handleFormSubmit = async () => {
-        setFormLoading(true);
-        setFormError('');
-
-        if (!formData.name) {
-            setFormError('Kart adı zorunludur.');
-            setFormLoading(false);
-            return;
-        }
-
-        let dataToSend = { ...formData };
-        dataToSend.userId = dataToSend.userId ? parseInt(dataToSend.userId, 10) : null;
-
-        try {
-            const response = await createCompanyCard(dataToSend);
-            if (response?.data?.success) {
-                showNotification('Kart başarıyla oluşturuldu.', 'success');
-                fetchCards(); // Kartları yeniden yükle
-                handleCloseModal();
-            }
-        } catch (err) {
-            console.error("Kart oluşturma hatası:", err);
-            const errorMsg = err.message || 'Kart oluşturulamadı.';
-            setFormError(errorMsg);
-        } finally {
-            setFormLoading(false);
-        }
-    };
+    // Modal functions removed - now navigating to /cards/new
 
     const getStatusChip = (isActive) => (
         <Chip
@@ -232,7 +155,7 @@ function CorporateCardsPage() {
                             <Button
                                 variant="contained"
                                 startIcon={<AddIcon />}
-                                onClick={handleOpenModal}
+                                onClick={() => navigate('/cards/new')}
                                 disabled={loading || loadingUsers}
                                 sx={{
                                     borderRadius: 2,
@@ -358,7 +281,7 @@ function CorporateCardsPage() {
                             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
                                 İlk kartvizitinizi oluşturmak için "Yeni Kartvizit" butonuna tıklayın
                             </Typography>
-                            <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenModal}>
+                            <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/cards/new')}>
                                 Yeni Kartvizit Oluştur
                             </Button>
                         </Box>
@@ -477,180 +400,7 @@ function CorporateCardsPage() {
                     )}
                 </Paper>
 
-                {/* Create Card Modal */}
-                <Dialog
-                    open={modalOpen}
-                    onClose={handleCloseModal}
-                    maxWidth="md"
-                    fullWidth
-                    PaperProps={{
-                        sx: {
-                            borderRadius: 3,
-                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
-                        }
-                    }}
-                >
-                    <DialogTitle sx={{ pb: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Box
-                                sx={{
-                                    p: 1,
-                                    borderRadius: 2,
-                                    backgroundColor: 'primary.50',
-                                    color: 'primary.main'
-                                }}
-                            >
-                                <AddIcon />
-                            </Box>
-                            <Box>
-                                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                                    Yeni Kartvizit Oluştur
-                                </Typography>
-                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                    Şirket çalışanları için yeni kartvizit oluşturun
-                                </Typography>
-                            </Box>
-                        </Box>
-                    </DialogTitle>
-                    
-                    <Divider />
-                    
-                    <DialogContent sx={{ pt: 3 }}>
-                        <Grid container spacing={3}>
-                            <Grid item xs={12}>
-                                <FormControl fullWidth>
-                                    <InputLabel>Çalışan Seç (Opsiyonel)</InputLabel>
-                                    <Select
-                                        name="userId"
-                                        value={formData.userId}
-                                        onChange={handleInputChange}
-                                        label="Çalışan Seç (Opsiyonel)"
-                                    >
-                                        <MenuItem value="">
-                                            <em>Çalışan seçilmedi</em>
-                                        </MenuItem>
-                                        {companyUsers.map((user) => (
-                                            <MenuItem key={user.id} value={user.id}>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                                    <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>
-                                                        {user.name.charAt(0).toUpperCase()}
-                                                    </Avatar>
-                                                    <Box>
-                                                        <Typography variant="body2">{user.name}</Typography>
-                                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                                            {user.email}
-                                                        </Typography>
-                                                    </Box>
-                                                </Box>
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-                            </Grid>
-
-                            <Grid item xs={12} md={6}>
-                                <TextField
-                                    fullWidth
-                                    label="Kartvizit Adı *"
-                                    name="name"
-                                    value={formData.name}
-                                    onChange={handleInputChange}
-                                    required
-                                />
-                            </Grid>
-
-                            <Grid item xs={12} md={6}>
-                                <TextField
-                                    fullWidth
-                                    label="Ünvan"
-                                    name="title"
-                                    value={formData.title}
-                                    onChange={handleInputChange}
-                                />
-                            </Grid>
-
-                            <Grid item xs={12} md={6}>
-                                <TextField
-                                    fullWidth
-                                    label="E-posta"
-                                    name="email"
-                                    type="email"
-                                    value={formData.email}
-                                    onChange={handleInputChange}
-                                />
-                            </Grid>
-
-                            <Grid item xs={12} md={6}>
-                                <TextField
-                                    fullWidth
-                                    label="Telefon"
-                                    name="phone"
-                                    value={formData.phone}
-                                    onChange={handleInputChange}
-                                />
-                            </Grid>
-
-                            <Grid item xs={12}>
-                                <TextField
-                                    fullWidth
-                                    label="Web Sitesi"
-                                    name="website"
-                                    value={formData.website}
-                                    onChange={handleInputChange}
-                                />
-                            </Grid>
-
-                            <Grid item xs={12}>
-                                <TextField
-                                    fullWidth
-                                    label="Adres"
-                                    name="address"
-                                    multiline
-                                    rows={3}
-                                    value={formData.address}
-                                    onChange={handleInputChange}
-                                />
-                            </Grid>
-
-                            <Grid item xs={12}>
-                                <FormControlLabel
-                                    control={
-                                        <Switch
-                                            name="isActive"
-                                            checked={formData.isActive}
-                                            onChange={handleInputChange}
-                                        />
-                                    }
-                                    label="Kartvizit aktif durumda"
-                                />
-                            </Grid>
-                        </Grid>
-
-                        {formError && (
-                            <Typography color="error" variant="body2" sx={{ mt: 2 }}>
-                                {formError}
-                            </Typography>
-                        )}
-                    </DialogContent>
-
-                    <DialogActions sx={{ p: 3, pt: 2 }}>
-                        <Button
-                            onClick={handleCloseModal}
-                            variant="outlined"
-                            sx={{ borderRadius: 2, textTransform: 'none' }}
-                        >
-                            İptal
-                        </Button>
-                        <Button
-                            onClick={handleFormSubmit}
-                            variant="contained"
-                            disabled={formLoading}
-                            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
-                        >
-                            {formLoading ? 'Oluşturuluyor...' : 'Kartvizit Oluştur'}
-                        </Button>
-                    </DialogActions>
-                </Dialog>
+                {/* Modal removed - now navigating to /cards/new */}
             </Container>
         </Box>
     );
