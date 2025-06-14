@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Box, Drawer, AppBar, Toolbar, List, Typography, Divider, IconButton, ListItemButton, ListItemIcon, ListItemText, useMediaQuery, Chip } from '@mui/material';
+import { Box, Drawer, AppBar, Toolbar, List, Typography, Divider, IconButton, ListItemButton, ListItemIcon, ListItemText, useMediaQuery, Chip, Avatar, Button } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import MenuIcon from '@mui/icons-material/Menu';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
@@ -9,6 +10,8 @@ import CardMembershipIcon from '@mui/icons-material/CardMembership';
 import BusinessIcon from '@mui/icons-material/Business';
 import AddIcon from '@mui/icons-material/Add';
 import SettingsIcon from '@mui/icons-material/Settings';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 
 const drawerWidth = 280;
 
@@ -56,6 +59,7 @@ function AdminLayout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -167,8 +171,83 @@ function AdminLayout({ children }) {
         </List>
       </Box>
 
-      {/* Footer */}
+      {/* User Profile Section */}
       <Box sx={{ p: 3, backgroundColor: 'grey.50', borderTop: '1px solid', borderColor: 'grey.200' }}>
+        {user && (
+          <>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+              <Avatar
+                sx={{ 
+                  width: 40, 
+                  height: 40,
+                  backgroundColor: 'primary.main',
+                  fontSize: '1.1rem',
+                  fontWeight: 600
+                }}
+              >
+                {user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+              </Avatar>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {user.name || 'Admin User'}
+                </Typography>
+                <Typography variant="caption" sx={{ color: 'text.secondary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                  {user.email}
+                </Typography>
+              </Box>
+            </Box>
+            
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                fullWidth
+                variant="outlined"
+                size="small"
+                startIcon={<AccountCircleIcon />}
+                onClick={() => navigate('/profile')}
+                sx={{ 
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontSize: '0.8rem',
+                  py: 0.5,
+                  borderColor: 'grey.300',
+                  color: 'text.secondary',
+                  '&:hover': {
+                    borderColor: 'primary.main',
+                    color: 'primary.main',
+                    backgroundColor: 'primary.50',
+                  },
+                }}
+              >
+                Profil
+              </Button>
+              <Button
+                fullWidth
+                variant="outlined"
+                size="small"
+                startIcon={<ExitToAppIcon />}
+                onClick={logout}
+                sx={{ 
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontSize: '0.8rem',
+                  py: 0.5,
+                  borderColor: 'error.main',
+                  color: 'error.main',
+                  '&:hover': {
+                    borderColor: 'error.dark',
+                    backgroundColor: 'error.50',
+                    color: 'error.dark',
+                  },
+                }}
+              >
+                Çıkış
+              </Button>
+            </Box>
+            
+            <Divider sx={{ my: 2 }} />
+          </>
+        )}
+        
         <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center' }}>
           DijiCard Admin v1.0
         </Typography>

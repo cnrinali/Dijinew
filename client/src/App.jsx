@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link as RouterLink, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link as RouterLink, Navigate, useLocation } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Button, Container, Box, IconButton, Menu, MenuItem } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -38,6 +38,7 @@ const navItems = [
 function AppContent() {
   const { user, logout, loading } = useAuth();
   const [anchorElNav, setAnchorElNav] = React.useState(null);
+  const location = useLocation();
 
   if (loading) {
     return null;
@@ -50,6 +51,9 @@ function AppContent() {
   const handleCloseNavMenu = () => {
     setAnchorElNav(null);
   };
+
+  const isAdminRoute = location.pathname.startsWith('/admin') || 
+                      (location.pathname === '/profile' && user?.role === 'admin');
 
   const filteredNavItems = navItems.filter(item => {
     if (item.public) {
@@ -74,7 +78,8 @@ function AppContent() {
         {/* All other routes with navbar */}
         <Route path="*" element={
           <>
-            <AppBar position="static">
+            {!isAdminRoute && (
+              <AppBar position="static">
               <Container maxWidth="xl">
                 <Toolbar disableGutters>
                   <Box
@@ -245,13 +250,24 @@ function AppContent() {
               </Toolbar>
               </Container>
             </AppBar>
+            )}
 
-            <Container component="main" sx={{ py: 0, minHeight: 'calc(100vh - 64px)' }}>
+            <Container component="main" maxWidth={false} sx={{ py: 0, px: isAdminRoute ? 0 : 3, minHeight: isAdminRoute ? '100vh' : 'calc(100vh - 64px)' }}>
               <Routes>
                 <Route path="/" element={<HomePage />} /> 
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
-                <Route path="/profile" element={user ? <UserProfilePage /> : <Navigate to="/login" />} />
+                <Route path="/profile" element={
+                  user ? (
+                    user.role === 'admin' ? (
+                      <AdminLayout><UserProfilePage /></AdminLayout>
+                    ) : (
+                      <UserProfilePage />
+                    )
+                  ) : (
+                    <Navigate to="/login" />
+                  )
+                } />
                 
                 {/* Admin Routes */}
                 <Route path="/admin/dashboard" element={user && user.role === 'admin' ? <AdminLayout><AdminDashboardPage /></AdminLayout> : <Navigate to="/login" />} />
