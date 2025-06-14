@@ -16,8 +16,11 @@ import AdminCompanyListPage from './pages/admin/CompanyManagementPage';
 import CardManagementPage from './pages/admin/CardManagementPage';
 import AdminCardCreatePage from './pages/admin/AdminCardCreatePage';
 import AdminLayout from './components/admin/AdminLayout';
+import CorporateLayout from './components/corporate/CorporateLayout';
 import UserProfilePage from './pages/ProfilePage';
 import CorporateDashboardPage from './pages/corporate/CorporateDashboardPage';
+import CorporateCardsPage from './pages/corporate/CorporateCardsPage';
+import CorporateUserManagementPage from './pages/corporate/CorporateUserManagementPage';
 import { NotificationProvider } from './context/NotificationContext.jsx';
 import QrCardPage from './pages/QrCardPage';
 import CardListPage from './pages/CardListPage';
@@ -53,6 +56,7 @@ function AppContent() {
   };
 
   const isAdminRoute = location.pathname.startsWith('/admin') || 
+                      location.pathname.startsWith('/corporate') ||
                       (location.pathname === '/profile' && user?.role === 'admin');
 
   const filteredNavItems = navItems.filter(item => {
@@ -292,7 +296,9 @@ function AppContent() {
                 <Route path="/admin/cards/new" element={user && user.role === 'admin' ? <AdminLayout><AdminCardCreatePage /></AdminLayout> : <Navigate to="/login" />} />
 
                 {/* Corporate Routes */}
-                <Route path="/corporate/dashboard" element={user && user.role === 'corporate' && user.companyId ? <CorporateDashboardPage /> : <Navigate to="/login" />} />
+                <Route path="/corporate/dashboard" element={user && user.role === 'corporate' && user.companyId ? <CorporateLayout><CorporateDashboardPage /></CorporateLayout> : <Navigate to="/login" />} />
+                <Route path="/corporate/cards" element={user && user.role === 'corporate' && user.companyId ? <CorporateLayout><CorporateCardsPage /></CorporateLayout> : <Navigate to="/login" />} />
+                <Route path="/corporate/users" element={user && user.role === 'corporate' && user.companyId ? <CorporateLayout><CorporateUserManagementPage /></CorporateLayout> : <Navigate to="/login" />} />
 
                 {/* User Routes */}
                 <Route path="/cards" element={user && user.role === 'user' ? <CardListPage /> : <Navigate to="/login" />} />

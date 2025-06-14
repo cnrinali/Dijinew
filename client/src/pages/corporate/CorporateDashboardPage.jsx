@@ -1,46 +1,84 @@
-import React, { useState } from 'react';
-import { Tabs, Tab, Box, Typography, Container, Paper, Chip } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Container, Grid, Typography, Paper, Card, CardContent, List, ListItem, ListItemText, Chip, IconButton, Tooltip } from '@mui/material';
 import BusinessIcon from '@mui/icons-material/Business';
 import PeopleIcon from '@mui/icons-material/People';
 import CardMembershipIcon from '@mui/icons-material/CardMembership';
-import CorporateCardsPage from './CorporateCardsPage';
-import CorporateUserManagementPage from './CorporateUserManagementPage';
-import { useAuth } from '../../context/AuthContext'; // AuthContext'i import edelim
-
-function TabPanel(props) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`corporate-tabpanel-${index}`}
-      aria-labelledby={`corporate-tab-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box sx={{ py: 0 }}>
-          {children}
-        </Box>
-      )}
-    </div>
-  );
-}
-
-function a11yProps(index) {
-  return {
-    id: `corporate-tab-${index}`,
-    'aria-controls': `corporate-tabpanel-${index}`,
-  };
-}
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import { useAuth } from '../../context/AuthContext';
+import ModernStatCard from '../../components/ModernStatCard';
+import { getCorporateCards, getCorporateUsers } from '../../services/corporateService';
 
 export default function CorporateDashboardPage() {
-  const [value, setValue] = useState(0);
-  const { user } = useAuth(); // Kullanıcı bilgilerini alalım
+  const { user } = useAuth();
+  const [stats, setStats] = useState({
+    totalCards: 0,
+    totalEmployees: 0,
+    activeCards: 0,
+    totalViews: 0,
+  });
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleChange = (event, newValue) => {
-    setValue(newValue);
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+      // Kartvizitleri al
+      const cardsResponse = await getCorporateCards();
+      const cards = cardsResponse?.data?.success ? cardsResponse.data.data : [];
+      
+      // Kullanıcıları al
+      const usersResponse = await getCorporateUsers({ brief: true });
+      const employees = usersResponse?.data?.success ? usersResponse.data.data : [];
+
+      // İstatistikleri hesapla
+      const activeCards = cards.filter(card => card.isActive).length;
+      const totalViews = cards.reduce((sum, card) => sum + (card.viewCount || 0), 0);
+
+      setStats({
+        totalCards: cards.length,
+        totalEmployees: employees.length,
+        activeCards,
+        totalViews,
+      });
+
+      // Son aktiviteler (örnek veri)
+      const activities = [
+        {
+          id: 1,
+          action: 'Yeni kartvizit oluşturuldu',
+          user: cards[0]?.userName || 'Kullanıcı',
+          time: '2 saat önce',
+          type: 'card',
+        },
+        {
+          id: 2,
+          action: 'Çalışan profili güncellendi',
+          user: employees[0]?.name || 'Çalışan',
+          time: '4 saat önce',
+          type: 'user',
+        },
+        {
+          id: 3,
+          action: 'Kartvizit görüntülendi',
+          user: 'Ziyaretçi',
+          time: '6 saat önce',
+          type: 'view',
+        },
+      ].filter(activity => activity.user !== 'Kullanıcı' && activity.user !== 'Çalışan');
+
+      setRecentActivities(activities);
+    } catch (error) {
+      console.error('Dashboard verileri alınırken hata:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
 
   // Kurumsal kullanıcı değilse veya companyId yoksa bu sayfayı gösterme
   if (user?.role !== 'corporate' || !user?.companyId) {
@@ -53,37 +91,78 @@ export default function CorporateDashboardPage() {
     );
   }
 
+  const getActivityIcon = (type) => {
+    switch (type) {
+      case 'card':
+        return <CardMembershipIcon sx={{ fontSize: 16, color: 'primary.main' }} />;
+      case 'user':
+        return <PeopleIcon sx={{ fontSize: 16, color: 'secondary.main' }} />;
+      case 'view':
+        return <VisibilityIcon sx={{ fontSize: 16, color: 'success.main' }} />;
+      default:
+        return <BusinessIcon sx={{ fontSize: 16, color: 'grey.500' }} />;
+    }
+  };
+
+  const getActivityColor = (type) => {
+    switch (type) {
+      case 'card':
+        return 'primary';
+      case 'user':
+        return 'secondary';
+      case 'view':
+        return 'success';
+      default:
+        return 'default';
+    }
+  };
+
   return (
-    <Box sx={{ 
-      minHeight: '100vh',
-      backgroundColor: 'background.default',
-      py: 4
-    }}>
-      <Container maxWidth="lg">
-        {/* Header Section */}
+    <Box sx={{ p: 4 }}>
+      <Container maxWidth="xl">
+        {/* Header */}
         <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-            <Box
-              sx={{
-                p: 2,
-                borderRadius: 2,
-                background: 'linear-gradient(135deg, #37474F 0%, #62727B 100%)',
-                color: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <BusinessIcon sx={{ fontSize: 28 }} />
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 3,
+                  background: 'linear-gradient(135deg, #37474F 0%, #62727B 100%)',
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                }}
+              >
+                <BusinessIcon sx={{ fontSize: 32 }} />
+              </Box>
+              <Box>
+                <Typography variant="h4" component="h1" sx={{ fontWeight: 700, color: 'text.primary', mb: 0.5 }}>
+                  Kurumsal Dashboard
+                </Typography>
+                <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+                  Şirket kartvizitleri ve çalışan yönetimi özeti
+                </Typography>
+              </Box>
             </Box>
-            <Box>
-              <Typography variant="h4" component="h1" sx={{ fontWeight: 700, color: 'text.primary' }}>
-                Kurumsal Panel
-              </Typography>
-              <Typography variant="body1" sx={{ color: 'text.secondary', mt: 0.5 }}>
-                Şirket kartvizitleri ve kullanıcı yönetimi
-              </Typography>
-            </Box>
+            
+            <Tooltip title="Verileri Yenile">
+              <IconButton 
+                onClick={fetchDashboardData}
+                disabled={loading}
+                sx={{ 
+                  backgroundColor: 'white',
+                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                  '&:hover': {
+                    backgroundColor: 'grey.50',
+                  },
+                }}
+              >
+                <RefreshIcon />
+              </IconButton>
+            </Tooltip>
           </Box>
           
           <Chip 
@@ -91,72 +170,242 @@ export default function CorporateDashboardPage() {
             label="Kurumsal Hesap"
             variant="filled"
             color="secondary"
-            size="small"
+            size="medium"
+            sx={{ fontWeight: 600 }}
           />
         </Box>
 
-        {/* Modern Tabs */}
-        <Paper 
-          elevation={0}
-          sx={{ 
-            borderRadius: 3,
-            border: '1px solid',
-            borderColor: 'grey.200',
-            overflow: 'hidden'
-          }}
-        >
-          <Box sx={{ 
-            borderBottom: 1, 
-            borderColor: 'divider',
-            backgroundColor: 'grey.50',
-            px: 2
-          }}>
-            <Tabs 
-              value={value} 
-              onChange={handleChange} 
-              aria-label="corporate panel tabs"
+        {/* Stats Cards */}
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <ModernStatCard
+              title="Toplam Kartvizit"
+              value={stats.totalCards}
+              icon={<CardMembershipIcon />}
+              color="primary"
+              trend={stats.totalCards > 0 ? 'up' : null}
+              trendValue={stats.totalCards > 0 ? `+${stats.totalCards}` : null}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <ModernStatCard
+              title="Aktif Kartvizitler"
+              value={stats.activeCards}
+              icon={<TrendingUpIcon />}
+              color="success"
+              progress={stats.totalCards > 0 ? Math.round((stats.activeCards / stats.totalCards) * 100) : 0}
+              subtitle={`${stats.totalCards} kartvizit içinde`}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <ModernStatCard
+              title="Şirket Çalışanları"
+              value={stats.totalEmployees}
+              icon={<PeopleIcon />}
+              color="secondary"
+              trend={stats.totalEmployees > 0 ? 'up' : null}
+              trendValue={stats.totalEmployees > 0 ? `${stats.totalEmployees} kişi` : null}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <ModernStatCard
+              title="Toplam Görüntülenme"
+              value={stats.totalViews}
+              icon={<VisibilityIcon />}
+              color="info"
+              trend="up"
+              trendValue={`${stats.totalViews} görüntülenme`}
+            />
+          </Grid>
+        </Grid>
+
+        {/* Recent Activities */}
+        <Grid container spacing={3}>
+          <Grid item xs={12} lg={8}>
+            <Paper
+              elevation={0}
               sx={{
-                '& .MuiTab-root': {
-                  minHeight: 64,
-                  fontSize: '1rem',
-                  fontWeight: 500,
-                  textTransform: 'none',
-                  color: 'text.secondary',
-                  '&.Mui-selected': {
-                    color: 'primary.main',
-                    fontWeight: 600,
-                  },
-                },
-                '& .MuiTabs-indicator': {
-                  height: 3,
-                  borderRadius: '3px 3px 0 0',
-                },
+                borderRadius: 3,
+                border: '1px solid',
+                borderColor: 'grey.200',
+                height: '100%',
+                background: 'white',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
               }}
             >
-              <Tab 
-                icon={<CardMembershipIcon />}
-                iconPosition="start"
-                label="Kartvizitlerim" 
-                {...a11yProps(0)} 
-              />
-              <Tab 
-                icon={<PeopleIcon />}
-                iconPosition="start"
-                label="Şirket Kullanıcıları" 
-                {...a11yProps(1)} 
-              />
-            </Tabs>
-          </Box>
-          
-          <Box sx={{ p: 4, backgroundColor: 'white' }}>
-            <TabPanel value={value} index={0}>
-              <CorporateCardsPage />
-            </TabPanel>
-            <TabPanel value={value} index={1}>
-              <CorporateUserManagementPage />
-            </TabPanel>
-          </Box>
-        </Paper>
+              <Box sx={{ p: 3, borderBottom: '1px solid', borderColor: 'grey.100' }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                  Son Aktiviteler
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                  Şirket hesabınızdaki son işlemler
+                </Typography>
+              </Box>
+              <Box sx={{ p: 3 }}>
+                {recentActivities.length > 0 ? (
+                  <List sx={{ p: 0 }}>
+                    {recentActivities.map((activity, index) => (
+                      <ListItem
+                        key={activity.id}
+                        sx={{
+                          px: 0,
+                          py: 2,
+                          borderBottom: index < recentActivities.length - 1 ? '1px solid' : 'none',
+                          borderColor: 'grey.100',
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
+                          <Box
+                            sx={{
+                              p: 1,
+                              borderRadius: 2,
+                              backgroundColor: `${getActivityColor(activity.type)}.50`,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            {getActivityIcon(activity.type)}
+                          </Box>
+                          <ListItemText
+                            primary={activity.action}
+                            secondary={`${activity.user} • ${activity.time}`}
+                            primaryTypographyProps={{
+                              fontWeight: 500,
+                              color: 'text.primary',
+                            }}
+                            secondaryTypographyProps={{
+                              color: 'text.secondary',
+                              fontSize: '0.875rem',
+                            }}
+                          />
+                          <Chip
+                            label={activity.type === 'card' ? 'Kartvizit' : activity.type === 'user' ? 'Kullanıcı' : 'Görüntülenme'}
+                            size="small"
+                            color={getActivityColor(activity.type)}
+                            variant="outlined"
+                            sx={{ minWidth: 80 }}
+                          />
+                        </Box>
+                      </ListItem>
+                    ))}
+                  </List>
+                ) : (
+                  <Box sx={{ textAlign: 'center', py: 4 }}>
+                    <BusinessIcon sx={{ fontSize: 48, color: 'grey.300', mb: 2 }} />
+                    <Typography variant="h6" sx={{ color: 'text.secondary', mb: 1 }}>
+                      Henüz aktivite yok
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      Kartvizit oluşturduğunuzda aktiviteler burada görünecek
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+            </Paper>
+          </Grid>
+
+          <Grid item xs={12} lg={4}>
+            <Paper
+              elevation={0}
+              sx={{
+                borderRadius: 3,
+                border: '1px solid',
+                borderColor: 'grey.200',
+                height: '100%',
+                background: 'white',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              }}
+            >
+              <Box sx={{ p: 3, borderBottom: '1px solid', borderColor: 'grey.100' }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                  Hızlı İşlemler
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                  Sık kullanılan işlemler
+                </Typography>
+              </Box>
+              <Box sx={{ p: 3 }}>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <Card 
+                      sx={{ 
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        border: '1px solid',
+                        borderColor: 'grey.200',
+                        '&:hover': {
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                          transform: 'translateY(-2px)',
+                          borderColor: 'primary.200',
+                        },
+                      }}
+                      onClick={() => window.location.href = '/cards/new'}
+                    >
+                      <CardContent sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Box
+                          sx={{
+                            p: 1,
+                            borderRadius: 2,
+                            backgroundColor: 'primary.50',
+                            color: 'primary.main',
+                          }}
+                        >
+                          <CardMembershipIcon />
+                        </Box>
+                        <Box>
+                          <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                            Yeni Kartvizit
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                            Kartvizit oluştur
+                          </Typography>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Card 
+                      sx={{ 
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        border: '1px solid',
+                        borderColor: 'grey.200',
+                        '&:hover': {
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                          transform: 'translateY(-2px)',
+                          borderColor: 'secondary.200',
+                        },
+                      }}
+                      onClick={() => window.location.href = '/corporate/users'}
+                    >
+                      <CardContent sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Box
+                          sx={{
+                            p: 1,
+                            borderRadius: 2,
+                            backgroundColor: 'secondary.50',
+                            color: 'secondary.main',
+                          }}
+                        >
+                          <PeopleIcon />
+                        </Box>
+                        <Box>
+                          <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                            Kullanıcı Yönetimi
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                            Çalışanları yönet
+                          </Typography>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                </Grid>
+              </Box>
+            </Paper>
+          </Grid>
+        </Grid>
       </Container>
     </Box>
   );

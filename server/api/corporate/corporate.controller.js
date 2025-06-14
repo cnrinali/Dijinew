@@ -68,6 +68,7 @@ const getCompanyCards = async (req, res) => {
         const dataResult = await request.query(dataQuery);
         
         res.status(200).json({
+            success: true,
             data: dataResult.recordset,
             totalCount: totalCount,
             page: pageNum,
@@ -86,7 +87,7 @@ const getCompanyCards = async (req, res) => {
 // @access  Private/Corporate
 const createCompanyCard = async (req, res) => {
     const corporateCompanyId = req.user.companyId;
-    const { userId, name, title, email, phone, website, address, status = true, customSlug } = req.body;
+    const { userId, name, title, email, phone, website, address, isActive = true, customSlug } = req.body;
 
     if (!corporateCompanyId) {
         return res.status(403).json({ message: 'Bu işlem için bir şirkete atanmış olmanız gerekmektedir.' });
@@ -177,12 +178,12 @@ const createCompanyCard = async (req, res) => {
             insertRequest.input('phone', sql.NVarChar, finalCardPhone);
             insertRequest.input('website', sql.NVarChar, finalCardWebsite);
             insertRequest.input('address', sql.NVarChar, finalCardAddress);
-            insertRequest.input('status', sql.Bit, status);
+            insertRequest.input('isActive', sql.Bit, isActive);
             insertRequest.input('customSlug', sql.NVarChar, slugToCheck);
             
             const insertResult = await insertRequest.query(`
-                INSERT INTO Cards (companyId, userId, name, title, email, phone, website, address, status, customSlug)
-                VALUES (@companyId, @userId, @name, @title, @email, @phone, @website, @address, @status, @customSlug)
+                INSERT INTO Cards (companyId, userId, name, title, email, phone, website, address, isActive, customSlug)
+                VALUES (@companyId, @userId, @name, @title, @email, @phone, @website, @address, @isActive, @customSlug)
             `);
 
             // Son eklenen kartı al
@@ -219,7 +220,10 @@ const createCompanyCard = async (req, res) => {
             }
 
             await transaction.commit();
-            res.status(201).json(newCard);
+            res.status(201).json({
+                success: true,
+                data: newCard
+            });
 
         } catch (error) {
             await transaction.rollback();
@@ -329,7 +333,10 @@ const createCompanyUser = async (req, res) => {
             newUser.companyName = companyNameResult.recordset[0]?.name;
 
             await transaction.commit();
-            res.status(201).json(newUser); // Şifre olmadan kullanıcı bilgisi döner
+            res.status(201).json({
+                success: true,
+                data: newUser
+            }); // Şifre olmadan kullanıcı bilgisi döner
 
         } catch (error) {
             await transaction.rollback();
@@ -367,9 +374,10 @@ const getCompanyUsers = async (req, res) => {
             'SELECT id, name, email, role, createdAt FROM Users WHERE companyId = @companyId ORDER BY createdAt DESC'
         );
         
-        // Frontend'in beklediği formatı { data: result.recordset } olarak ayarlayabiliriz
-        // veya direkt result.recordset gönderebiliriz. `getMyCompanyUsersForSelection` ile tutarlı olmalı.
-        res.status(200).json(result.recordset); // Şimdilik direkt array dönsün
+        res.status(200).json({
+            success: true,
+            data: result.recordset
+        });
 
     } catch (error) {
         console.error("Şirket kullanıcılarını getirme hatası (Corporate):", error);

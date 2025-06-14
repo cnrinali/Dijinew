@@ -1,36 +1,57 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-    getMyCompanyCards,
-    createMyCompanyCard,
-    getMyCompanyUsersForSelection
+    getCorporateCards,
+    createCompanyCard,
+    getCorporateUsers
 } from '../../services/corporateService';
-import { useNotification } from '../../context/NotificationContext'; // Bildirimler için
-
-// MUI Imports (AdminUserListPage.jsx'ten benzerlerini alabiliriz)
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
-import CircularProgress from '@mui/material/CircularProgress';
-import Alert from '@mui/material/Alert';
-import Button from '@mui/material/Button';
-import AddIcon from '@mui/icons-material/Add';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
-import TextField from '@mui/material/TextField';
-import Switch from '@mui/material/Switch';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
+import { useNotification } from '../../context/NotificationContext';
+import {
+    Box,
+    Container,
+    Typography,
+    Paper,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Button,
+    Chip,
+    IconButton,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    TextField,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    Switch,
+    FormControlLabel,
+    Grid,
+    Card,
+    CardContent,
+    Tooltip,
+    Avatar,
+    LinearProgress,
+    Stack,
+    Divider
+} from '@mui/material';
+import {
+    Add as AddIcon,
+    Visibility as VisibilityIcon,
+    Edit as EditIcon,
+    Delete as DeleteIcon,
+    QrCode as QrCodeIcon,
+    CardMembership as CardMembershipIcon,
+    Refresh as RefreshIcon,
+    Person as PersonIcon,
+    Email as EmailIcon,
+    Phone as PhoneIcon,
+    Business as BusinessIcon
+} from '@mui/icons-material';
 
 const initialFormData = {
     userId: '',
@@ -40,44 +61,33 @@ const initialFormData = {
     phone: '',
     website: '',
     address: '',
-    status: true,
+    isActive: true,
     customSlug: ''
-    // userId şimdilik formda olmayacak, backend'de null veya isteğe bağlı olarak yönetilebilir
 };
 
 function CorporateCardsPage() {
     const [cards, setCards] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    // const [pagination, setPagination] = useState({ page: 1, limit: 10, totalCount: 0, totalPages: 1 });
+    const [companyUsers, setCompanyUsers] = useState([]);
+    const [loadingUsers, setLoadingUsers] = useState(false);
     const { showNotification } = useNotification();
 
-    const [companyUserList, setCompanyUserList] = useState([]);
-    const [loadingUsers, setLoadingUsers] = useState(false);
-
-    // Modal state'leri
+    // Modal states
     const [modalOpen, setModalOpen] = useState(false);
     const [formData, setFormData] = useState(initialFormData);
     const [formLoading, setFormLoading] = useState(false);
     const [formError, setFormError] = useState('');
-    // const [isEditMode, setIsEditMode] = useState(false); // Şimdilik sadece ekleme
-    // const [selectedCard, setSelectedCard] = useState(null);
 
-    const fetchCompanyCards = useCallback(async () => {
+    const fetchCards = useCallback(async () => {
         setLoading(true);
         setError('');
         try {
-            const response = await getMyCompanyCards(); 
-            if (response && Array.isArray(response.data)) {
-                setCards(response.data);
-            } else {
-                console.error("Beklenmeyen API yanıt formatı (CorporateCards):", response);
-                setCards([]);
-                setError('Kart verileri alınamadı (format hatası).');
-                showNotification('Kart verileri alınamadı (format hatası).', 'error');
-            }
+            const response = await getCorporateCards();
+            const cardsData = response?.data?.success ? response.data.data : [];
+            setCards(cardsData);
         } catch (err) {
-            console.error("Şirket kartları getirilirken hata (CorporatePage):", err);
+            console.error("Şirket kartları getirilirken hata:", err);
             const errorMsg = err.message || 'Şirket kartları yüklenemedi.';
             setError(errorMsg);
             showNotification(errorMsg, 'error');
@@ -87,36 +97,29 @@ function CorporateCardsPage() {
         }
     }, [showNotification]);
 
-    const fetchCompanyUsers = useCallback(async () => {
+    const fetchUsers = useCallback(async () => {
         setLoadingUsers(true);
         try {
-            const response = await getMyCompanyUsersForSelection();
-            // response.data beklenen format { data: [{id, name, email}, ...] } veya direkt array
-            if (response && Array.isArray(response.data)) {
-                setCompanyUserList(response.data);
-            } else if (response && Array.isArray(response)) { // Eğer API direkt array dönerse
-                 setCompanyUserList(response);
-            } else {
-                setCompanyUserList([]);
-                showNotification('Şirket kullanıcı listesi formatı hatalı.', 'warning');
-            }
+            const response = await getCorporateUsers({ brief: true });
+            const usersData = response?.data?.success ? response.data.data : [];
+            setCompanyUsers(usersData);
         } catch (err) {
+            console.error("Şirket kullanıcıları getirilirken hata:", err);
             showNotification(err.message || 'Şirket kullanıcıları yüklenemedi.', 'error');
-            setCompanyUserList([]);
+            setCompanyUsers([]);
         } finally {
             setLoadingUsers(false);
         }
     }, [showNotification]);
 
     useEffect(() => {
-        fetchCompanyCards();
-        fetchCompanyUsers(); // Sayfa yüklendiğinde kullanıcıları da çek
-    }, [fetchCompanyCards, fetchCompanyUsers]);
+        fetchCards();
+        fetchUsers();
+    }, [fetchCards, fetchUsers]);
 
     const handleOpenModal = () => {
         setFormData(initialFormData);
         setFormError('');
-        setError('');
         setModalOpen(true);
     };
 
@@ -128,21 +131,16 @@ function CorporateCardsPage() {
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
         let newFormData = { ...formData };
-        newFormData[name] = type === 'checkbox' || type === 'switch' ? checked : value;
+        newFormData[name] = type === 'checkbox' || name === 'isActive' ? checked : value;
 
-        if (name === 'userId') {
-            const selectedUser = companyUserList.find(user => user.id === value);
+        if (name === 'userId' && value) {
+            const selectedUser = companyUsers.find(user => user.id === parseInt(value));
             if (selectedUser) {
-                const isNameFromOtherUser = companyUserList.some(u => u.name === newFormData.name && u.id !== selectedUser.id);
-                if (!newFormData.name || isNameFromOtherUser) {
-                    newFormData.name = selectedUser.name;
-                }
-                newFormData.email = selectedUser.email;
-                newFormData.title = '';
-            } else {
-                // Kullanıcı seçimi kaldırıldı. Opsiyonel: newFormData.email ve newFormData.title'ı sıfırla.
+                newFormData.name = selectedUser.name || '';
+                newFormData.email = selectedUser.email || '';
             }
         }
+
         setFormData(newFormData);
     };
 
@@ -157,24 +155,17 @@ function CorporateCardsPage() {
         }
 
         let dataToSend = { ...formData };
-
-        if (dataToSend.userId) { 
-            // Backend, userId varsa e-postayı kullanıcıdan alacak ve ünvanı null yapacak.
-            // Frontend'den gönderilen email ve title'ı silerek backend'in işini kolaylaştıralım.
-            delete dataToSend.email; 
-            delete dataToSend.title;
-        } else {
-            // Kullanıcı seçilmediyse, email opsiyonel, title formdan olduğu gibi gider.
-        }
         dataToSend.userId = dataToSend.userId ? parseInt(dataToSend.userId, 10) : null;
 
         try {
-            const newCard = await createMyCompanyCard(dataToSend);
-            setCards(prevCards => [newCard, ...prevCards]);
-            showNotification('Kart başarıyla oluşturuldu.', 'success');
-            handleCloseModal();
+            const response = await createCompanyCard(dataToSend);
+            if (response?.data?.success) {
+                showNotification('Kart başarıyla oluşturuldu.', 'success');
+                fetchCards(); // Kartları yeniden yükle
+                handleCloseModal();
+            }
         } catch (err) {
-            console.error("Kart oluşturma hatası (CorporatePage):", err);
+            console.error("Kart oluşturma hatası:", err);
             const errorMsg = err.message || 'Kart oluşturulamadı.';
             setFormError(errorMsg);
         } finally {
@@ -182,140 +173,485 @@ function CorporateCardsPage() {
         }
     };
 
-    if (loading && cards.length === 0) { // Sadece ilk yüklemede tam ekran loading
-        return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 5 }}>
-                <CircularProgress />
-            </Box>
-        );
-    }
+    const getStatusChip = (isActive) => (
+        <Chip
+            label={isActive ? 'Aktif' : 'Pasif'}
+            color={isActive ? 'success' : 'default'}
+            size="small"
+            variant="outlined"
+        />
+    );
 
     return (
-        <Box sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h4" component="h1">Şirket Kartvizitlerim</Typography>
-                <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenModal} disabled={loading || loadingUsers}>
-                    Yeni Kart Ekle
-                </Button>
-            </Box>
+        <Box sx={{ p: 4 }}>
+            <Container maxWidth="xl">
+                {/* Header */}
+                <Box sx={{ mb: 4 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Box
+                                sx={{
+                                    p: 2,
+                                    borderRadius: 3,
+                                    background: 'linear-gradient(135deg, #1565C0 0%, #2196F3 100%)',
+                                    color: 'white',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                }}
+                            >
+                                <CardMembershipIcon sx={{ fontSize: 32 }} />
+                            </Box>
+                            <Box>
+                                <Typography variant="h4" component="h1" sx={{ fontWeight: 700, color: 'text.primary', mb: 0.5 }}>
+                                    Kartvizitlerim
+                                </Typography>
+                                <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+                                    Şirket kartvizitlerini yönetin ve düzenleyin
+                                </Typography>
+                            </Box>
+                        </Box>
 
-            {loading && cards.length > 0 && <CircularProgress sx={{mb: 2}}/>}{/* Liste varken yükleniyorsa küçük spinner */}
-            {error && !modalOpen && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-
-            {cards.length === 0 && !error && !loading && (
-                <Typography sx={{ textAlign: 'center', mt: 3 }}>
-                    Şirketinize ait henüz bir kartvizit bulunmamaktadır.
-                </Typography>
-            )}
-
-            {cards.length > 0 && (
-                <TableContainer component={Paper}>
-                    <Table sx={{ minWidth: 650 }} aria-label="şirket kartları tablosu">
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>ID</TableCell>
-                                <TableCell>Kart Adı</TableCell>
-                                <TableCell>İsim (Kullanıcı)</TableCell>
-                                <TableCell>Email (Kullanıcı)</TableCell>
-                                <TableCell>Durum</TableCell>
-                                <TableCell>Oluşturulma Tarihi</TableCell>
-                                {/* <TableCell align="right">İşlemler</TableCell> */}
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {cards.map((card) => (
-                                <TableRow
-                                    key={card.id}
-                                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Tooltip title="Yenile">
+                                <IconButton 
+                                    onClick={fetchCards}
+                                    disabled={loading}
+                                    sx={{ 
+                                        backgroundColor: 'white',
+                                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                                        '&:hover': {
+                                            backgroundColor: 'grey.50',
+                                        },
+                                    }}
                                 >
-                                    <TableCell component="th" scope="row">{card.id}</TableCell>
-                                    <TableCell>{card.name || card.cardName}</TableCell>
-                                    <TableCell>{card.userName || 'N/A'}</TableCell>
-                                    <TableCell>{card.userEmail || 'N/A'}</TableCell>
-                                    <TableCell>{card.status ? 'Aktif' : 'Pasif'}</TableCell>
-                                    <TableCell>{new Date(card.createdAt).toLocaleDateString()}</TableCell>
-                                    {/* <TableCell align="right">İşlemler...</TableCell> */}
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            )}
+                                    <RefreshIcon />
+                                </IconButton>
+                            </Tooltip>
+                            <Button
+                                variant="contained"
+                                startIcon={<AddIcon />}
+                                onClick={handleOpenModal}
+                                disabled={loading || loadingUsers}
+                                sx={{
+                                    borderRadius: 2,
+                                    textTransform: 'none',
+                                    fontWeight: 600,
+                                    px: 3,
+                                    py: 1.5,
+                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                }}
+                            >
+                                Yeni Kartvizit
+                            </Button>
+                        </Box>
+                    </Box>
+                </Box>
 
-            {/* Kart Ekleme/Düzenleme Modalı */}
-            <Dialog open={modalOpen} onClose={handleCloseModal} maxWidth="sm" fullWidth>
-                <DialogTitle>Yeni Şirket Kartı Oluştur</DialogTitle>
-                <DialogContent>
-                    {formError && <Alert severity="error" sx={{ mb: 2 }}>{formError}</Alert>}
+                {/* Stats Cards */}
+                <Grid container spacing={3} sx={{ mb: 4 }}>
+                    <Grid item xs={12} sm={6} md={3}>
+                        <Card sx={{ background: 'linear-gradient(135deg, #1565C0 0%, #2196F3 100%)', color: 'white' }}>
+                            <CardContent>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <Box>
+                                        <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+                                            {cards.length}
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                                            Toplam Kartvizit
+                                        </Typography>
+                                    </Box>
+                                    <CardMembershipIcon sx={{ fontSize: 40, opacity: 0.8 }} />
+                                </Box>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                        <Card sx={{ background: 'linear-gradient(135deg, #10B981 0%, #34D399 100%)', color: 'white' }}>
+                            <CardContent>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <Box>
+                                        <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+                                            {cards.filter(card => card.isActive).length}
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                                            Aktif Kartlar
+                                        </Typography>
+                                    </Box>
+                                    <VisibilityIcon sx={{ fontSize: 40, opacity: 0.8 }} />
+                                </Box>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                        <Card sx={{ background: 'linear-gradient(135deg, #37474F 0%, #62727B 100%)', color: 'white' }}>
+                            <CardContent>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <Box>
+                                        <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+                                            {companyUsers.length}
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                                            Şirket Çalışanları
+                                        </Typography>
+                                    </Box>
+                                    <PersonIcon sx={{ fontSize: 40, opacity: 0.8 }} />
+                                </Box>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                        <Card sx={{ background: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)', color: 'white' }}>
+                            <CardContent>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <Box>
+                                        <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+                                            {cards.reduce((total, card) => total + (card.viewCount || 0), 0)}
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                                            Toplam Görüntülenme
+                                        </Typography>
+                                    </Box>
+                                    <QrCodeIcon sx={{ fontSize: 40, opacity: 0.8 }} />
+                                </Box>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                </Grid>
 
-                    <FormControl fullWidth margin="dense" disabled={loadingUsers || formLoading}>
-                        <InputLabel id="company-user-select-label">Bağlı Kullanıcı (İsteğe Bağlı)</InputLabel>
-                        <Select
-                            labelId="company-user-select-label"
-                            id="userId"
-                            name="userId"
-                            value={formData.userId}
-                            label="Bağlı Kullanıcı (İsteğe Bağlı)"
-                            onChange={handleInputChange}
-                        >
-                            <MenuItem value="">
-                                <em>Yok (Şirkete Ait Kart)</em>
-                            </MenuItem>
-                            {companyUserList.map((user) => (
-                                <MenuItem key={user.id} value={user.id}>
-                                    {user.name} ({user.email})
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-
-                    <TextField autoFocus margin="dense" id="name" name="name" label="Kart Adı/Sahibi" type="text" fullWidth variant="outlined" value={formData.name} onChange={handleInputChange} required disabled={formLoading} />
+                {/* Cards Table */}
+                <Paper
+                    elevation={0}
+                    sx={{
+                        borderRadius: 3,
+                        border: '1px solid',
+                        borderColor: 'grey.200',
+                        background: 'white',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    }}
+                >
+                    {loading && <LinearProgress />}
                     
-                    <TextField 
-                        margin="dense" 
-                        id="title" 
-                        name="title" 
-                        label="Ünvan" 
-                        type="text" 
-                        fullWidth 
-                        variant="outlined" 
-                        value={formData.userId ? '' : formData.title}
-                        onChange={handleInputChange} 
-                        disabled={!!formData.userId || formLoading}
-                        placeholder={formData.userId ? 'Kullanıcıya bağlı (Ünvan kullanılmaz)' : ''}
-                    />
+                    <Box sx={{ p: 3, borderBottom: '1px solid', borderColor: 'grey.100' }}>
+                        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                            Kartvizit Listesi
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                            Tüm şirket kartvizitlerinizi bu listede bulabilirsiniz
+                        </Typography>
+                    </Box>
 
-                    <TextField 
-                        margin="dense" 
-                        id="email" 
-                        name="email" 
-                        label="E-posta (Kart için)" 
-                        type="email" 
-                        fullWidth 
-                        variant="outlined" 
-                        value={formData.email}
-                        onChange={handleInputChange} 
-                        disabled={!!formData.userId || formLoading}
-                        InputLabelProps={formData.userId ? { shrink: true } : {}}
-                    />
+                    {error ? (
+                        <Box sx={{ p: 3 }}>
+                            <Typography color="error" variant="body2">
+                                {error}
+                            </Typography>
+                        </Box>
+                    ) : cards.length === 0 ? (
+                        <Box sx={{ textAlign: 'center', py: 6 }}>
+                            <CardMembershipIcon sx={{ fontSize: 64, color: 'grey.300', mb: 2 }} />
+                            <Typography variant="h6" sx={{ color: 'text.secondary', mb: 1 }}>
+                                Henüz kartvizit yok
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
+                                İlk kartvizitinizi oluşturmak için "Yeni Kartvizit" butonuna tıklayın
+                            </Typography>
+                            <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenModal}>
+                                Yeni Kartvizit Oluştur
+                            </Button>
+                        </Box>
+                    ) : (
+                        <TableContainer>
+                            <Table>
+                                <TableHead>
+                                    <TableRow sx={{ backgroundColor: 'grey.50' }}>
+                                        <TableCell sx={{ fontWeight: 600 }}>Kartvizit</TableCell>
+                                        <TableCell sx={{ fontWeight: 600 }}>Kişi</TableCell>
+                                        <TableCell sx={{ fontWeight: 600 }}>İletişim</TableCell>
+                                        <TableCell sx={{ fontWeight: 600 }}>Durum</TableCell>
+                                        <TableCell sx={{ fontWeight: 600 }}>İstatistikler</TableCell>
+                                        <TableCell sx={{ fontWeight: 600 }}>İşlemler</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {cards.map((card) => (
+                                        <TableRow key={card.id} sx={{ '&:hover': { backgroundColor: 'grey.50' } }}>
+                                            <TableCell>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                    <Avatar
+                                                        sx={{
+                                                            width: 40,
+                                                            height: 40,
+                                                            backgroundColor: 'primary.main',
+                                                            fontSize: '1rem',
+                                                            fontWeight: 600
+                                                        }}
+                                                    >
+                                                        {card.name.charAt(0).toUpperCase()}
+                                                    </Avatar>
+                                                    <Box>
+                                                        <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                                                            {card.name}
+                                                        </Typography>
+                                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                                            {card.title || 'Ünvan belirtilmemiş'}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Box>
+                                                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                                        {card.userName || 'Kullanıcı atanmamış'}
+                                                    </Typography>
+                                                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                                        {card.userEmail || ''}
+                                                    </Typography>
+                                                </Box>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Stack spacing={0.5}>
+                                                    {card.email && (
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                            <EmailIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+                                                            <Typography variant="caption">{card.email}</Typography>
+                                                        </Box>
+                                                    )}
+                                                    {card.phone && (
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                            <PhoneIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+                                                            <Typography variant="caption">{card.phone}</Typography>
+                                                        </Box>
+                                                    )}
+                                                </Stack>
+                                            </TableCell>
+                                            <TableCell>
+                                                {getStatusChip(card.isActive)}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Box>
+                                                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                                        {card.viewCount || 0} görüntülenme
+                                                    </Typography>
+                                                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                                        Son: {card.lastViewed ? new Date(card.lastViewed).toLocaleDateString('tr-TR') : 'Henüz görüntülenmedi'}
+                                                    </Typography>
+                                                </Box>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                                    <Tooltip title="Görüntüle">
+                                                        <IconButton
+                                                            size="small"
+                                                            onClick={() => window.open(`/qr/${card.slug}`, '_blank')}
+                                                            sx={{ color: 'primary.main' }}
+                                                        >
+                                                            <VisibilityIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                    <Tooltip title="QR Kod">
+                                                        <IconButton
+                                                            size="small"
+                                                            sx={{ color: 'info.main' }}
+                                                        >
+                                                            <QrCodeIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                    <Tooltip title="Düzenle">
+                                                        <IconButton
+                                                            size="small"
+                                                            sx={{ color: 'warning.main' }}
+                                                        >
+                                                            <EditIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </Box>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    )}
+                </Paper>
 
-                    <TextField margin="dense" id="phone" name="phone" label="Telefon (Kart için)" type="tel" fullWidth variant="outlined" value={formData.phone} onChange={handleInputChange} disabled={formLoading} />
-                    <TextField margin="dense" id="website" name="website" label="Web Sitesi" type="url" fullWidth variant="outlined" value={formData.website} onChange={handleInputChange} disabled={formLoading} />
-                    <TextField margin="dense" id="address" name="address" label="Adres" type="text" fullWidth multiline rows={3} variant="outlined" value={formData.address} onChange={handleInputChange} disabled={formLoading} />
-                    <TextField margin="dense" id="customSlug" name="customSlug" label="Özel URL (örn: benim-kartim)" type="text" fullWidth variant="outlined" value={formData.customSlug} onChange={handleInputChange} disabled={formLoading} helperText="Sadece harf, rakam ve tire (-) kullanın."/>
-                    <FormControlLabel
-                        control={<Switch checked={formData.status} onChange={handleInputChange} name="status" disabled={formLoading} />}
-                        label="Kart Aktif mi?"
-                        sx={{ mt: 1 }}
-                    />
-                </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 2 }}>
-                    <Button onClick={handleCloseModal} disabled={formLoading}>İptal</Button>
-                    <Button onClick={handleFormSubmit} variant="contained" disabled={formLoading}>
-                        {formLoading ? <CircularProgress size={24} /> : 'Oluştur'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                {/* Create Card Modal */}
+                <Dialog
+                    open={modalOpen}
+                    onClose={handleCloseModal}
+                    maxWidth="md"
+                    fullWidth
+                    PaperProps={{
+                        sx: {
+                            borderRadius: 3,
+                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+                        }
+                    }}
+                >
+                    <DialogTitle sx={{ pb: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Box
+                                sx={{
+                                    p: 1,
+                                    borderRadius: 2,
+                                    backgroundColor: 'primary.50',
+                                    color: 'primary.main'
+                                }}
+                            >
+                                <AddIcon />
+                            </Box>
+                            <Box>
+                                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                    Yeni Kartvizit Oluştur
+                                </Typography>
+                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                    Şirket çalışanları için yeni kartvizit oluşturun
+                                </Typography>
+                            </Box>
+                        </Box>
+                    </DialogTitle>
+                    
+                    <Divider />
+                    
+                    <DialogContent sx={{ pt: 3 }}>
+                        <Grid container spacing={3}>
+                            <Grid item xs={12}>
+                                <FormControl fullWidth>
+                                    <InputLabel>Çalışan Seç (Opsiyonel)</InputLabel>
+                                    <Select
+                                        name="userId"
+                                        value={formData.userId}
+                                        onChange={handleInputChange}
+                                        label="Çalışan Seç (Opsiyonel)"
+                                    >
+                                        <MenuItem value="">
+                                            <em>Çalışan seçilmedi</em>
+                                        </MenuItem>
+                                        {companyUsers.map((user) => (
+                                            <MenuItem key={user.id} value={user.id}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                    <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>
+                                                        {user.name.charAt(0).toUpperCase()}
+                                                    </Avatar>
+                                                    <Box>
+                                                        <Typography variant="body2">{user.name}</Typography>
+                                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                                            {user.email}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+
+                            <Grid item xs={12} md={6}>
+                                <TextField
+                                    fullWidth
+                                    label="Kartvizit Adı *"
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleInputChange}
+                                    required
+                                />
+                            </Grid>
+
+                            <Grid item xs={12} md={6}>
+                                <TextField
+                                    fullWidth
+                                    label="Ünvan"
+                                    name="title"
+                                    value={formData.title}
+                                    onChange={handleInputChange}
+                                />
+                            </Grid>
+
+                            <Grid item xs={12} md={6}>
+                                <TextField
+                                    fullWidth
+                                    label="E-posta"
+                                    name="email"
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={handleInputChange}
+                                />
+                            </Grid>
+
+                            <Grid item xs={12} md={6}>
+                                <TextField
+                                    fullWidth
+                                    label="Telefon"
+                                    name="phone"
+                                    value={formData.phone}
+                                    onChange={handleInputChange}
+                                />
+                            </Grid>
+
+                            <Grid item xs={12}>
+                                <TextField
+                                    fullWidth
+                                    label="Web Sitesi"
+                                    name="website"
+                                    value={formData.website}
+                                    onChange={handleInputChange}
+                                />
+                            </Grid>
+
+                            <Grid item xs={12}>
+                                <TextField
+                                    fullWidth
+                                    label="Adres"
+                                    name="address"
+                                    multiline
+                                    rows={3}
+                                    value={formData.address}
+                                    onChange={handleInputChange}
+                                />
+                            </Grid>
+
+                            <Grid item xs={12}>
+                                <FormControlLabel
+                                    control={
+                                        <Switch
+                                            name="isActive"
+                                            checked={formData.isActive}
+                                            onChange={handleInputChange}
+                                        />
+                                    }
+                                    label="Kartvizit aktif durumda"
+                                />
+                            </Grid>
+                        </Grid>
+
+                        {formError && (
+                            <Typography color="error" variant="body2" sx={{ mt: 2 }}>
+                                {formError}
+                            </Typography>
+                        )}
+                    </DialogContent>
+
+                    <DialogActions sx={{ p: 3, pt: 2 }}>
+                        <Button
+                            onClick={handleCloseModal}
+                            variant="outlined"
+                            sx={{ borderRadius: 2, textTransform: 'none' }}
+                        >
+                            İptal
+                        </Button>
+                        <Button
+                            onClick={handleFormSubmit}
+                            variant="contained"
+                            disabled={formLoading}
+                            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+                        >
+                            {formLoading ? 'Oluşturuluyor...' : 'Kartvizit Oluştur'}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+            </Container>
         </Box>
     );
 }

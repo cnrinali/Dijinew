@@ -34,6 +34,9 @@ export const getMyCompanyCards = async (params = {}) => {
     }
 };
 
+// Modern isim ile aynı fonksiyon
+export const getCorporateCards = getMyCompanyCards;
+
 // @desc    Create a new card for the logged-in corporate user's company
 // @route   POST /api/corporate/cards
 export const createMyCompanyCard = async (cardData) => {
@@ -47,17 +50,20 @@ export const createMyCompanyCard = async (cardData) => {
     }
 };
 
+// Modern isim ile aynı fonksiyon
+export const createCompanyCard = createMyCompanyCard;
+
 // @desc    Get users for the logged-in corporate user's company (for selection)
 // @route   GET /api/corporate/users?brief=true (Varsayım)
 // @access  Private/Corporate
-export const getMyCompanyUsersForSelection = async () => {
+export const getMyCompanyUsersForSelection = async (params = {}) => {
     try {
         const config = getAuthConfig();
         // Backend'de bu endpoint'in sadece id, name, email gibi temel bilgileri dönmesi idealdir.
         // companyId filtrelemesi backend'de otomatik olarak req.user.companyId ile yapılmalı.
         const response = await axios.get(`${API_BASE_URL}/users`, { 
             ...config,
-            // params: { brief: true } // Eğer backend destekliyorsa sadece temel alanları istemek için
+            params // Eğer backend destekliyorsa sadece temel alanları istemek için
         });
         return response.data; // Genellikle { data: [{id, name, email}, ...], ... } formatında döner
     } catch (error) {
@@ -65,6 +71,9 @@ export const getMyCompanyUsersForSelection = async () => {
         throw error.response?.data || new Error('Şirket kullanıcıları getirilemedi.');
     }
 };
+
+// Modern isim ile aynı fonksiyon
+export const getCorporateUsers = getMyCompanyUsersForSelection;
 
 // @desc    Create a new user for the logged-in corporate user's company
 // @route   POST /api/corporate/users
@@ -80,6 +89,9 @@ export const createMyCompanyUser = async (userData) => {
         throw error.response?.data || new Error('Şirket kullanıcısı oluşturulamadı.');
     }
 };
+
+// Modern isim ile aynı fonksiyon
+export const createCompanyUser = createMyCompanyUser;
 
 // Gelecekteki diğer kurumsal servis fonksiyonları buraya eklenebilir
 // export const addCardToMyCompany = async (cardData) => { ... }; 
