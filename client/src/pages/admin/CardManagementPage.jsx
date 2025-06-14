@@ -37,8 +37,20 @@ import Avatar from '@mui/material/Avatar'; // QR Kodu göstermek için
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
+import Grid from '@mui/material/Grid';
+import InputAdornment from '@mui/material/InputAdornment';
+import Chip from '@mui/material/Chip';
+import Collapse from '@mui/material/Collapse';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import FilterListIcon from '@mui/icons-material/FilterList';
 
 function CardManagementPage() {
+    console.log('CardManagementPage component loaded with filters!'); // Debug log
     const [cards, setCards] = useState([]);
     const [companies, setCompanies] = useState([]); // Şirket listesi state'i
     const [users, setUsers] = useState([]); // Kullanıcı listesi state'i
@@ -66,6 +78,16 @@ function CardManagementPage() {
     const [formLoading, setFormLoading] = useState(false);
     const [formError, setFormError] = useState(''); // Form içi hata mesajı
     const [zipLoading, setZipLoading] = useState(false); // QR ZIP indirme için yükleme durumu
+
+    // Filter states
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState('');
+    const [companyFilter, setCompanyFilter] = useState('');
+    const [userFilter, setUserFilter] = useState('');
+    const [dateFromFilter, setDateFromFilter] = useState('');
+    const [dateToFilter, setDateToFilter] = useState('');
+    const [filteredCards, setFilteredCards] = useState([]);
+    const [filterOpen, setFilterOpen] = useState(false);
 
     const { showNotification } = useNotification();
 
@@ -132,6 +154,77 @@ function CardManagementPage() {
         fetchUsersList(); // Kullanıcıları yükle
         fetchCards(); // Kartları yükle
     }, [fetchCompaniesList, fetchUsersList, fetchCards]);
+
+    // Filter function
+    const applyFilters = useCallback(() => {
+        let filtered = cards;
+
+        // Search filter
+        if (searchQuery) {
+            filtered = filtered.filter(card => 
+                card.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                card.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                card.phone?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                card.title?.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+        }
+
+        // Status filter
+        if (statusFilter !== '') {
+            filtered = filtered.filter(card => card.status === (statusFilter === 'active'));
+        }
+
+        // Company filter
+        if (companyFilter) {
+            if (companyFilter === 'null') {
+                filtered = filtered.filter(card => !card.companyId || card.companyId === null);
+            } else {
+                filtered = filtered.filter(card => card.companyId?.toString() === companyFilter);
+            }
+        }
+
+        // User filter
+        if (userFilter) {
+            if (userFilter === 'null') {
+                filtered = filtered.filter(card => !card.userId || card.userId === null);
+            } else {
+                filtered = filtered.filter(card => card.userId?.toString() === userFilter);
+            }
+        }
+
+        // Date range filter
+        if (dateFromFilter) {
+            filtered = filtered.filter(card => {
+                const cardDate = new Date(card.createdAt);
+                const fromDate = new Date(dateFromFilter);
+                return cardDate >= fromDate;
+            });
+        }
+
+        if (dateToFilter) {
+            filtered = filtered.filter(card => {
+                const cardDate = new Date(card.createdAt);
+                const toDate = new Date(dateToFilter);
+                toDate.setHours(23, 59, 59, 999); // End of day
+                return cardDate <= toDate;
+            });
+        }
+
+        setFilteredCards(filtered);
+    }, [cards, searchQuery, statusFilter, companyFilter, userFilter, dateFromFilter, dateToFilter]);
+
+    useEffect(() => {
+        applyFilters();
+    }, [applyFilters]);
+
+    const clearFilters = () => {
+        setSearchQuery('');
+        setStatusFilter('');
+        setCompanyFilter('');
+        setUserFilter('');
+        setDateFromFilter('');
+        setDateToFilter('');
+    };
 
     const handleOpenModal = (card = null) => {
         setFormError(''); // Hataları temizle
@@ -605,10 +698,19 @@ function CardManagementPage() {
     ];
 
     return (
-        <Paper sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h5" component="h1">Kartvizit Yönetimi</Typography>
-                <Box>
+        <Box sx={{ p: 3 }}>
+            {/* Header */}
+            <Box sx={{ mb: 4 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box>
+                        <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary', mb: 1 }}>
+                            🃏 Kartvizit Yönetimi
+                        </Typography>
+                        <Typography variant="body1" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                            Tüm kartvizitleri görüntüleyin ve yönetin
+                        </Typography>
+                    </Box>
+                    <Box>
                      <Button
                         variant="outlined"
                         startIcon={<FileDownloadIcon />}
@@ -647,19 +749,176 @@ function CardManagementPage() {
                     </Button>
                 </Box>
             </Box>
+            </Box>
+
+            {/* Filter Section */}
+            <Card sx={{ mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'grey.200' }}>
+                <Box 
+                    sx={{ 
+                        p: 2, 
+                        backgroundColor: 'grey.50',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        borderBottom: filterOpen ? '1px solid' : 'none',
+                        borderColor: 'grey.200'
+                    }}
+                    onClick={() => setFilterOpen(!filterOpen)}
+                >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <FilterListIcon color="primary" />
+                        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                            Filtreler
+                        </Typography>
+                        <Chip 
+                            label={`${filteredCards.length} kart`}
+                            color="primary"
+                            variant="outlined"
+                            size="small"
+                        />
+                    </Box>
+                    {filterOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                </Box>
+                
+                <Collapse in={filterOpen}>
+                    <CardContent sx={{ pt: 3 }}>
+                        <Grid container spacing={2} alignItems="center">
+                            <Grid item xs={12} md={3}>
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    placeholder="İsim, email, telefon veya ünvan ara..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <SearchIcon color="action" />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} md={2}>
+                                <FormControl fullWidth size="small">
+                                    <InputLabel>Durum</InputLabel>
+                                    <Select
+                                        value={statusFilter}
+                                        onChange={(e) => setStatusFilter(e.target.value)}
+                                        label="Durum"
+                                        sx={{ borderRadius: 2 }}
+                                    >
+                                        <MenuItem value="">Tümü</MenuItem>
+                                        <MenuItem value="active">Aktif</MenuItem>
+                                        <MenuItem value="inactive">Pasif</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={12} md={2}>
+                                <FormControl fullWidth size="small">
+                                    <InputLabel>Şirket</InputLabel>
+                                    <Select
+                                        value={companyFilter}
+                                        onChange={(e) => setCompanyFilter(e.target.value)}
+                                        label="Şirket"
+                                        sx={{ borderRadius: 2 }}
+                                    >
+                                        <MenuItem value="">Tümü</MenuItem>
+                                        <MenuItem value="null">Bireysel Kartlar</MenuItem>
+                                        {companies.map(company => (
+                                            <MenuItem key={company.id} value={company.id.toString()}>
+                                                {company.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={12} md={2}>
+                                <FormControl fullWidth size="small">
+                                    <InputLabel>Kullanıcı</InputLabel>
+                                    <Select
+                                        value={userFilter}
+                                        onChange={(e) => setUserFilter(e.target.value)}
+                                        label="Kullanıcı"
+                                        sx={{ borderRadius: 2 }}
+                                    >
+                                        <MenuItem value="">Tümü</MenuItem>
+                                        <MenuItem value="null">Kullanıcısız Kartlar</MenuItem>
+                                        {users.map(user => (
+                                            <MenuItem key={user.id} value={user.id.toString()}>
+                                                {user.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={12} md={3}>
+                                <Button
+                                    fullWidth
+                                    variant="outlined"
+                                    onClick={clearFilters}
+                                    startIcon={<ClearIcon />}
+                                    sx={{ borderRadius: 2 }}
+                                    size="small"
+                                >
+                                    Filtreleri Temizle
+                                </Button>
+                            </Grid>
+                        </Grid>
+                        
+                        {/* Date Range Filters */}
+                        <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid', borderColor: 'grey.200' }}>
+                            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600, color: 'text.primary' }}>
+                                📅 Oluşturulma Tarihi Aralığı
+                            </Typography>
+                            <Grid container spacing={2}>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        size="small"
+                                        type="date"
+                                        label="Başlangıç Tarihi"
+                                        value={dateFromFilter}
+                                        onChange={(e) => setDateFromFilter(e.target.value)}
+                                        InputLabelProps={{ shrink: true }}
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        size="small"
+                                        type="date"
+                                        label="Bitiş Tarihi"
+                                        value={dateToFilter}
+                                        onChange={(e) => setDateToFilter(e.target.value)}
+                                        InputLabelProps={{ shrink: true }}
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </Box>
+                    </CardContent>
+                </Collapse>
+            </Card>
 
             {loading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
                     <CircularProgress />
                 </Box>
             ) : (
-                 <DataGrid
-                    rows={cards}
-                    columns={columns}
-                    apiRef={apiRef} 
-                    pageSizeOptions={[5, 10, 25]}
-                    disableRowSelectionOnClick
-                />
+                <Paper sx={{ borderRadius: 3, border: '1px solid', borderColor: 'grey.200' }}>
+                    <DataGrid
+                        rows={filteredCards}
+                        columns={columns}
+                        apiRef={apiRef} 
+                        pageSizeOptions={[5, 10, 25]}
+                        disableRowSelectionOnClick
+                        sx={{ border: 'none' }}
+                    />
+                </Paper>
             )}
 
             {/* Ekleme/Düzenleme Modalı */}
@@ -846,7 +1105,7 @@ function CardManagementPage() {
                 </DialogActions>
             </Dialog>
 
-        </Paper>
+        </Box>
     );
 }
 

@@ -13,7 +13,7 @@ import HomePage from './pages/HomePage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminUserListPage from './pages/admin/AdminUserListPage';
 import AdminCompanyListPage from './pages/admin/CompanyManagementPage';
-import AdminCardListPage from './pages/admin/AdminCardListPage';
+import CardManagementPage from './pages/admin/CardManagementPage';
 import AdminCardCreatePage from './pages/admin/AdminCardCreatePage';
 import AdminLayout from './components/admin/AdminLayout';
 import UserProfilePage from './pages/ProfilePage';
@@ -26,7 +26,7 @@ import CreateCardPage from './pages/CreateCardPage';
 import EditCardPage from './pages/EditCardPage';
 
 const navItems = [
-  { label: 'Ana Sayfa', path: '/', public: true },
+  { label: 'Ana Sayfa', path: '/home', public: true },
   { label: 'Giriş Yap', path: '/login', public: true, hideWhenLoggedIn: true },
   { label: 'Kayıt Ol', path: '/register', public: true, hideWhenLoggedIn: true },
   { label: 'Profilim', path: '/profile', roles: ['user', 'admin', 'corporate'] },
@@ -254,7 +254,22 @@ function AppContent() {
 
             <Container component="main" maxWidth={false} sx={{ py: 0, px: isAdminRoute ? 0 : 3, minHeight: isAdminRoute ? '100vh' : 'calc(100vh - 64px)' }}>
               <Routes>
-                <Route path="/" element={<HomePage />} /> 
+                <Route path="/" element={
+                  user ? (
+                    user.role === 'admin' ? (
+                      <Navigate to="/admin/dashboard" replace />
+                    ) : user.role === 'corporate' && user.companyId ? (
+                      <Navigate to="/corporate/dashboard" replace />
+                    ) : user.role === 'user' ? (
+                      <Navigate to="/cards" replace />
+                    ) : (
+                      <HomePage />
+                    )
+                  ) : (
+                    <HomePage />
+                  )
+                } /> 
+                <Route path="/home" element={<HomePage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/profile" element={
@@ -273,7 +288,7 @@ function AppContent() {
                 <Route path="/admin/dashboard" element={user && user.role === 'admin' ? <AdminLayout><AdminDashboardPage /></AdminLayout> : <Navigate to="/login" />} />
                 <Route path="/admin/users" element={user && user.role === 'admin' ? <AdminLayout><AdminUserListPage /></AdminLayout> : <Navigate to="/login" />} />
                 <Route path="/admin/companies" element={user && user.role === 'admin' ? <AdminLayout><AdminCompanyListPage /></AdminLayout> : <Navigate to="/login" />} />
-                <Route path="/admin/cards" element={user && user.role === 'admin' ? <AdminLayout><AdminCardListPage /></AdminLayout> : <Navigate to="/login" />} />
+                <Route path="/admin/cards" element={user && user.role === 'admin' ? <AdminLayout><CardManagementPage /></AdminLayout> : <Navigate to="/login" />} />
                 <Route path="/admin/cards/new" element={user && user.role === 'admin' ? <AdminLayout><AdminCardCreatePage /></AdminLayout> : <Navigate to="/login" />} />
 
                 {/* Corporate Routes */}

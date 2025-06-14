@@ -33,12 +33,23 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
+import Grid from '@mui/material/Grid';
+import InputAdornment from '@mui/material/InputAdornment';
+import Chip from '@mui/material/Chip';
+import Collapse from '@mui/material/Collapse';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
 
 // Icon Imports
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import PeopleIcon from '@mui/icons-material/People';
+import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import FilterListIcon from '@mui/icons-material/FilterList';
 
 function AdminUserListPage() {
     const [users, setUsers] = useState([]);
@@ -52,6 +63,15 @@ function AdminUserListPage() {
     const initialFormData = { name: '', email: '', password: '', role: 'user', companyId: '' };
     const [formData, setFormData] = useState(initialFormData);
     const [formLoading, setFormLoading] = useState(false);
+
+    // Filter states
+    const [searchQuery, setSearchQuery] = useState('');
+    const [roleFilter, setRoleFilter] = useState('');
+    const [companyFilter, setCompanyFilter] = useState('');
+    const [dateFromFilter, setDateFromFilter] = useState('');
+    const [dateToFilter, setDateToFilter] = useState('');
+    const [filteredUsers, setFilteredUsers] = useState([]);
+    const [filterOpen, setFilterOpen] = useState(false);
 
     const { showNotification } = useNotification();
 
@@ -99,6 +119,61 @@ function AdminUserListPage() {
         fetchUsers();
         fetchCompaniesList();
     }, [fetchUsers, fetchCompaniesList]);
+
+    // Filter function
+    const applyFilters = useCallback(() => {
+        let filtered = users;
+
+        // Search filter
+        if (searchQuery) {
+            filtered = filtered.filter(user => 
+                user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                user.email?.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+        }
+
+        // Role filter
+        if (roleFilter) {
+            filtered = filtered.filter(user => user.role === roleFilter);
+        }
+
+        // Company filter
+        if (companyFilter) {
+            filtered = filtered.filter(user => user.companyId?.toString() === companyFilter);
+        }
+
+        // Date range filter
+        if (dateFromFilter) {
+            filtered = filtered.filter(user => {
+                const userDate = new Date(user.createdAt);
+                const fromDate = new Date(dateFromFilter);
+                return userDate >= fromDate;
+            });
+        }
+
+        if (dateToFilter) {
+            filtered = filtered.filter(user => {
+                const userDate = new Date(user.createdAt);
+                const toDate = new Date(dateToFilter);
+                toDate.setHours(23, 59, 59, 999); // End of day
+                return userDate <= toDate;
+            });
+        }
+
+        setFilteredUsers(filtered);
+    }, [users, searchQuery, roleFilter, companyFilter, dateFromFilter, dateToFilter]);
+
+    useEffect(() => {
+        applyFilters();
+    }, [applyFilters]);
+
+    const clearFilters = () => {
+        setSearchQuery('');
+        setRoleFilter('');
+        setCompanyFilter('');
+        setDateFromFilter('');
+        setDateToFilter('');
+    };
 
     const handleOpenModal = (user = null) => {
         setError('');
@@ -237,6 +312,141 @@ function AdminUserListPage() {
                     </Button>
                 </Box>
             </Box>
+
+            {/* Filter Section */}
+            <Card sx={{ mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'grey.200' }}>
+                <Box 
+                    sx={{ 
+                        p: 2, 
+                        backgroundColor: 'grey.50',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        borderBottom: filterOpen ? '1px solid' : 'none',
+                        borderColor: 'grey.200'
+                    }}
+                    onClick={() => setFilterOpen(!filterOpen)}
+                >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <FilterListIcon color="primary" />
+                        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                            Filtreler
+                        </Typography>
+                        <Chip 
+                            label={`${filteredUsers.length} kullanıcı`}
+                            color="primary"
+                            variant="outlined"
+                            size="small"
+                        />
+                    </Box>
+                    {filterOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                </Box>
+                
+                <Collapse in={filterOpen}>
+                    <CardContent sx={{ pt: 3 }}>
+                        <Grid container spacing={2} alignItems="center">
+                            <Grid item xs={12} md={4}>
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    placeholder="İsim veya email ara..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <SearchIcon color="action" />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} md={2}>
+                                <FormControl fullWidth size="small">
+                                    <InputLabel>Rol</InputLabel>
+                                    <Select
+                                        value={roleFilter}
+                                        onChange={(e) => setRoleFilter(e.target.value)}
+                                        label="Rol"
+                                        sx={{ borderRadius: 2 }}
+                                    >
+                                        <MenuItem value="">Tümü</MenuItem>
+                                        <MenuItem value="admin">Admin</MenuItem>
+                                        <MenuItem value="user">Kullanıcı</MenuItem>
+                                        <MenuItem value="corporate">Kurumsal</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={12} md={3}>
+                                <FormControl fullWidth size="small">
+                                    <InputLabel>Şirket</InputLabel>
+                                    <Select
+                                        value={companyFilter}
+                                        onChange={(e) => setCompanyFilter(e.target.value)}
+                                        label="Şirket"
+                                        sx={{ borderRadius: 2 }}
+                                    >
+                                        <MenuItem value="">Tümü</MenuItem>
+                                        <MenuItem value="null">Bireysel Kullanıcılar</MenuItem>
+                                        {companies.map(company => (
+                                            <MenuItem key={company.id} value={company.id.toString()}>
+                                                {company.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={12} md={3}>
+                                <Button
+                                    fullWidth
+                                    variant="outlined"
+                                    onClick={clearFilters}
+                                    startIcon={<ClearIcon />}
+                                    sx={{ borderRadius: 2 }}
+                                    size="small"
+                                >
+                                    Filtreleri Temizle
+                                </Button>
+                            </Grid>
+                        </Grid>
+                        
+                        {/* Date Range Filters */}
+                        <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid', borderColor: 'grey.200' }}>
+                            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600, color: 'text.primary' }}>
+                                📅 Kayıt Tarihi Aralığı
+                            </Typography>
+                            <Grid container spacing={2}>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        size="small"
+                                        type="date"
+                                        label="Başlangıç Tarihi"
+                                        value={dateFromFilter}
+                                        onChange={(e) => setDateFromFilter(e.target.value)}
+                                        InputLabelProps={{ shrink: true }}
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        size="small"
+                                        type="date"
+                                        label="Bitiş Tarihi"
+                                        value={dateToFilter}
+                                        onChange={(e) => setDateToFilter(e.target.value)}
+                                        InputLabelProps={{ shrink: true }}
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </Box>
+                    </CardContent>
+                </Collapse>
+            </Card>
             
             {error && !modalOpen && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
@@ -254,8 +464,8 @@ function AdminUserListPage() {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {users.length > 0 ? (
-                            users.map((user) => (
+                        {filteredUsers.length > 0 ? (
+                            filteredUsers.map((user) => (
                                 <TableRow
                                     key={user.id}
                                     sx={{ 

@@ -24,10 +24,24 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Chip from '@mui/material/Chip';
+import Grid from '@mui/material/Grid';
+import InputAdornment from '@mui/material/InputAdornment';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import BusinessIcon from '@mui/icons-material/Business';
+import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import Collapse from '@mui/material/Collapse';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
 
 function CompanyManagementPage() {
     const [companies, setCompanies] = useState([]);
@@ -39,6 +53,14 @@ function CompanyManagementPage() {
     const initialFormData = { name: '', userLimit: 1, cardLimit: 1, status: true, phone: '', website: '', address: '' };
     const [formData, setFormData] = useState(initialFormData);
     const [formLoading, setFormLoading] = useState(false);
+
+    // Filter states
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState('');
+    const [sizeFilter, setSizeFilter] = useState('');
+
+    const [filteredCompanies, setFilteredCompanies] = useState([]);
+    const [filterOpen, setFilterOpen] = useState(false);
 
     const { showNotification } = useNotification();
 
@@ -77,6 +99,53 @@ function CompanyManagementPage() {
     useEffect(() => {
         fetchCompanies();
     }, [fetchCompanies]);
+
+    // Filter function
+    const applyFilters = useCallback(() => {
+        let filtered = companies;
+
+        // Search filter
+        if (searchQuery) {
+            filtered = filtered.filter(company => 
+                company.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                company.address?.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+        }
+
+        // Status filter
+        if (statusFilter !== '') {
+            filtered = filtered.filter(company => company.status === (statusFilter === 'active'));
+        }
+
+        // Size filter (based on user limit)
+        if (sizeFilter) {
+            switch (sizeFilter) {
+                case 'small':
+                    filtered = filtered.filter(company => company.userLimit <= 10);
+                    break;
+                case 'medium':
+                    filtered = filtered.filter(company => company.userLimit > 10 && company.userLimit <= 50);
+                    break;
+                case 'large':
+                    filtered = filtered.filter(company => company.userLimit > 50);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        setFilteredCompanies(filtered);
+    }, [companies, searchQuery, statusFilter, sizeFilter]);
+
+    useEffect(() => {
+        applyFilters();
+    }, [applyFilters]);
+
+    const clearFilters = () => {
+        setSearchQuery('');
+        setStatusFilter('');
+        setSizeFilter('');
+    };
 
     const handleOpenModal = (company = null) => {
         if (company) {
@@ -196,17 +265,117 @@ function CompanyManagementPage() {
                             Şirketleri görüntüleyin ve yönetin
                         </Typography>
                     </Box>
-                    <Button
-                        variant="contained"
+                <Button
+                    variant="contained"
                         color="primary"
-                        startIcon={<AddIcon />}
-                        onClick={() => handleOpenModal()}
+                    startIcon={<AddIcon />}
+                    onClick={() => handleOpenModal()}
                         sx={{ minWidth: 200 }}
-                    >
-                        Yeni Şirket Ekle
-                    </Button>
-                </Box>
+                >
+                    Yeni Şirket Ekle
+                </Button>
             </Box>
+            </Box>
+
+            {/* Filter Section */}
+            <Card sx={{ mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'grey.200' }}>
+                <Box 
+                    sx={{ 
+                        p: 2, 
+                        backgroundColor: 'grey.50',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        borderBottom: filterOpen ? '1px solid' : 'none',
+                        borderColor: 'grey.200'
+                    }}
+                    onClick={() => setFilterOpen(!filterOpen)}
+                >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <FilterListIcon color="primary" />
+                        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                            Filtreler
+                        </Typography>
+                        <Chip 
+                            label={`${filteredCompanies.length} şirket`}
+                            color="primary"
+                            variant="outlined"
+                            size="small"
+                        />
+                    </Box>
+                    {filterOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                </Box>
+                
+                <Collapse in={filterOpen}>
+                    <CardContent sx={{ pt: 3 }}>
+                        <Grid container spacing={2} alignItems="center">
+                            <Grid item xs={12} md={4}>
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    placeholder="Şirket adı veya adres ara..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <SearchIcon color="action" />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} md={2}>
+                                <FormControl fullWidth size="small">
+                                    <InputLabel>Durum</InputLabel>
+                                    <Select
+                                        value={statusFilter}
+                                        onChange={(e) => setStatusFilter(e.target.value)}
+                                        label="Durum"
+                                        sx={{ borderRadius: 2 }}
+                                    >
+                                        <MenuItem value="">Tümü</MenuItem>
+                                        <MenuItem value="active">Aktif</MenuItem>
+                                        <MenuItem value="inactive">Pasif</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={12} md={2}>
+                                <FormControl fullWidth size="small">
+                                    <InputLabel>Boyut</InputLabel>
+                                    <Select
+                                        value={sizeFilter}
+                                        onChange={(e) => setSizeFilter(e.target.value)}
+                                        label="Boyut"
+                                        sx={{ borderRadius: 2 }}
+                                    >
+                                        <MenuItem value="">Tümü</MenuItem>
+                                        <MenuItem value="small">Küçük (≤10)</MenuItem>
+                                        <MenuItem value="medium">Orta (11-50)</MenuItem>
+                                        <MenuItem value="large">Büyük (&gt;50)</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={12} md={4}>
+                                <Button
+                                    fullWidth
+                                    variant="outlined"
+                                    onClick={clearFilters}
+                                    startIcon={<ClearIcon />}
+                                    sx={{ borderRadius: 2 }}
+                                    size="small"
+                                >
+                                    Filtreleri Temizle
+                                </Button>
+                            </Grid>
+                        </Grid>
+                        
+
+                    </CardContent>
+                </Collapse>
+            </Card>
 
             {loading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 8 }}>
@@ -227,8 +396,8 @@ function CompanyManagementPage() {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {companies.length > 0 ? (
-                                companies.map((company) => (
+                            {filteredCompanies.length > 0 ? (
+                                filteredCompanies.map((company) => (
                                     <TableRow
                                         key={company.id}
                                         sx={{ 
