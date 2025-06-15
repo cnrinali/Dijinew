@@ -71,6 +71,17 @@ const createCard = async (req, res) => {
         linkedinUrl = null,
         twitterUrl = null,
         instagramUrl = null,
+        // Pazaryeri alanları
+        trendyolUrl = null,
+        hepsiburadaUrl = null,
+        ciceksepeti = null,
+        sahibindenUrl = null,
+        hepsiemlakUrl = null,
+        gittigidiyorUrl = null,
+        n11Url = null,
+        amazonTrUrl = null,
+        getirUrl = null,
+        yemeksepetiUrl = null,
         // Kurumsal kullanıcı için seçilen kullanıcı ID'si
         userId: selectedUserId = null
     } = req.body;
@@ -150,11 +161,22 @@ const createCard = async (req, res) => {
             .input('linkedinUrl', sql.NVarChar, linkedinUrl)
             .input('twitterUrl', sql.NVarChar, twitterUrl)
             .input('instagramUrl', sql.NVarChar, instagramUrl)
+            // Pazaryeri inputları
+            .input('trendyolUrl', sql.NVarChar, trendyolUrl)
+            .input('hepsiburadaUrl', sql.NVarChar, hepsiburadaUrl)
+            .input('ciceksepeti', sql.NVarChar, ciceksepeti)
+            .input('sahibindenUrl', sql.NVarChar, sahibindenUrl)
+            .input('hepsiemlakUrl', sql.NVarChar, hepsiemlakUrl)
+            .input('gittigidiyorUrl', sql.NVarChar, gittigidiyorUrl)
+            .input('n11Url', sql.NVarChar, n11Url)
+            .input('amazonTrUrl', sql.NVarChar, amazonTrUrl)
+            .input('getirUrl', sql.NVarChar, getirUrl)
+            .input('yemeksepetiUrl', sql.NVarChar, yemeksepetiUrl)
             .query(`
                 INSERT INTO Cards 
-                (userId, cardName, profileImageUrl, coverImageUrl, name, title, company, bio, phone, email, website, address, theme, customSlug, isActive, linkedinUrl, twitterUrl, instagramUrl)
+                (userId, cardName, profileImageUrl, coverImageUrl, name, title, company, bio, phone, email, website, address, theme, customSlug, isActive, linkedinUrl, twitterUrl, instagramUrl, trendyolUrl, hepsiburadaUrl, ciceksepeti, sahibindenUrl, hepsiemlakUrl, gittigidiyorUrl, n11Url, amazonTrUrl, getirUrl, yemeksepetiUrl)
                 VALUES 
-                (@userId, @cardName, @profileImageUrl, @coverImageUrl, @name, @title, @company, @bio, @phone, @email, @website, @address, @theme, @customSlug, 1, @linkedinUrl, @twitterUrl, @instagramUrl);
+                (@userId, @cardName, @profileImageUrl, @coverImageUrl, @name, @title, @company, @bio, @phone, @email, @website, @address, @theme, @customSlug, 1, @linkedinUrl, @twitterUrl, @instagramUrl, @trendyolUrl, @hepsiburadaUrl, @ciceksepeti, @sahibindenUrl, @hepsiemlakUrl, @gittigidiyorUrl, @n11Url, @amazonTrUrl, @getirUrl, @yemeksepetiUrl);
             `);
 
         // 3. Son eklenen kartı al
@@ -259,7 +281,18 @@ const updateCard = async (req, res) => {
         // Yeni sosyal medya alanları
         linkedinUrl,
         twitterUrl,
-        instagramUrl
+        instagramUrl,
+        // Pazaryeri alanları
+        trendyolUrl,
+        hepsiburadaUrl,
+        ciceksepeti,
+        sahibindenUrl,
+        hepsiemlakUrl,
+        gittigidiyorUrl,
+        n11Url,
+        amazonTrUrl,
+        getirUrl,
+        yemeksepetiUrl
     } = req.body;
 
     if (isNaN(parseInt(cardId))) {
@@ -324,6 +357,17 @@ const updateCard = async (req, res) => {
             .input('linkedinUrl', sql.NVarChar, linkedinUrl)
             .input('twitterUrl', sql.NVarChar, twitterUrl)
             .input('instagramUrl', sql.NVarChar, instagramUrl)
+            // Pazaryeri inputları
+            .input('trendyolUrl', sql.NVarChar, trendyolUrl)
+            .input('hepsiburadaUrl', sql.NVarChar, hepsiburadaUrl)
+            .input('ciceksepeti', sql.NVarChar, ciceksepeti)
+            .input('sahibindenUrl', sql.NVarChar, sahibindenUrl)
+            .input('hepsiemlakUrl', sql.NVarChar, hepsiemlakUrl)
+            .input('gittigidiyorUrl', sql.NVarChar, gittigidiyorUrl)
+            .input('n11Url', sql.NVarChar, n11Url)
+            .input('amazonTrUrl', sql.NVarChar, amazonTrUrl)
+            .input('getirUrl', sql.NVarChar, getirUrl)
+            .input('yemeksepetiUrl', sql.NVarChar, yemeksepetiUrl)
             .query(`
                 UPDATE Cards SET 
                     cardName = @cardName,
@@ -342,7 +386,17 @@ const updateCard = async (req, res) => {
                     isActive = @isActive,
                     linkedinUrl = @linkedinUrl,
                     twitterUrl = @twitterUrl,
-                    instagramUrl = @instagramUrl
+                    instagramUrl = @instagramUrl,
+                    trendyolUrl = @trendyolUrl,
+                    hepsiburadaUrl = @hepsiburadaUrl,
+                    ciceksepeti = @ciceksepeti,
+                    sahibindenUrl = @sahibindenUrl,
+                    hepsiemlakUrl = @hepsiemlakUrl,
+                    gittigidiyorUrl = @gittigidiyorUrl,
+                    n11Url = @n11Url,
+                    amazonTrUrl = @amazonTrUrl,
+                    getirUrl = @getirUrl,
+                    yemeksepetiUrl = @yemeksepetiUrl
                 WHERE id = @cardId;
             `);
 

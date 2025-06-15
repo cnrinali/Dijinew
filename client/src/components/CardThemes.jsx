@@ -29,7 +29,46 @@ import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import StorefrontIcon from '@mui/icons-material/Storefront';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import LocalFloristIcon from '@mui/icons-material/LocalFlorist';
+import HomeIcon from '@mui/icons-material/Home';
+import DeliveryDiningIcon from '@mui/icons-material/DeliveryDining';
+import RestaurantIcon from '@mui/icons-material/Restaurant';
 import { formatIban, getBankLogo } from '../constants/turkishBanks';
+
+// Pazaryeri ikonları ve isimleri
+const getMarketplaceIcon = (marketplace) => {
+    switch (marketplace) {
+        case 'trendyol': return <StorefrontIcon />;
+        case 'hepsiburada': return <ShoppingCartIcon />;
+        case 'ciceksepeti': return <LocalFloristIcon />;
+        case 'sahibinden': return <HomeIcon />;
+        case 'hepsiemlak': return <HomeIcon />;
+        case 'gittigidiyor': return <StorefrontIcon />;
+        case 'n11': return <ShoppingCartIcon />;
+        case 'amazonTr': return <ShoppingCartIcon />;
+        case 'getir': return <DeliveryDiningIcon />;
+        case 'yemeksepeti': return <RestaurantIcon />;
+        default: return <StorefrontIcon />;
+    }
+};
+
+const getMarketplaceName = (marketplace) => {
+    switch (marketplace) {
+        case 'trendyol': return 'Trendyol';
+        case 'hepsiburada': return 'Hepsiburada';
+        case 'ciceksepeti': return 'Çiçeksepeti';
+        case 'sahibinden': return 'Sahibinden';
+        case 'hepsiemlak': return 'Hepsiemlak';
+        case 'gittigidiyor': return 'GittiGidiyor';
+        case 'n11': return 'N11';
+        case 'amazonTr': return 'Amazon TR';
+        case 'getir': return 'Getir';
+        case 'yemeksepeti': return 'Yemeksepeti';
+        default: return marketplace;
+    }
+};
 
 // Default tema (şu anki)
 export const DefaultTheme = ({ cardData }) => {
@@ -166,6 +205,124 @@ export const DefaultTheme = ({ cardData }) => {
                                     </ListItem>
                                 );
                             })}
+                        </List>
+                    </CardContent>
+                </>
+            )}
+
+            {/* Pazaryeri Linkleri */}
+            {(cardData.trendyolUrl || cardData.hepsiburadaUrl || cardData.ciceksepeti || cardData.sahibindenUrl || 
+              cardData.hepsiemlakUrl || cardData.gittigidiyorUrl || cardData.n11Url || cardData.amazonTrUrl || 
+              cardData.getirUrl || cardData.yemeksepetiUrl) && (
+                <>
+                    <Divider />
+                    <CardContent sx={{ pt: 1, pb: 1 }}>
+                        <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                            <StorefrontIcon sx={{ mr: 1 }} /> Pazaryeri Linkleri
+                        </Typography>
+                        <List dense>
+                            {cardData.trendyolUrl && (
+                                <ListItem component={Link} href={cardData.trendyolUrl} target="_blank" rel="noopener noreferrer">
+                                    <ListItemIcon>
+                                        <img 
+                                            src="/img/ikon/trendyol.png" 
+                                            alt="Trendyol" 
+                                            style={{ width: 24, height: 24 }}
+                                        />
+                                    </ListItemIcon>
+                                    <ListItemText primary={getMarketplaceName('trendyol')} />
+                                </ListItem>
+                            )}
+                            {cardData.hepsiburadaUrl && (
+                                <ListItem component={Link} href={cardData.hepsiburadaUrl} target="_blank" rel="noopener noreferrer">
+                                    <ListItemIcon>
+                                        <img 
+                                            src="/img/ikon/hepsiburada.png" 
+                                            alt="Hepsiburada" 
+                                            style={{ width: 24, height: 24 }}
+                                        />
+                                    </ListItemIcon>
+                                    <ListItemText primary={getMarketplaceName('hepsiburada')} />
+                                </ListItem>
+                            )}
+                            {cardData.ciceksepeti && (
+                                <ListItem component={Link} href={cardData.ciceksepeti} target="_blank" rel="noopener noreferrer">
+                                    <ListItemIcon>
+                                        <img 
+                                            src="/img/ikon/ciceksepeti.png" 
+                                            alt="Çiçeksepeti" 
+                                            style={{ width: 24, height: 24 }}
+                                        />
+                                    </ListItemIcon>
+                                    <ListItemText primary={getMarketplaceName('ciceksepeti')} />
+                                </ListItem>
+                            )}
+                            {cardData.sahibindenUrl && (
+                                <ListItem component={Link} href={cardData.sahibindenUrl} target="_blank" rel="noopener noreferrer">
+                                    <ListItemIcon>
+                                        <img 
+                                            src="/img/ikon/sahibinden.png" 
+                                            alt="Sahibinden" 
+                                            style={{ width: 24, height: 24 }}
+                                        />
+                                    </ListItemIcon>
+                                    <ListItemText primary={getMarketplaceName('sahibinden')} />
+                                </ListItem>
+                            )}
+                            {cardData.hepsiemlakUrl && (
+                                <ListItem component={Link} href={cardData.hepsiemlakUrl} target="_blank" rel="noopener noreferrer">
+                                    <ListItemIcon>
+                                        <img 
+                                            src="/img/ikon/hepsiemlak.png" 
+                                            alt="Hepsiemlak" 
+                                            style={{ width: 24, height: 24 }}
+                                        />
+                                    </ListItemIcon>
+                                    <ListItemText primary={getMarketplaceName('hepsiemlak')} />
+                                </ListItem>
+                            )}
+                            {cardData.gittigidiyorUrl && (
+                                <ListItem component={Link} href={cardData.gittigidiyorUrl} target="_blank" rel="noopener noreferrer">
+                                    <ListItemIcon>{getMarketplaceIcon('gittigidiyor')}</ListItemIcon>
+                                    <ListItemText primary={getMarketplaceName('gittigidiyor')} />
+                                </ListItem>
+                            )}
+                            {cardData.n11Url && (
+                                <ListItem component={Link} href={cardData.n11Url} target="_blank" rel="noopener noreferrer">
+                                    <ListItemIcon>
+                                        <img 
+                                            src="/img/ikon/n11.png" 
+                                            alt="N11" 
+                                            style={{ width: 24, height: 24 }}
+                                        />
+                                    </ListItemIcon>
+                                    <ListItemText primary={getMarketplaceName('n11')} />
+                                </ListItem>
+                            )}
+                            {cardData.amazonTrUrl && (
+                                <ListItem component={Link} href={cardData.amazonTrUrl} target="_blank" rel="noopener noreferrer">
+                                    <ListItemIcon>
+                                        <img 
+                                            src="/img/ikon/amazon.png" 
+                                            alt="Amazon" 
+                                            style={{ width: 24, height: 24 }}
+                                        />
+                                    </ListItemIcon>
+                                    <ListItemText primary={getMarketplaceName('amazonTr')} />
+                                </ListItem>
+                            )}
+                            {cardData.getirUrl && (
+                                <ListItem component={Link} href={cardData.getirUrl} target="_blank" rel="noopener noreferrer">
+                                    <ListItemIcon>{getMarketplaceIcon('getir')}</ListItemIcon>
+                                    <ListItemText primary={getMarketplaceName('getir')} />
+                                </ListItem>
+                            )}
+                            {cardData.yemeksepetiUrl && (
+                                <ListItem component={Link} href={cardData.yemeksepetiUrl} target="_blank" rel="noopener noreferrer">
+                                    <ListItemIcon>{getMarketplaceIcon('yemeksepeti')}</ListItemIcon>
+                                    <ListItemText primary={getMarketplaceName('yemeksepeti')} />
+                                </ListItem>
+                            )}
                         </List>
                     </CardContent>
                 </>

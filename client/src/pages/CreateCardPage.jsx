@@ -29,6 +29,9 @@ import InputAdornment from '@mui/material/InputAdornment';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import InstagramIcon from '@mui/icons-material/Instagram';
+import StorefrontIcon from '@mui/icons-material/Storefront';
+import DeliveryDiningIcon from '@mui/icons-material/DeliveryDining';
+import RestaurantIcon from '@mui/icons-material/Restaurant';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import List from '@mui/material/List';
@@ -69,6 +72,17 @@ function CreateCardPage() {
         linkedinUrl: '',
         twitterUrl: '',
         instagramUrl: '',
+        // Pazaryeri alanları
+        trendyolUrl: '',
+        hepsiburadaUrl: '',
+        ciceksepeti: '',
+        sahibindenUrl: '',
+        hepsiemlakUrl: '',
+        gittigidiyorUrl: '',
+        n11Url: '',
+        amazonTrUrl: '',
+        getirUrl: '',
+        yemeksepetiUrl: '',
         profileImage: null,
         logoImage: null,
         linkedin: '',
@@ -746,6 +760,248 @@ function CreateCardPage() {
                                                     ),
                                                 }}
                                                 sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                            />
+                                        </Grid>
+                                    </Grid>
+                                </Card>
+                            </Grid>
+
+                            {/* Pazaryeri Alanları */}
+                            <Grid item xs={12}>
+                                <Card sx={{ p: 3, borderRadius: 2 }}>
+                                    <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 3 }}>
+                                        🛒 Pazaryeri Linkleri (İsteğe Bağlı)
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                                        Türkiye'deki popüler pazaryerlerindeki mağaza linklerinizi ekleyebilirsiniz
+                                    </Typography>
+                                    <Grid container spacing={3}>
+                                        <Grid item xs={12} sm={6} md={4}>
+                                            <TextField
+                                                name="trendyolUrl"
+                                                fullWidth
+                                                id="trendyolUrl"
+                                                label="Trendyol Mağaza URL"
+                                                value={formData.trendyolUrl}
+                                                onChange={onChange}
+                                                disabled={loading}
+                                                placeholder="https://www.trendyol.com/magaza/..."
+                                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                                InputProps={{
+                                                    startAdornment: (
+                                                        <InputAdornment position="start">
+                                                            <img 
+                                                                src="/img/ikon/trendyol.png" 
+                                                                alt="Trendyol" 
+                                                                style={{ width: 20, height: 20 }}
+                                                            />
+                                                        </InputAdornment>
+                                                    ),
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6} md={4}>
+                                            <TextField
+                                                name="hepsiburadaUrl"
+                                                fullWidth
+                                                id="hepsiburadaUrl"
+                                                label="Hepsiburada Mağaza URL"
+                                                value={formData.hepsiburadaUrl}
+                                                onChange={onChange}
+                                                disabled={loading}
+                                                placeholder="https://www.hepsiburada.com/magaza/..."
+                                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                                InputProps={{
+                                                    startAdornment: (
+                                                        <InputAdornment position="start">
+                                                            <img 
+                                                                src="/img/ikon/hepsiburada.png" 
+                                                                alt="Hepsiburada" 
+                                                                style={{ width: 20, height: 20 }}
+                                                            />
+                                                        </InputAdornment>
+                                                    ),
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6} md={4}>
+                                            <TextField
+                                                name="ciceksepeti"
+                                                fullWidth
+                                                id="ciceksepeti"
+                                                label="Çiçeksepeti Mağaza URL"
+                                                value={formData.ciceksepeti}
+                                                onChange={onChange}
+                                                disabled={loading}
+                                                placeholder="https://www.ciceksepeti.com/..."
+                                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                                InputProps={{
+                                                    startAdornment: (
+                                                        <InputAdornment position="start">
+                                                            <img 
+                                                                src="/img/ikon/ciceksepeti.png" 
+                                                                alt="Çiçeksepeti" 
+                                                                style={{ width: 20, height: 20 }}
+                                                            />
+                                                        </InputAdornment>
+                                                    ),
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6} md={4}>
+                                            <TextField
+                                                name="sahibindenUrl"
+                                                fullWidth
+                                                id="sahibindenUrl"
+                                                label="Sahibinden Profil URL"
+                                                value={formData.sahibindenUrl}
+                                                onChange={onChange}
+                                                disabled={loading}
+                                                placeholder="https://www.sahibinden.com/..."
+                                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                                InputProps={{
+                                                    startAdornment: (
+                                                        <InputAdornment position="start">
+                                                            <img 
+                                                                src="/img/ikon/sahibinden.png" 
+                                                                alt="Sahibinden" 
+                                                                style={{ width: 20, height: 20 }}
+                                                            />
+                                                        </InputAdornment>
+                                                    ),
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6} md={4}>
+                                            <TextField
+                                                name="hepsiemlakUrl"
+                                                fullWidth
+                                                id="hepsiemlakUrl"
+                                                label="Hepsiemlak Profil URL"
+                                                value={formData.hepsiemlakUrl}
+                                                onChange={onChange}
+                                                disabled={loading}
+                                                placeholder="https://www.hepsiemlak.com/..."
+                                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                                InputProps={{
+                                                    startAdornment: (
+                                                        <InputAdornment position="start">
+                                                            <img 
+                                                                src="/img/ikon/hepsiemlak.png" 
+                                                                alt="Hepsiemlak" 
+                                                                style={{ width: 20, height: 20 }}
+                                                            />
+                                                        </InputAdornment>
+                                                    ),
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6} md={4}>
+                                            <TextField
+                                                name="gittigidiyorUrl"
+                                                fullWidth
+                                                id="gittigidiyorUrl"
+                                                label="GittiGidiyor Mağaza URL"
+                                                value={formData.gittigidiyorUrl}
+                                                onChange={onChange}
+                                                disabled={loading}
+                                                placeholder="https://www.gittigidiyor.com/..."
+                                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                                InputProps={{
+                                                    startAdornment: (
+                                                        <InputAdornment position="start">
+                                                            <StorefrontIcon color="action" />
+                                                        </InputAdornment>
+                                                    ),
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6} md={4}>
+                                            <TextField
+                                                name="n11Url"
+                                                fullWidth
+                                                id="n11Url"
+                                                label="N11 Mağaza URL"
+                                                value={formData.n11Url}
+                                                onChange={onChange}
+                                                disabled={loading}
+                                                placeholder="https://www.n11.com/magaza/..."
+                                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                                InputProps={{
+                                                    startAdornment: (
+                                                        <InputAdornment position="start">
+                                                            <img 
+                                                                src="/img/ikon/n11.png" 
+                                                                alt="N11" 
+                                                                style={{ width: 20, height: 20 }}
+                                                            />
+                                                        </InputAdornment>
+                                                    ),
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6} md={4}>
+                                            <TextField
+                                                name="amazonTrUrl"
+                                                fullWidth
+                                                id="amazonTrUrl"
+                                                label="Amazon Türkiye Mağaza URL"
+                                                value={formData.amazonTrUrl}
+                                                onChange={onChange}
+                                                disabled={loading}
+                                                placeholder="https://www.amazon.com.tr/..."
+                                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                                InputProps={{
+                                                    startAdornment: (
+                                                        <InputAdornment position="start">
+                                                            <img 
+                                                                src="/img/ikon/amazon.png" 
+                                                                alt="Amazon" 
+                                                                style={{ width: 20, height: 20 }}
+                                                            />
+                                                        </InputAdornment>
+                                                    ),
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6} md={4}>
+                                            <TextField
+                                                name="getirUrl"
+                                                fullWidth
+                                                id="getirUrl"
+                                                label="Getir Mağaza URL"
+                                                value={formData.getirUrl}
+                                                onChange={onChange}
+                                                disabled={loading}
+                                                placeholder="https://getir.com/..."
+                                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                                InputProps={{
+                                                    startAdornment: (
+                                                        <InputAdornment position="start">
+                                                            <DeliveryDiningIcon color="action" />
+                                                        </InputAdornment>
+                                                    ),
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6} md={4}>
+                                            <TextField
+                                                name="yemeksepetiUrl"
+                                                fullWidth
+                                                id="yemeksepetiUrl"
+                                                label="Yemeksepeti Restoran URL"
+                                                value={formData.yemeksepetiUrl}
+                                                onChange={onChange}
+                                                disabled={loading}
+                                                placeholder="https://www.yemeksepeti.com/..."
+                                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                                InputProps={{
+                                                    startAdornment: (
+                                                        <InputAdornment position="start">
+                                                            <RestaurantIcon color="action" />
+                                                        </InputAdornment>
+                                                    ),
+                                                }}
                                             />
                                         </Grid>
                                     </Grid>
