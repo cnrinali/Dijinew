@@ -2,6 +2,7 @@ const { getPool, sql } = require('../../config/db');
 const bcrypt = require('bcryptjs'); // Şifre hashleme için
 const jwt = require('jsonwebtoken'); // JWT oluşturma için
 const crypto = require('crypto'); // Şifre sıfırlama token'ı için
+const ActivityLogger = require('../../middleware/activityLogger');
 
 // Helper function to generate JWT
 const generateToken = (id, role, companyId) => {
@@ -106,6 +107,18 @@ const loginUser = async (req, res) => {
             return res.status(401).json({ message: 'Geçersiz e-posta veya şifre' });
         }
 
+        // Activity log
+        await ActivityLogger.log({
+            userId: user.id,
+            userRole: user.role,
+            companyId: user.companyId,
+            action: ActivityLogger.ACTIONS.USER_LOGIN,
+            actionType: ActivityLogger.ACTION_TYPES.LOGIN,
+            targetType: ActivityLogger.TARGET_TYPES.SYSTEM,
+            description: `Kullanıcı giriş yaptı: ${user.name}`,
+            req
+        });
+
         // Giriş başarılı, JWT oluştur ve gönder (role ve companyId eklendi) - GÜNCELLENDİ
         res.status(200).json({
             id: user.id,
@@ -125,10 +138,27 @@ const loginUser = async (req, res) => {
 // @desc    Logout user
 // @route   POST /api/auth/logout
 // @access  Private (Token gerekli olacak - middleware eklenecek)
-const logoutUser = (req, res) => {
-    // Genellikle istemci tarafında token silinir.
-    // Backend tarafında token blacklisting gibi mekanizmalar yoksa, burada yapılacak pek bir şey yok.
-    res.status(200).json({ message: 'Çıkış başarılı (istemci token silmeli)' });
+const logoutUser = async (req, res) => {
+    try {
+        // Activity log
+        await ActivityLogger.log({
+            userId: req.user.id,
+            userRole: req.user.role,
+            companyId: req.user.companyId,
+            action: ActivityLogger.ACTIONS.USER_LOGOUT,
+            actionType: ActivityLogger.ACTION_TYPES.LOGOUT,
+            targetType: ActivityLogger.TARGET_TYPES.SYSTEM,
+            description: `Kullanıcı çıkış yaptı: ${req.user.name || req.user.email}`,
+            req
+        });
+
+        // Genellikle istemci tarafında token silinir.
+        // Backend tarafında token blacklisting gibi mekanizmalar yoksa, burada yapılacak pek bir şey yok.
+        res.status(200).json({ message: 'Çıkış başarılı (istemci token silmeli)' });
+    } catch (error) {
+        console.error("Logout activity logging error:", error);
+        res.status(200).json({ message: 'Çıkış başarılı (istemci token silmeli)' });
+    }
 };
 
 // @desc    Forgot password

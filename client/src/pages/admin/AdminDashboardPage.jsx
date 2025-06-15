@@ -22,6 +22,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 
 // Components
 import ModernStatCard from '../../components/ModernStatCard';
+import RecentActivitiesWidget from '../../components/common/RecentActivitiesWidget';
 
 // Admin Servisi - Named import kullanalım
 import { getDashboardStats } from '../../services/adminService';
@@ -157,47 +158,54 @@ function AdminDashboardPage() {
                         </Grid>
                     </Grid>
 
-                    {/* Recent Activities */}
-                    <Paper 
-                        elevation={0}
-                        sx={{ 
-                            p: 4, 
-                            borderRadius: 3,
-                            border: '1px solid',
-                            borderColor: 'grey.200',
-                            background: 'white'
-                        }}
-                    >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                            <TrendingUpIcon sx={{ color: 'primary.main', fontSize: 24 }} />
-                            <Typography variant="h5" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                                Son Aktiviteler
-                            </Typography>
-                        </Box>
-                        
-                        <Divider sx={{ mb: 3 }} />
-                        
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            <Box sx={{ p: 3, backgroundColor: 'grey.50', borderRadius: 2, border: '1px solid', borderColor: 'grey.200' }}>
-                                <Typography variant="h6" sx={{ color: 'text.primary', mb: 1 }}>
-                                    Hoş Geldiniz! 👋
-                                </Typography>
-                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                    Admin paneline hoş geldiniz. Sol menüden istediğiniz bölüme ulaşabilirsiniz. 
-                                    Kullanıcıları, kartvizitleri ve şirketleri kolayca yönetebilirsiniz.
-                                </Typography>
-                            </Box>
-                            
-                            <Box sx={{ p: 3, backgroundColor: 'success.50', borderRadius: 2, border: '1px solid', borderColor: 'success.200' }}>
-                                <Typography variant="h6" sx={{ color: 'success.dark', mb: 1 }}>
-                                    Sistem Durumu: Aktif ✅
-                                </Typography>
-                                <Typography variant="body2" sx={{ color: 'success.dark' }}>
-                                    Tüm sistemler normal çalışıyor. Son backup: Bugün 03:00
-                                </Typography>
-                            </Box>
-                        </Box>
-                    </Paper>
+                    {/* Recent Activities and Welcome */}
+                    <Grid container spacing={3}>
+                        <Grid item xs={12} lg={8}>
+                            <RecentActivitiesWidget title="Son Sistem Aktiviteleri" maxItems={8} />
+                        </Grid>
+                        <Grid item xs={12} lg={4}>
+                            <Paper 
+                                elevation={0}
+                                sx={{ 
+                                    p: 3, 
+                                    borderRadius: 3,
+                                    border: '1px solid',
+                                    borderColor: 'grey.200',
+                                    background: 'white',
+                                    height: 'fit-content'
+                                }}
+                            >
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                                    <SettingsIcon sx={{ color: 'primary.main', fontSize: 24 }} />
+                                    <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                                        Sistem Bilgileri
+                                    </Typography>
+                                </Box>
+                                
+                                <Divider sx={{ mb: 3 }} />
+                                
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                    <Box sx={{ p: 3, backgroundColor: 'grey.50', borderRadius: 2, border: '1px solid', borderColor: 'grey.200' }}>
+                                        <Typography variant="h6" sx={{ color: 'text.primary', mb: 1 }}>
+                                            Hoş Geldiniz! 👋
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                            Admin paneline hoş geldiniz. Sol menüden istediğiniz bölüme ulaşabilirsiniz.
+                                        </Typography>
+                                    </Box>
+                                    
+                                    <Box sx={{ p: 3, backgroundColor: 'success.50', borderRadius: 2, border: '1px solid', borderColor: 'success.200' }}>
+                                        <Typography variant="h6" sx={{ color: 'success.dark', mb: 1 }}>
+                                            Sistem Durumu: Aktif ✅
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: 'success.dark' }}>
+                                            Tüm sistemler normal çalışıyor.
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            </Paper>
+                        </Grid>
+                    </Grid>
                 </>
             ) : (
                 <Paper 

@@ -1,4 +1,5 @@
 const { getPool, sql } = require('../../config/db');
+const ActivityLogger = require('../../middleware/activityLogger');
 
 // Yardımcı Fonksiyon: Slug'ı doğrular ve temizler
 const validateAndCleanSlug = (slug) => {
@@ -162,11 +163,26 @@ const createCard = async (req, res) => {
             .query('SELECT TOP 1 * FROM Cards WHERE userId = @userId ORDER BY id DESC');
 
         if (selectResult.recordset && selectResult.recordset.length > 0) {
+            const newCard = selectResult.recordset[0];
+            
+            // Activity log
+            await ActivityLogger.logCardAction(
+                req.user.id,
+                req.user.role,
+                req.user.companyId || null,
+                ActivityLogger.ACTIONS.CARD_CREATED,
+                newCard.id,
+                newCard.cardName,
+                `Yeni kartvizit oluşturuldu: ${newCard.cardName}`,
+                req,
+                { cardId: newCard.id, selectedUserId: selectedUserId }
+            );
+            
             res.status(201).json({
                 success: true,
                 message: 'Kartvizit başarıyla oluşturuldu',
                 data: {
-                    card: selectResult.recordset[0]
+                    card: newCard
                 }
             });
         } else {
@@ -336,7 +352,22 @@ const updateCard = async (req, res) => {
             .query('SELECT * FROM Cards WHERE id = @cardId');
 
         if (selectResult.recordset && selectResult.recordset.length > 0) {
-            res.status(200).json(selectResult.recordset[0]); 
+            const updatedCard = selectResult.recordset[0];
+            
+            // Activity log
+            await ActivityLogger.logCardAction(
+                req.user.id,
+                req.user.role,
+                req.user.companyId || null,
+                ActivityLogger.ACTIONS.CARD_UPDATED,
+                updatedCard.id,
+                updatedCard.cardName,
+                `Kartvizit güncellendi: ${updatedCard.cardName}`,
+                req,
+                { cardId: updatedCard.id }
+            );
+            
+            res.status(200).json(updatedCard); 
         } else {
             throw new Error('Kartvizit güncellenemedi.');
         }
@@ -371,7 +402,7 @@ const deleteCard = async (req, res) => {
         const checkResult = await pool.request()
             .input('cardId', sql.Int, parseInt(cardId))
             .input('userId', sql.Int, userId)
-            .query('SELECT TOP 1 id FROM Cards WHERE id = @cardId AND userId = @userId');
+            .query('SELECT TOP 1 id, cardName FROM Cards WHERE id = @cardId AND userId = @userId');
         
         if (checkResult.recordset.length === 0) {
              return res.status(404).json({ message: 'Silinecek kartvizit bulunamadı veya size ait değil' });
@@ -386,6 +417,21 @@ const deleteCard = async (req, res) => {
 
         // rowsAffected kontrolü, silme işleminin başarılı olup olmadığını teyit eder.
         if (deleteResult.rowsAffected && deleteResult.rowsAffected[0] > 0) {
+            const deletedCard = checkResult.recordset[0];
+            
+            // Activity log
+            await ActivityLogger.logCardAction(
+                req.user.id,
+                req.user.role,
+                req.user.companyId || null,
+                ActivityLogger.ACTIONS.CARD_DELETED,
+                deletedCard.id,
+                deletedCard.cardName,
+                `Kartvizit silindi: ${deletedCard.cardName}`,
+                req,
+                { cardId: deletedCard.id }
+            );
+            
             res.status(200).json({ message: 'Kartvizit başarıyla silindi', id: cardId });
         } else {
             // Bu duruma normalde gelinmemeli (yukarıda kontrol edildi)

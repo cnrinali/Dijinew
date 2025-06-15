@@ -12,6 +12,7 @@ import AddIcon from '@mui/icons-material/Add';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import HistoryIcon from '@mui/icons-material/History';
 
 const drawerWidth = 280;
 
@@ -50,6 +51,13 @@ const menuItems = [
     icon: <AddIcon />,
     path: '/admin/cards/new',
     description: 'Yeni kartvizit oluştur'
+  },
+  {
+    id: 'activities',
+    label: 'Sistem Aktiviteleri',
+    icon: <HistoryIcon />,
+    path: '/admin/activities',
+    description: 'Tüm sistem aktivitelerini görüntüle'
   },
 ];
 

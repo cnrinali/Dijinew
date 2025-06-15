@@ -8,6 +8,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useAuth } from '../../context/AuthContext';
 import ModernStatCard from '../../components/ModernStatCard';
+import RecentActivitiesWidget from '../../components/common/RecentActivitiesWidget';
 import { getCorporateCards, getCorporateUsers } from '../../services/corporateService';
 
 export default function CorporateDashboardPage() {
@@ -18,7 +19,7 @@ export default function CorporateDashboardPage() {
     activeCards: 0,
     totalViews: 0,
   });
-  const [recentActivities, setRecentActivities] = useState([]);
+
   const [loading, setLoading] = useState(true);
 
   const fetchDashboardData = async () => {
@@ -43,32 +44,7 @@ export default function CorporateDashboardPage() {
         totalViews,
       });
 
-      // Son aktiviteler (örnek veri)
-      const activities = [
-        {
-          id: 1,
-          action: 'Yeni kartvizit oluşturuldu',
-          user: cards[0]?.userName || 'Kullanıcı',
-          time: '2 saat önce',
-          type: 'card',
-        },
-        {
-          id: 2,
-          action: 'Çalışan profili güncellendi',
-          user: employees[0]?.name || 'Çalışan',
-          time: '4 saat önce',
-          type: 'user',
-        },
-        {
-          id: 3,
-          action: 'Kartvizit görüntülendi',
-          user: 'Ziyaretçi',
-          time: '6 saat önce',
-          type: 'view',
-        },
-      ].filter(activity => activity.user !== 'Kullanıcı' && activity.user !== 'Çalışan');
 
-      setRecentActivities(activities);
     } catch (error) {
       console.error('Dashboard verileri alınırken hata:', error);
     } finally {
@@ -91,31 +67,7 @@ export default function CorporateDashboardPage() {
     );
   }
 
-  const getActivityIcon = (type) => {
-    switch (type) {
-      case 'card':
-        return <CardMembershipIcon sx={{ fontSize: 16, color: 'primary.main' }} />;
-      case 'user':
-        return <PeopleIcon sx={{ fontSize: 16, color: 'secondary.main' }} />;
-      case 'view':
-        return <VisibilityIcon sx={{ fontSize: 16, color: 'success.main' }} />;
-      default:
-        return <BusinessIcon sx={{ fontSize: 16, color: 'grey.500' }} />;
-    }
-  };
 
-  const getActivityColor = (type) => {
-    switch (type) {
-      case 'card':
-        return 'primary';
-      case 'user':
-        return 'secondary';
-      case 'view':
-        return 'success';
-      default:
-        return 'default';
-    }
-  };
 
   return (
     <Box sx={{ p: 4 }}>
@@ -222,87 +174,7 @@ export default function CorporateDashboardPage() {
         {/* Recent Activities */}
         <Grid container spacing={3}>
           <Grid item xs={12} lg={8}>
-            <Paper
-              elevation={0}
-              sx={{
-                borderRadius: 3,
-                border: '1px solid',
-                borderColor: 'grey.200',
-                height: '100%',
-                background: 'white',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-              }}
-            >
-              <Box sx={{ p: 3, borderBottom: '1px solid', borderColor: 'grey.100' }}>
-                <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                  Son Aktiviteler
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
-                  Şirket hesabınızdaki son işlemler
-                </Typography>
-              </Box>
-              <Box sx={{ p: 3 }}>
-                {recentActivities.length > 0 ? (
-                  <List sx={{ p: 0 }}>
-                    {recentActivities.map((activity, index) => (
-                      <ListItem
-                        key={activity.id}
-                        sx={{
-                          px: 0,
-                          py: 2,
-                          borderBottom: index < recentActivities.length - 1 ? '1px solid' : 'none',
-                          borderColor: 'grey.100',
-                        }}
-                      >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-                          <Box
-                            sx={{
-                              p: 1,
-                              borderRadius: 2,
-                              backgroundColor: `${getActivityColor(activity.type)}.50`,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            {getActivityIcon(activity.type)}
-                          </Box>
-                          <ListItemText
-                            primary={activity.action}
-                            secondary={`${activity.user} • ${activity.time}`}
-                            primaryTypographyProps={{
-                              fontWeight: 500,
-                              color: 'text.primary',
-                            }}
-                            secondaryTypographyProps={{
-                              color: 'text.secondary',
-                              fontSize: '0.875rem',
-                            }}
-                          />
-                          <Chip
-                            label={activity.type === 'card' ? 'Kartvizit' : activity.type === 'user' ? 'Kullanıcı' : 'Görüntülenme'}
-                            size="small"
-                            color={getActivityColor(activity.type)}
-                            variant="outlined"
-                            sx={{ minWidth: 80 }}
-                          />
-                        </Box>
-                      </ListItem>
-                    ))}
-                  </List>
-                ) : (
-                  <Box sx={{ textAlign: 'center', py: 4 }}>
-                    <BusinessIcon sx={{ fontSize: 48, color: 'grey.300', mb: 2 }} />
-                    <Typography variant="h6" sx={{ color: 'text.secondary', mb: 1 }}>
-                      Henüz aktivite yok
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                      Kartvizit oluşturduğunuzda aktiviteler burada görünecek
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
-            </Paper>
+            <RecentActivitiesWidget title="Son Şirket Aktiviteleri" maxItems={6} />
           </Grid>
 
           <Grid item xs={12} lg={4}>

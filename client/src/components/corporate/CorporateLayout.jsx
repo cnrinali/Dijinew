@@ -11,6 +11,7 @@ import BusinessIcon from '@mui/icons-material/Business';
 import AddIcon from '@mui/icons-material/Add';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import HistoryIcon from '@mui/icons-material/History';
 
 const drawerWidth = 280;
 
@@ -43,6 +44,13 @@ const menuItems = [
     path: '/cards/new',
     description: 'Yeni kartvizit oluştur'
   },
+  {
+    id: 'activities',
+    label: 'Şirket Aktiviteleri',
+    icon: <HistoryIcon />,
+    path: '/corporate/activities',
+    description: 'Şirket aktivitelerini görüntüle'
+  },
 ];
 
 function CorporateLayout({ children }) {
@@ -70,6 +78,7 @@ function CorporateLayout({ children }) {
     if (currentPath.includes('/corporate/cards') || currentPath === '/corporate/dashboard') return 'cards';
     if (currentPath.includes('/corporate/users')) return 'users';
     if (currentPath === '/cards/new') return 'create-card';
+    if (currentPath.includes('/corporate/activities')) return 'activities';
     return 'dashboard';
   };
 
