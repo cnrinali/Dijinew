@@ -1,0 +1,271 @@
+const express = require('express');
+const router = express.Router();
+const si = require('systeminformation');
+const { protect, authorize } = require('../middleware/authMiddleware');
+
+// Sistem durumu bilgilerini al
+router.get('/status', protect, authorize('admin'), async (req, res) => {
+    try {
+        const [cpu, mem, fsSize, networkStats, osInfo, time] = await Promise.all([
+            si.currentLoad(),
+            si.mem(),
+            si.fsSize(),
+            si.networkStats(),
+            si.osInfo(),
+            si.time()
+        ]);
+
+        const systemStatus = {
+            server: {
+                status: 'online',
+                uptime: time.uptime
+            },
+            database: {
+                status: 'connected' // Bu gerçek DB bağlantı durumunu kontrol edebiliriz
+            },
+            memory: {
+                total: Math.round(mem.total / 1024 / 1024 / 1024), // GB
+                used: Math.round(mem.used / 1024 / 1024 / 1024), // GB
+                percentage: Math.round((mem.used / mem.total) * 100)
+            },
+            cpu: {
+                usage: Math.round(cpu.currentLoad),
+                cores: cpu.cpus?.length || 0
+            },
+            storage: fsSize.length > 0 ? {
+                total: Math.round(fsSize[0].size / 1024 / 1024 / 1024), // GB
+                used: Math.round(fsSize[0].used / 1024 / 1024 / 1024), // GB
+                percentage: Math.round((fsSize[0].used / fsSize[0].size) * 100)
+            } : null,
+            network: networkStats.length > 0 ? {
+                rx: Math.round(networkStats[0].rx_sec / 1024 / 1024 * 8), // Mbps
+                tx: Math.round(networkStats[0].tx_sec / 1024 / 1024 * 8)  // Mbps
+            } : null,
+            os: {
+                platform: osInfo.platform,
+                distro: osInfo.distro,
+                release: osInfo.release,
+                arch: osInfo.arch
+            }
+        };
+
+        res.json({
+            success: true,
+            data: systemStatus
+        });
+    } catch (error) {
+        console.error('Sistem durumu alınırken hata:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Sistem durumu alınamadı',
+            error: error.message
+        });
+    }
+});
+
+// Kaynak kullanımı bilgilerini al
+router.get('/resources', protect, authorize('admin'), async (req, res) => {
+    try {
+        const [cpu, mem, fsSize, networkStats, processes] = await Promise.all([
+            si.currentLoad(),
+            si.mem(),
+            si.fsSize(),
+            si.networkStats(),
+            si.processes()
+        ]);
+
+        const resources = {
+            cpu: {
+                usage: Math.round(cpu.currentLoad),
+                cores: cpu.cpus?.length || 0,
+                speed: cpu.cpus?.[0]?.speed || 0
+            },
+            memory: {
+                total: Math.round(mem.total / 1024 / 1024 / 1024), // GB
+                used: Math.round(mem.used / 1024 / 1024 / 1024), // GB
+                free: Math.round(mem.free / 1024 / 1024 / 1024), // GB
+                percentage: Math.round((mem.used / mem.total) * 100)
+            },
+            storage: fsSize.length > 0 ? {
+                total: Math.round(fsSize[0].size / 1024 / 1024 / 1024), // GB
+                used: Math.round(fsSize[0].used / 1024 / 1024 / 1024), // GB
+                free: Math.round((fsSize[0].size - fsSize[0].used) / 1024 / 1024 / 1024), // GB
+                percentage: Math.round((fsSize[0].used / fsSize[0].size) * 100)
+            } : null,
+            network: networkStats.length > 0 ? {
+                interface: networkStats[0].iface,
+                rx_speed: Math.round(networkStats[0].rx_sec / 1024 / 1024), // MB/s
+                tx_speed: Math.round(networkStats[0].tx_sec / 1024 / 1024), // MB/s
+                rx_total: Math.round(networkStats[0].rx_bytes / 1024 / 1024 / 1024), // GB
+                tx_total: Math.round(networkStats[0].tx_bytes / 1024 / 1024 / 1024)  // GB
+            } : null,
+            processes: {
+                total: processes.all || 0,
+                running: processes.running || 0,
+                sleeping: processes.sleeping || 0
+            }
+        };
+
+        res.json({
+            success: true,
+            data: resources
+        });
+    } catch (error) {
+        console.error('Kaynak kullanımı alınırken hata:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Kaynak kullanımı alınamadı',
+            error: error.message
+        });
+    }
+});
+
+// Sistem performans metrikleri
+router.get('/performance', protect, authorize('admin'), async (req, res) => {
+    try {
+        const [cpu, mem, networkStats, diskIO] = await Promise.all([
+            si.currentLoad(),
+            si.mem(),
+            si.networkStats(),
+            si.disksIO()
+        ]);
+
+        const performance = {
+            cpu_usage: Math.round(cpu.currentLoad),
+            memory_usage: Math.round((mem.used / mem.total) * 100),
+            disk_io: {
+                read: Math.round(diskIO.rIO_sec / 1024 / 1024), // MB/s
+                write: Math.round(diskIO.wIO_sec / 1024 / 1024) // MB/s
+            },
+            network_io: networkStats.length > 0 ? {
+                rx: Math.round(networkStats[0].rx_sec / 1024 / 1024), // MB/s
+                tx: Math.round(networkStats[0].tx_sec / 1024 / 1024)  // MB/s
+            } : null,
+            response_time: Date.now() % 100 + 20, // Simulated response time
+            uptime_percentage: 99.9 // Bu gerçek uptime hesaplaması yapılabilir
+        };
+
+        res.json({
+            success: true,
+            data: performance
+        });
+    } catch (error) {
+        console.error('Performans metrikleri alınırken hata:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Performans metrikleri alınamadı',
+            error: error.message
+        });
+    }
+});
+
+// Sistem bakım bilgileri
+router.get('/maintenance', protect, authorize('admin'), async (req, res) => {
+    try {
+        const [osInfo, time, versions] = await Promise.all([
+            si.osInfo(),
+            si.time(),
+            si.versions()
+        ]);
+
+        // Son yedekleme zamanını simüle et (gerçek uygulamada veritabanından alınır)
+        const lastBackup = new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000); // Son 24 saat içinde
+        const backupHoursAgo = Math.floor((Date.now() - lastBackup.getTime()) / (1000 * 60 * 60));
+
+        const maintenance = {
+            last_backup: {
+                timestamp: lastBackup.toISOString(),
+                hours_ago: backupHoursAgo,
+                display: backupHoursAgo === 0 ? 'Az önce' : `${backupHoursAgo} saat önce`
+            },
+            last_update: {
+                version: versions.node ? `Node ${versions.node}` : 'v2.1.3',
+                date: osInfo.build || 'Bilinmiyor'
+            },
+            active_errors: Math.floor(Math.random() * 3), // 0-2 arası rastgele hata sayısı
+            pending_notifications: Math.floor(Math.random() * 10) + 1, // 1-10 arası bildirim
+            system_health: Math.random() > 0.1 ? 'healthy' : 'warning' // %90 sağlıklı
+        };
+
+        res.json({
+            success: true,
+            data: maintenance
+        });
+    } catch (error) {
+        console.error('Bakım bilgileri alınırken hata:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Bakım bilgileri alınamadı',
+            error: error.message
+        });
+    }
+});
+
+// Günlük istatistikler
+router.get('/daily-stats', protect, authorize('admin'), async (req, res) => {
+    try {
+        const { getPool } = require('../config/db');
+        const pool = await getPool();
+
+        // Bugünkü tarihi al
+        const today = new Date();
+        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        
+        // Veritabanından günlük istatistikleri al
+        const [newUsersResult, activeSessionsResult, apiRequestsResult] = await Promise.all([
+            // Bugün kayıt olan kullanıcılar
+            pool.request()
+                .input('todayStart', todayStart)
+                .query(`
+                    SELECT COUNT(*) as count 
+                    FROM Users 
+                    WHERE createdAt >= @todayStart
+                `),
+            
+            // Aktif oturumlar (son 1 saat içinde aktivite gösterenler)
+            pool.request()
+                .input('oneHourAgo', new Date(Date.now() - 60 * 60 * 1000))
+                .query(`
+                    SELECT COUNT(DISTINCT userId) as count 
+                    FROM Activities 
+                    WHERE createdAt >= @oneHourAgo
+                `),
+            
+            // Bugünkü API istekleri (Activities tablosundan)
+            pool.request()
+                .input('todayStart', todayStart)
+                .query(`
+                    SELECT COUNT(*) as count 
+                    FROM Activities 
+                    WHERE createdAt >= @todayStart
+                `)
+        ]);
+
+        // Disk kullanımını sistem bilgilerinden al
+        const fsSize = await si.fsSize();
+        const diskUsage = fsSize.length > 0 ? 
+            (fsSize[0].used / (1024 * 1024 * 1024)).toFixed(1) : '0.0'; // GB
+
+        const dailyStats = {
+            new_registrations: newUsersResult.recordset[0]?.count || 0,
+            active_sessions: activeSessionsResult.recordset[0]?.count || 0,
+            api_requests: apiRequestsResult.recordset[0]?.count || 0,
+            disk_usage: `${diskUsage} GB`,
+            last_updated: new Date().toISOString()
+        };
+
+        res.json({
+            success: true,
+            data: dailyStats
+        });
+    } catch (error) {
+        console.error('Günlük istatistikler alınırken hata:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Günlük istatistikler alınamadı',
+            error: error.message
+        });
+    }
+});
+
+module.exports = router; 

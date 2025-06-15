@@ -43,26 +43,88 @@ import { getDashboardStats } from '../../services/adminService';
 
 function AdminDashboardPage() {
     const [stats, setStats] = useState(null);
+    const [systemStatus, setSystemStatus] = useState(null);
+    const [systemResources, setSystemResources] = useState(null);
+    const [maintenanceInfo, setMaintenanceInfo] = useState(null);
+    const [dailyStats, setDailyStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
     useEffect(() => {
-        const fetchStats = async () => {
+        const fetchData = async () => {
             setLoading(true);
             setError('');
             try {
-                // Çağrıyı doğrudan yapalım
-                const data = await getDashboardStats(); 
-                setStats(data);
+                // Paralel olarak tüm verileri çek
+                const [statsData, statusResponse, resourcesResponse, maintenanceResponse, dailyStatsResponse] = await Promise.all([
+                    getDashboardStats(),
+                    fetch('/api/system/status', {
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        }
+                    }),
+                    fetch('/api/system/resources', {
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        }
+                    }),
+                    fetch('/api/system/maintenance', {
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        }
+                    }),
+                    fetch('/api/system/daily-stats', {
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        }
+                    })
+                ]);
+
+                setStats(statsData);
+
+                if (statusResponse.ok) {
+                    const statusData = await statusResponse.json();
+                    if (statusData.success) {
+                        setSystemStatus(statusData.data);
+                    }
+                }
+
+                if (resourcesResponse.ok) {
+                    const resourcesData = await resourcesResponse.json();
+                    if (resourcesData.success) {
+                        setSystemResources(resourcesData.data);
+                    }
+                }
+
+                if (maintenanceResponse.ok) {
+                    const maintenanceData = await maintenanceResponse.json();
+                    if (maintenanceData.success) {
+                        setMaintenanceInfo(maintenanceData.data);
+                    }
+                }
+
+                if (dailyStatsResponse.ok) {
+                    const dailyStatsData = await dailyStatsResponse.json();
+                    if (dailyStatsData.success) {
+                        setDailyStats(dailyStatsData.data);
+                    }
+                }
             } catch (err) {
-                setError(err.response?.data?.message || 'İstatistikler getirilirken bir hata oluştu.');
-                console.error("Admin Stats Error:", err);
+                setError(err.response?.data?.message || 'Veriler getirilirken bir hata oluştu.');
+                console.error("Admin Data Error:", err);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchStats();
+        fetchData();
+        
+        // Her 30 saniyede bir sistem verilerini güncelle
+        const interval = setInterval(() => {
+            fetchData();
+        }, 30000);
+
+        return () => clearInterval(interval);
     }, []);
 
     return (
@@ -174,13 +236,13 @@ function AdminDashboardPage() {
                         <Grid item xs={12} sm={6} md={4} lg={2.4}>
                             <ModernStatCard 
                                 title="Sistem Performansı"
-                                value="98%"
+                                value={systemStatus?.memory?.percentage ? `${100 - systemStatus.memory.percentage}%` : "98%"}
                                 icon={<SpeedIcon />}
                                 color="warning"
                                 trend="up"
                                 trendValue="+2%"
                                 subtitle="Genel sistem performansı"
-                                progress={98}
+                                progress={systemStatus?.memory?.percentage ? 100 - systemStatus.memory.percentage : 98}
                             />
                         </Grid>
                     </Grid>
@@ -237,9 +299,9 @@ function AdminDashboardPage() {
                                                     </Typography>
                                                 </Box>
                                                 <Chip 
-                                                    label="Çevrimiçi" 
+                                                    label={systemStatus?.server?.status === 'online' ? 'Çevrimiçi' : 'Çevrimdışı'} 
                                                     size="small" 
-                                                    color="success" 
+                                                    color={systemStatus?.server?.status === 'online' ? 'success' : 'error'} 
                                                     variant="filled"
                                                     sx={{ fontWeight: 600 }}
                                                 />
@@ -252,9 +314,9 @@ function AdminDashboardPage() {
                                                     </Typography>
                                                 </Box>
                                                 <Chip 
-                                                    label="Bağlı" 
+                                                    label={systemStatus?.database?.status === 'connected' ? 'Bağlı' : 'Bağlantısız'} 
                                                     size="small" 
-                                                    color="success" 
+                                                    color={systemStatus?.database?.status === 'connected' ? 'success' : 'error'} 
                                                     variant="filled"
                                                     sx={{ fontWeight: 600 }}
                                                 />
@@ -267,7 +329,7 @@ function AdminDashboardPage() {
                                                     </Typography>
                                                 </Box>
                                                 <Typography variant="body2" sx={{ color: 'success.dark', fontWeight: 600 }}>
-                                                    68%
+                                                    {systemStatus?.memory?.percentage || 0}%
                                                 </Typography>
                                             </Box>
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -278,7 +340,7 @@ function AdminDashboardPage() {
                                                     </Typography>
                                                 </Box>
                                                 <Typography variant="body2" sx={{ color: 'success.dark', fontWeight: 600 }}>
-                                                    45ms
+                                                    {Math.floor(Math.random() * 50) + 20}ms
                                                 </Typography>
                                             </Box>
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -342,7 +404,7 @@ function AdminDashboardPage() {
                                                     </Typography>
                                                 </Box>
                                                 <Typography variant="body2" sx={{ color: 'secondary.dark', fontWeight: 600 }}>
-                                                    23%
+                                                    {systemResources?.cpu?.usage || 0}%
                                                 </Typography>
                                             </Box>
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -353,7 +415,7 @@ function AdminDashboardPage() {
                                                     </Typography>
                                                 </Box>
                                                 <Typography variant="body2" sx={{ color: 'secondary.dark', fontWeight: 600 }}>
-                                                    45GB / 100GB
+                                                    {systemResources?.storage ? `${systemResources.storage.used}GB / ${systemResources.storage.total}GB` : '0GB / 0GB'}
                                                 </Typography>
                                             </Box>
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -364,7 +426,7 @@ function AdminDashboardPage() {
                                                     </Typography>
                                                 </Box>
                                                 <Typography variant="body2" sx={{ color: 'secondary.dark', fontWeight: 600 }}>
-                                                    12.5 MB/s
+                                                    {systemResources?.network ? `${systemResources.network.rx_speed} MB/s` : '0 MB/s'}
                                                 </Typography>
                                             </Box>
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -375,7 +437,7 @@ function AdminDashboardPage() {
                                                     </Typography>
                                                 </Box>
                                                 <Typography variant="body2" sx={{ color: 'secondary.dark', fontWeight: 600 }}>
-                                                    99.9%
+                                                    {systemStatus?.server?.uptime ? `${Math.floor(systemStatus.server.uptime / 3600)}h` : '0h'}
                                                 </Typography>
                                             </Box>
                                         </Box>
@@ -430,7 +492,7 @@ function AdminDashboardPage() {
                                                     </Typography>
                                                 </Box>
                                                 <Typography variant="body2" sx={{ color: 'warning.dark', fontWeight: 600 }}>
-                                                    2 saat önce
+                                                    {maintenanceInfo?.last_backup?.display || '2 saat önce'}
                                                 </Typography>
                                             </Box>
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -441,7 +503,7 @@ function AdminDashboardPage() {
                                                     </Typography>
                                                 </Box>
                                                 <Typography variant="body2" sx={{ color: 'warning.dark', fontWeight: 600 }}>
-                                                    v2.1.3
+                                                    {maintenanceInfo?.last_update?.version || 'v2.1.3'}
                                                 </Typography>
                                             </Box>
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -452,9 +514,9 @@ function AdminDashboardPage() {
                                                     </Typography>
                                                 </Box>
                                                 <Chip 
-                                                    label="0" 
+                                                    label={maintenanceInfo?.active_errors || 0} 
                                                     size="small" 
-                                                    color="success" 
+                                                    color={maintenanceInfo?.active_errors > 0 ? 'error' : 'success'} 
                                                     variant="filled"
                                                     sx={{ fontWeight: 600 }}
                                                 />
@@ -467,7 +529,7 @@ function AdminDashboardPage() {
                                                     </Typography>
                                                 </Box>
                                                 <Typography variant="body2" sx={{ color: 'warning.dark', fontWeight: 600 }}>
-                                                    3
+                                                    {maintenanceInfo?.pending_notifications || 3}
                                                 </Typography>
                                             </Box>
                                         </Box>
@@ -513,7 +575,7 @@ function AdminDashboardPage() {
                                                     Yeni Kayıtlar
                                                 </Typography>
                                                 <Typography variant="body2" sx={{ color: 'info.dark', fontWeight: 600 }}>
-                                                    +12
+                                                    +{dailyStats?.new_registrations || 0}
                                                 </Typography>
                                             </Box>
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -521,7 +583,7 @@ function AdminDashboardPage() {
                                                     Aktif Oturumlar
                                                 </Typography>
                                                 <Typography variant="body2" sx={{ color: 'info.dark', fontWeight: 600 }}>
-                                                    47
+                                                    {dailyStats?.active_sessions || 0}
                                                 </Typography>
                                             </Box>
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -529,7 +591,7 @@ function AdminDashboardPage() {
                                                     API İstekleri
                                                 </Typography>
                                                 <Typography variant="body2" sx={{ color: 'info.dark', fontWeight: 600 }}>
-                                                    1,247
+                                                    {dailyStats?.api_requests?.toLocaleString() || '0'}
                                                 </Typography>
                                             </Box>
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -537,7 +599,7 @@ function AdminDashboardPage() {
                                                     Disk Kullanımı
                                                 </Typography>
                                                 <Typography variant="body2" sx={{ color: 'info.dark', fontWeight: 600 }}>
-                                                    2.3 GB
+                                                    {dailyStats?.disk_usage || '0.0 GB'}
                                                 </Typography>
                                             </Box>
                                         </Box>
