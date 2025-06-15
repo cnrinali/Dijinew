@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
     Box,
     Card,
@@ -17,6 +17,7 @@ import {
     Paper,
     Chip
 } from '@mui/material';
+import analyticsService, { trackClick } from '../services/analyticsService';
 
 // Icon Imports
 import PhoneIcon from '@mui/icons-material/Phone';
@@ -72,6 +73,24 @@ const getMarketplaceName = (marketplace) => {
 
 // Default tema (şu anki)
 export const DefaultTheme = ({ cardData }) => {
+    // Kart görüntülenmesini kaydet
+    useEffect(() => {
+        if (cardData?.id) {
+            analyticsService.recordCardView(cardData.id);
+        }
+    }, [cardData?.id]);
+
+    // Link tıklama handler'ı
+    const handleLinkClick = (linkType) => {
+        console.log(`DefaultTheme - handleLinkClick çağrıldı: linkType=${linkType}, cardId=${cardData?.id}`);
+        if (cardData?.id) {
+            console.log(`DefaultTheme - trackClick çağrılıyor...`);
+            trackClick(cardData.id, linkType);
+        } else {
+            console.log(`DefaultTheme - cardData.id bulunamadı:`, cardData);
+        }
+    };
+
     return (
         <Card sx={{ maxWidth: 500, width: '100%', mt: 2 }}>
             {cardData.coverImageUrl && (
@@ -135,19 +154,33 @@ export const DefaultTheme = ({ cardData }) => {
             <CardContent sx={{ pt: 1, pb: 1 }}>
                 <List dense>
                     {cardData.phone && (
-                        <ListItem>
+                        <ListItem 
+                            component={Link} 
+                            href={`tel:${cardData.phone}`}
+                            onClick={() => handleLinkClick('phone')}
+                        >
                             <ListItemIcon><PhoneIcon /></ListItemIcon>
                             <ListItemText primary={cardData.phone} />
                         </ListItem>
                     )}
                     {cardData.email && (
-                        <ListItem component={Link} href={`mailto:${cardData.email}`}>
+                        <ListItem 
+                            component={Link} 
+                            href={`mailto:${cardData.email}`}
+                            onClick={() => handleLinkClick('email')}
+                        >
                             <ListItemIcon><EmailIcon /></ListItemIcon>
                             <ListItemText primary={cardData.email} />
                         </ListItem>
                     )}
                     {cardData.website && (
-                        <ListItem component={Link} href={cardData.website} target="_blank" rel="noopener noreferrer">
+                        <ListItem 
+                            component={Link} 
+                            href={cardData.website} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            onClick={() => handleLinkClick('website')}
+                        >
                             <ListItemIcon><LanguageIcon /></ListItemIcon>
                             <ListItemText primary={cardData.website} />
                         </ListItem>
@@ -222,7 +255,13 @@ export const DefaultTheme = ({ cardData }) => {
                         </Typography>
                         <List dense>
                             {cardData.trendyolUrl && (
-                                <ListItem component={Link} href={cardData.trendyolUrl} target="_blank" rel="noopener noreferrer">
+                                <ListItem 
+                                    component={Link} 
+                                    href={cardData.trendyolUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    onClick={() => handleLinkClick('trendyol')}
+                                >
                                     <ListItemIcon>
                                         <img 
                                             src="/img/ikon/trendyol.png" 
@@ -334,17 +373,41 @@ export const DefaultTheme = ({ cardData }) => {
                     <CardContent sx={{ py: 1, textAlign: 'center' }}>
                         <Stack direction="row" spacing={1} justifyContent="center">
                             {cardData.linkedinUrl && (
-                                <IconButton component="a" href={cardData.linkedinUrl} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" color="primary">
+                                <IconButton 
+                                    component="a" 
+                                    href={cardData.linkedinUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    aria-label="LinkedIn" 
+                                    color="primary"
+                                    onClick={() => handleLinkClick('linkedin')}
+                                >
                                     <LinkedInIcon />
                                 </IconButton>
                             )}
                             {cardData.twitterUrl && (
-                                <IconButton component="a" href={cardData.twitterUrl} target="_blank" rel="noopener noreferrer" aria-label="Twitter" color="info">
+                                <IconButton 
+                                    component="a" 
+                                    href={cardData.twitterUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    aria-label="Twitter" 
+                                    color="info"
+                                    onClick={() => handleLinkClick('twitter')}
+                                >
                                     <TwitterIcon />
                                 </IconButton>
                             )}
                             {cardData.instagramUrl && (
-                                <IconButton component="a" href={cardData.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Instagram" sx={{ color: '#E1306C' }}>
+                                <IconButton 
+                                    component="a" 
+                                    href={cardData.instagramUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    aria-label="Instagram" 
+                                    sx={{ color: '#E1306C' }}
+                                    onClick={() => handleLinkClick('instagram')}
+                                >
                                     <InstagramIcon />
                                 </IconButton>
                             )}
@@ -667,6 +730,24 @@ export const MinimalistTheme = ({ cardData }) => {
 
 // İkon Grid Tema (ekran görüntüsündeki gibi)
 export const IconGridTheme = ({ cardData }) => {
+    // Kart görüntülenmesini kaydet
+    useEffect(() => {
+        if (cardData?.id) {
+            analyticsService.recordCardView(cardData.id);
+        }
+    }, [cardData?.id]);
+
+    // Link tıklama handler'ı
+    const handleLinkClick = (linkType) => {
+        console.log(`IconGridTheme - handleLinkClick çağrıldı: linkType=${linkType}, cardId=${cardData?.id}`);
+        if (cardData?.id) {
+            console.log(`IconGridTheme - trackClick çağrılıyor...`);
+            trackClick(cardData.id, linkType);
+        } else {
+            console.log(`IconGridTheme - cardData.id bulunamadı:`, cardData);
+        }
+    };
+
     return (
         <Box sx={{ maxWidth: 400, width: '100%', mt: 2 }}>
             {/* Üst Kısım - Profil */}
@@ -703,7 +784,12 @@ export const IconGridTheme = ({ cardData }) => {
                     {/* İlk Satır */}
                     <Stack direction="row" spacing={1} justifyContent="space-around">
                         {cardData.phone && (
-                            <Box sx={{ textAlign: 'center', cursor: 'pointer', p: 1, borderRadius: 2, backgroundColor: 'green.50', minWidth: 80 }}>
+                            <Box 
+                                component={Link} 
+                                href={`tel:${cardData.phone}`}
+                                onClick={() => handleLinkClick('phone')}
+                                sx={{ textAlign: 'center', cursor: 'pointer', p: 1, borderRadius: 2, backgroundColor: 'green.50', minWidth: 80, textDecoration: 'none' }}
+                            >
                                 <PhoneIcon sx={{ fontSize: 28, color: 'green.main', mb: 0.5 }} />
                                 <Typography variant="caption" display="block">TELEFON</Typography>
                             </Box>
@@ -712,6 +798,7 @@ export const IconGridTheme = ({ cardData }) => {
                             <Box 
                                 component={Link} 
                                 href={`mailto:${cardData.email}`}
+                                onClick={() => handleLinkClick('email')}
                                 sx={{ textAlign: 'center', cursor: 'pointer', p: 1, borderRadius: 2, backgroundColor: 'blue.50', minWidth: 80, textDecoration: 'none' }}
                             >
                                 <EmailIcon sx={{ fontSize: 28, color: 'blue.main', mb: 0.5 }} />
@@ -734,6 +821,7 @@ export const IconGridTheme = ({ cardData }) => {
                                 href={cardData.website} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
+                                onClick={() => handleLinkClick('website')}
                                 sx={{ textAlign: 'center', cursor: 'pointer', p: 1, borderRadius: 2, backgroundColor: 'purple.50', minWidth: 80, textDecoration: 'none' }}
                             >
                                 <LanguageIcon sx={{ fontSize: 28, color: 'purple.main', mb: 0.5 }} />
@@ -807,6 +895,7 @@ export const IconGridTheme = ({ cardData }) => {
                                     href={cardData.linkedinUrl} 
                                     target="_blank" 
                                     rel="noopener noreferrer"
+                                    onClick={() => handleLinkClick('linkedin')}
                                     sx={{ textAlign: 'center', cursor: 'pointer', p: 1, borderRadius: 2, backgroundColor: '#0077B5', color: 'white', minWidth: 80, textDecoration: 'none' }}
                                 >
                                     <LinkedInIcon sx={{ fontSize: 28, mb: 0.5 }} />
@@ -819,6 +908,7 @@ export const IconGridTheme = ({ cardData }) => {
                                     href={cardData.instagramUrl} 
                                     target="_blank" 
                                     rel="noopener noreferrer"
+                                    onClick={() => handleLinkClick('instagram')}
                                     sx={{ textAlign: 'center', cursor: 'pointer', p: 1, borderRadius: 2, backgroundColor: '#E1306C', color: 'white', minWidth: 80, textDecoration: 'none' }}
                                 >
                                     <InstagramIcon sx={{ fontSize: 28, mb: 0.5 }} />
@@ -831,6 +921,7 @@ export const IconGridTheme = ({ cardData }) => {
                                     href={cardData.twitterUrl} 
                                     target="_blank" 
                                     rel="noopener noreferrer"
+                                    onClick={() => handleLinkClick('twitter')}
                                     sx={{ textAlign: 'center', cursor: 'pointer', p: 1, borderRadius: 2, backgroundColor: '#1DA1F2', color: 'white', minWidth: 80, textDecoration: 'none' }}
                                 >
                                     <TwitterIcon sx={{ fontSize: 28, mb: 0.5 }} />

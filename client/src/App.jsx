@@ -29,6 +29,7 @@ import CardListPage from './pages/CardListPage';
 import PublicCardViewPage from './pages/PublicCardViewPage';
 import CreateCardPage from './pages/CreateCardPage';
 import EditCardPage from './pages/EditCardPage';
+import AnalyticsPage from './pages/AnalyticsPage';
 
 const navItems = [
   { label: 'Ana Sayfa', path: '/home', public: true },
@@ -36,6 +37,7 @@ const navItems = [
   { label: 'Kayıt Ol', path: '/register', public: true, hideWhenLoggedIn: true },
   { label: 'Profilim', path: '/profile', roles: ['user', 'admin', 'corporate'] },
   { label: 'Dijital Kartım', path: '/cards', roles: ['user'] },
+  { label: 'İstatistikler', path: '/analytics', roles: ['user', 'admin', 'corporate'] },
   { label: 'Admin Panel', path: '/admin/dashboard', roles: ['admin'] },
   { label: 'Kurumsal Panel', path: '/corporate/dashboard', roles: ['corporate'] },
 ];
@@ -308,6 +310,19 @@ function AppContent() {
 
                 {/* User Routes */}
                 <Route path="/cards" element={user && user.role === 'user' ? <CardListPage /> : <Navigate to="/login" />} />
+                <Route path="/analytics" element={
+                  user && (user.role === 'user' || user.role === 'corporate' || user.role === 'admin') ? (
+                    user.role === 'corporate' ? (
+                      <CorporateLayout><AnalyticsPage /></CorporateLayout>
+                    ) : user.role === 'admin' ? (
+                      <AdminLayout><AnalyticsPage /></AdminLayout>
+                    ) : (
+                      <AnalyticsPage />
+                    )
+                  ) : (
+                    <Navigate to="/login" />
+                  )
+                } />
                 <Route path="/cards/new" element={
                   user && (user.role === 'user' || user.role === 'corporate' || user.role === 'admin') ? (
                     user.role === 'corporate' ? (

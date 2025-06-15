@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Card,
     CardContent,
@@ -13,7 +14,8 @@ import {
     IconButton,
     Tooltip,
     Alert,
-    Skeleton
+    Skeleton,
+    Button
 } from '@mui/material';
 import {
     Refresh as RefreshIcon,
@@ -22,7 +24,8 @@ import {
     CreditCard as CardIcon,
     Settings as SystemIcon,
     Login as LoginIcon,
-    Logout as LogoutIcon
+    Logout as LogoutIcon,
+    ArrowForward as ArrowForwardIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
@@ -30,6 +33,7 @@ import axios from 'axios';
 import { API_BASE_URL } from '../../config/api';
 
 const RecentActivitiesWidget = ({ title = "Son Aktiviteler", maxItems = 5 }) => {
+    const navigate = useNavigate();
     const [activities, setActivities] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -123,6 +127,18 @@ const RecentActivitiesWidget = ({ title = "Son Aktiviteler", maxItems = 5 }) => 
         if (diffInDays < 7) return `${diffInDays} gün önce`;
         
         return format(activityDate, 'dd MMM yyyy', { locale: tr });
+    };
+
+    const handleViewAll = () => {
+        // Kullanıcının rolüne göre doğru sayfaya yönlendir
+        const userStr = localStorage.getItem('user');
+        const user = userStr ? JSON.parse(userStr) : null;
+        
+        if (user?.role === 'admin') {
+            navigate('/admin/activities');
+        } else if (user?.role === 'corporate') {
+            navigate('/corporate/activities');
+        }
     };
 
     if (loading) {
@@ -220,6 +236,25 @@ const RecentActivitiesWidget = ({ title = "Son Aktiviteler", maxItems = 5 }) => 
                             </ListItem>
                         ))}
                     </List>
+                )}
+
+                {/* Tümünü Gör Butonu */}
+                {activities.length > 0 && (
+                    <Box sx={{ mt: 2, textAlign: 'center' }}>
+                        <Button
+                            variant="outlined"
+                            size="small"
+                            endIcon={<ArrowForwardIcon />}
+                            onClick={handleViewAll}
+                            sx={{ 
+                                borderRadius: 2,
+                                textTransform: 'none',
+                                fontWeight: 500
+                            }}
+                        >
+                            Tümünü Gör
+                        </Button>
+                    </Box>
                 )}
             </CardContent>
         </Card>

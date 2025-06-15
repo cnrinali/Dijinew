@@ -161,7 +161,7 @@ function AdminDashboardPage() {
                     {/* Recent Activities and Welcome */}
                     <Grid container spacing={3}>
                         <Grid item xs={12} lg={8}>
-                            <RecentActivitiesWidget title="Son Sistem Aktiviteleri" maxItems={8} />
+                            <RecentActivitiesWidget title="Son Sistem Aktiviteleri" maxItems={5} />
                         </Grid>
                         <Grid item xs={12} lg={4}>
                             <Paper 

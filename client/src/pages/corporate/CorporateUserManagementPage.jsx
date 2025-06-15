@@ -77,7 +77,7 @@ function CorporateUserManagementPage() {
             const errorMsg = err.message || 'Şirket kullanıcıları yüklenemedi.';
             setError(errorMsg);
             showNotification(errorMsg, 'error');
-            setUsers([]);
+            setUsers([]); 
         } finally {
             setLoading(false);
         }
@@ -122,16 +122,16 @@ function CorporateUserManagementPage() {
 
         if (formData.role !== 'user') {
             setFormError('Sadece \'user\' rolünde kullanıcı oluşturabilirsiniz.');
-            setFormLoading(false);
-            return;
+             setFormLoading(false);
+             return;
         }
 
         try {
             const response = await createCompanyUser(formData);
             if (response?.data?.success) {
-                showNotification('Kullanıcı başarıyla şirket bünyesine eklendi.', 'success');
+            showNotification('Kullanıcı başarıyla şirket bünyesine eklendi.', 'success');
                 fetchUsers(); // Kullanıcıları yeniden yükle
-                handleCloseModal();
+            handleCloseModal(); 
             }
         } catch (err) {
             console.error("Şirket kullanıcısı oluşturma hatası:", err);
@@ -209,11 +209,11 @@ function CorporateUserManagementPage() {
                                     <RefreshIcon />
                                 </IconButton>
                             </Tooltip>
-                            <Button
-                                variant="contained"
-                                startIcon={<AddIcon />}
-                                onClick={handleOpenModal}
-                                disabled={loading}
+                <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={handleOpenModal}
+                    disabled={loading}
                                 sx={{
                                     borderRadius: 2,
                                     textTransform: 'none',
@@ -223,7 +223,7 @@ function CorporateUserManagementPage() {
                                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                                     background: 'linear-gradient(135deg, #37474F 0%, #62727B 100%)',
                                 }}
-                            >
+                >
                                 Yeni Kullanıcı
                             </Button>
                         </Box>
@@ -322,8 +322,8 @@ function CorporateUserManagementPage() {
                         <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
                             Şirketinize kayıtlı tüm kullanıcıları bu listede bulabilirsiniz
                         </Typography>
-                    </Box>
-
+            </Box>
+            
                     {error ? (
                         <Box sx={{ p: 3 }}>
                             <Typography color="error" variant="body2">
@@ -338,7 +338,7 @@ function CorporateUserManagementPage() {
                             </Typography>
                             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
                                 İlk kullanıcınızı oluşturmak için "Yeni Kullanıcı" butonuna tıklayın
-                            </Typography>
+                </Typography>
                             <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenModal}>
                                 Yeni Kullanıcı Oluştur
                             </Button>
@@ -346,17 +346,17 @@ function CorporateUserManagementPage() {
                     ) : (
                         <TableContainer>
                             <Table>
-                                <TableHead>
+                        <TableHead>
                                     <TableRow sx={{ backgroundColor: 'grey.50' }}>
                                         <TableCell sx={{ fontWeight: 600 }}>Kullanıcı</TableCell>
                                         <TableCell sx={{ fontWeight: 600 }}>İletişim</TableCell>
                                         <TableCell sx={{ fontWeight: 600 }}>Rol</TableCell>
                                         <TableCell sx={{ fontWeight: 600 }}>Kayıt Tarihi</TableCell>
                                         <TableCell sx={{ fontWeight: 600 }}>İşlemler</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {users.map((user) => (
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {users.map((user) => (
                                         <TableRow key={user.id} sx={{ '&:hover': { backgroundColor: 'grey.50' } }}>
                                             <TableCell>
                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -369,7 +369,7 @@ function CorporateUserManagementPage() {
                                                             fontSize: '1rem',
                                                             fontWeight: 600
                                                         }}
-                                                    >
+                                >
                                                         {user.name.charAt(0).toUpperCase()}
                                                     </Avatar>
                                                     <Box>
@@ -424,12 +424,12 @@ function CorporateUserManagementPage() {
                                                     </Tooltip>
                                                 </Box>
                                             </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    )}
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            )}
                 </Paper>
 
                 {/* Create User Modal */}
@@ -514,20 +514,20 @@ function CorporateUserManagementPage() {
                             <Grid item xs={12}>
                                 <FormControl fullWidth disabled={formLoading}>
                                     <InputLabel>Rol</InputLabel>
-                                    <Select
-                                        name="role"
+                        <Select
+                            name="role"
                                         value={formData.role}
                                         onChange={handleInputChange}
-                                        label="Rol"
-                                    >
+                            label="Rol"
+                        >
                                         <MenuItem value="user">
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                 <UserIcon sx={{ fontSize: 18 }} />
                                                 Kullanıcı
                                             </Box>
                                         </MenuItem>
-                                    </Select>
-                                </FormControl>
+                        </Select>
+                    </FormControl>
                             </Grid>
                         </Grid>
 
@@ -536,7 +536,7 @@ function CorporateUserManagementPage() {
                                 {formError}
                             </Typography>
                         )}
-                    </DialogContent>
+                </DialogContent>
 
                     <DialogActions sx={{ p: 3, pt: 2 }}>
                         <Button
@@ -558,9 +558,9 @@ function CorporateUserManagementPage() {
                             }}
                         >
                             {formLoading ? 'Oluşturuluyor...' : 'Kullanıcı Oluştur'}
-                        </Button>
-                    </DialogActions>
-                </Dialog>
+                    </Button>
+                </DialogActions>
+            </Dialog>
             </Container>
         </Box>
     );

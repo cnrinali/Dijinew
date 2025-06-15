@@ -167,8 +167,8 @@ function CorporateCardsPage() {
                                 }}
                             >
                                 Yeni Kartvizit
-                            </Button>
-                        </Box>
+                </Button>
+            </Box>
                     </Box>
                 </Box>
 
@@ -263,7 +263,7 @@ function CorporateCardsPage() {
                         </Typography>
                         <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
                             Tüm şirket kartvizitlerinizi bu listede bulabilirsiniz
-                        </Typography>
+                </Typography>
                     </Box>
 
                     {error ? (
@@ -288,7 +288,7 @@ function CorporateCardsPage() {
                     ) : (
                         <TableContainer>
                             <Table>
-                                <TableHead>
+                        <TableHead>
                                     <TableRow sx={{ backgroundColor: 'grey.50' }}>
                                         <TableCell sx={{ fontWeight: 600 }}>Kartvizit</TableCell>
                                         <TableCell sx={{ fontWeight: 600 }}>Kişi</TableCell>
@@ -296,10 +296,10 @@ function CorporateCardsPage() {
                                         <TableCell sx={{ fontWeight: 600 }}>Durum</TableCell>
                                         <TableCell sx={{ fontWeight: 600 }}>İstatistikler</TableCell>
                                         <TableCell sx={{ fontWeight: 600 }}>İşlemler</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {cards.map((card) => (
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {cards.map((card) => (
                                         <TableRow key={card.id} sx={{ '&:hover': { backgroundColor: 'grey.50' } }}>
                                             <TableCell>
                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -392,12 +392,12 @@ function CorporateCardsPage() {
                                                     </Tooltip>
                                                 </Box>
                                             </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    )}
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            )}
                 </Paper>
 
                 {/* Modal removed - now navigating to /cards/new */}

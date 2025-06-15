@@ -12,6 +12,7 @@ const userRoutes = require('./api/users/user.routes.js'); // User rotalarını i
 const adminRoutes = require('./api/admin/admin.routes.js'); // Tüm admin rotalarını içeren dosya
 const corporateRoutes = require('./api/corporate/corporate.routes.js'); // Kurumsal rotaları import et
 const activityRoutes = require('./api/activities/activity.routes.js'); // Activity rotalarını import et
+const analyticsRoutes = require('./api/analytics/analytics.routes.js'); // Analytics rotalarını import et
 
 const app = express();
 const port = process.env.PORT || 5001;
@@ -76,6 +77,7 @@ app.use('/api/users', userRoutes); // User rotalarını kullan
 app.use('/api/admin', adminRoutes); // Tüm admin rotalarını /api/admin altına bağla
 app.use('/api/corporate', corporateRoutes); // Kurumsal rotaları /api/corporate altına bağla
 app.use('/api/activities', activityRoutes); // Activity rotalarını /api/activities altına bağla
+app.use('/api/analytics', analyticsRoutes); // Analytics rotalarını /api/analytics altına bağla
 
 // Card Rotaları (Farklı base path'ler ile)
 app.use('/api/public', publicCardRoutes); // Public card rotalarını /api/public altına bağla

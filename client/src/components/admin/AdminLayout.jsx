@@ -13,6 +13,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import HistoryIcon from '@mui/icons-material/History';
+import BarChartIcon from '@mui/icons-material/BarChart';
 
 const drawerWidth = 280;
 
@@ -53,6 +54,13 @@ const menuItems = [
     description: 'Yeni kartvizit oluştur'
   },
   {
+    id: 'analytics',
+    label: 'İstatistikler',
+    icon: <BarChartIcon />,
+    path: '/analytics',
+    description: 'Sistem istatistikleri ve analizler'
+  },
+  {
     id: 'activities',
     label: 'Sistem Aktiviteleri',
     icon: <HistoryIcon />,
@@ -82,6 +90,7 @@ function AdminLayout({ children }) {
 
   const getActiveItem = () => {
     const currentPath = location.pathname;
+    if (currentPath === '/analytics') return 'analytics';
     return menuItems.find(item => 
       item.path === currentPath || 
       (item.id === 'dashboard' && currentPath === '/admin/dashboard')

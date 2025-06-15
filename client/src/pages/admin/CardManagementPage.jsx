@@ -710,7 +710,7 @@ function CardManagementPage() {
                             Tüm kartvizitleri görüntüleyin ve yönetin
                         </Typography>
                     </Box>
-                    <Box>
+                <Box>
                      <Button
                         variant="outlined"
                         startIcon={<FileDownloadIcon />}
@@ -748,7 +748,7 @@ function CardManagementPage() {
                         Yeni Kart Ekle
                     </Button>
                 </Box>
-            </Box>
+                </Box>
             </Box>
 
             {/* Filter Section */}
@@ -910,14 +910,14 @@ function CardManagementPage() {
                 </Box>
             ) : (
                 <Paper sx={{ borderRadius: 3, border: '1px solid', borderColor: 'grey.200' }}>
-                    <DataGrid
+                 <DataGrid
                         rows={filteredCards}
-                        columns={columns}
-                        apiRef={apiRef} 
-                        pageSizeOptions={[5, 10, 25]}
-                        disableRowSelectionOnClick
+                    columns={columns}
+                    apiRef={apiRef} 
+                    pageSizeOptions={[5, 10, 25]}
+                    disableRowSelectionOnClick
                         sx={{ border: 'none' }}
-                    />
+                />
                 </Paper>
             )}
 

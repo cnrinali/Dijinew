@@ -12,6 +12,7 @@ import AddIcon from '@mui/icons-material/Add';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import HistoryIcon from '@mui/icons-material/History';
+import BarChartIcon from '@mui/icons-material/BarChart';
 
 const drawerWidth = 280;
 
@@ -43,6 +44,13 @@ const menuItems = [
     icon: <AddIcon />,
     path: '/cards/new',
     description: 'Yeni kartvizit oluştur'
+  },
+  {
+    id: 'analytics',
+    label: 'İstatistikler',
+    icon: <BarChartIcon />,
+    path: '/analytics',
+    description: 'Şirket istatistikleri ve analizler'
   },
   {
     id: 'activities',
@@ -78,6 +86,7 @@ function CorporateLayout({ children }) {
     if (currentPath.includes('/corporate/cards') || currentPath === '/corporate/dashboard') return 'cards';
     if (currentPath.includes('/corporate/users')) return 'users';
     if (currentPath === '/cards/new') return 'create-card';
+    if (currentPath === '/analytics') return 'analytics';
     if (currentPath.includes('/corporate/activities')) return 'activities';
     return 'dashboard';
   };

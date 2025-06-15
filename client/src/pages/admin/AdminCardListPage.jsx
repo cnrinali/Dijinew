@@ -143,22 +143,22 @@ function AdminCardListPage() {
                     </Box>
                     <Box sx={{ flex: 1 }}>
                         <Typography variant="h4" component="h1" sx={{ fontWeight: 700, color: 'text.primary' }}>
-                            Kartvizit Yönetimi
-                        </Typography>
+                    Kartvizit Yönetimi
+                </Typography>
                         <Typography variant="body1" sx={{ color: 'text.secondary', mt: 0.5 }}>
                             Tüm kartvizitleri görüntüleyin ve yönetin
                         </Typography>
                     </Box>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        startIcon={<AddIcon />}
-                        component={RouterLink}
-                        to="/admin/cards/new"
+                <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={<AddIcon />}
+                    component={RouterLink}
+                    to="/admin/cards/new"
                         sx={{ minWidth: 200 }}
-                    >
-                        Yeni Kartvizit Ekle
-                    </Button>
+                >
+                    Yeni Kartvizit Ekle
+                </Button>
                 </Box>
             </Box>
             
