@@ -52,12 +52,12 @@ const ModernStatCard = ({
         },
       }}
     >
-      <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <CardContent sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
         {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
           <Box
             sx={{
-              p: 1.5,
+              p: 1,
               borderRadius: 2,
               background: getGradientColor(color),
               display: 'flex',
@@ -67,7 +67,7 @@ const ModernStatCard = ({
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
             }}
           >
-            {React.cloneElement(icon, { fontSize: 'medium' })}
+            {React.cloneElement(icon, { fontSize: 'small' })}
           </Box>
           
           {trend && trendValue && (
@@ -95,7 +95,7 @@ const ModernStatCard = ({
               color: 'text.primary',
               fontWeight: 700,
               mb: 0.5,
-              fontSize: '2rem'
+              fontSize: '1.5rem'
             }}
           >
             {typeof value === 'number' ? value.toLocaleString() : value}
@@ -106,7 +106,8 @@ const ModernStatCard = ({
             sx={{ 
               color: 'text.secondary',
               fontWeight: 500,
-              mb: subtitle ? 1 : 0
+              mb: subtitle ? 1 : 0,
+              fontSize: '0.85rem'
             }}
           >
             {title}
