@@ -12,6 +12,8 @@ import {
     Button,
     Divider,
     Chip,
+    Tooltip,
+    IconButton,
 } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import CardMembershipIcon from '@mui/icons-material/CardMembership';
@@ -33,6 +35,7 @@ import AnalyticsIcon from '@mui/icons-material/Analytics';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import DeveloperBoardIcon from '@mui/icons-material/DeveloperBoard';
 import DataUsageIcon from '@mui/icons-material/DataUsage';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 // Components
 import ModernStatCard from '../../components/ModernStatCard';
@@ -51,85 +54,85 @@ function AdminDashboardPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            setError('');
-            try {
-                // Paralel olarak tüm verileri çek
-                const [statsData, statusResponse, resourcesResponse, performanceResponse, maintenanceResponse, dailyStatsResponse] = await Promise.all([
-                    getDashboardStats(),
-                    fetch('/api/system/status', {
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
-                        }
-                    }),
-                    fetch('/api/system/resources', {
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
-                        }
-                    }),
-                    fetch('/api/system/performance', {
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
-                        }
-                    }),
-                    fetch('/api/system/maintenance', {
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
-                        }
-                    }),
-                    fetch('/api/system/daily-stats', {
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
-                        }
-                    })
-                ]);
-
-                setStats(statsData);
-
-                if (statusResponse.ok) {
-                    const statusData = await statusResponse.json();
-                    if (statusData.success) {
-                        setSystemStatus(statusData.data);
+    const fetchData = async () => {
+        setLoading(true);
+        setError('');
+        try {
+            // Paralel olarak tüm verileri çek
+            const [statsData, statusResponse, resourcesResponse, performanceResponse, maintenanceResponse, dailyStatsResponse] = await Promise.all([
+                getDashboardStats(),
+                fetch('/api/system/status', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
-                }
-
-                if (resourcesResponse.ok) {
-                    const resourcesData = await resourcesResponse.json();
-                    if (resourcesData.success) {
-                        setSystemResources(resourcesData.data);
+                }),
+                fetch('/api/system/resources', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
-                }
-
-                if (performanceResponse.ok) {
-                    const performanceData = await performanceResponse.json();
-                    if (performanceData.success) {
-                        setSystemPerformance(performanceData.data);
+                }),
+                fetch('/api/system/performance', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
-                }
-
-                if (maintenanceResponse.ok) {
-                    const maintenanceData = await maintenanceResponse.json();
-                    if (maintenanceData.success) {
-                        setMaintenanceInfo(maintenanceData.data);
+                }),
+                fetch('/api/system/maintenance', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
-                }
-
-                if (dailyStatsResponse.ok) {
-                    const dailyStatsData = await dailyStatsResponse.json();
-                    if (dailyStatsData.success) {
-                        setDailyStats(dailyStatsData.data);
+                }),
+                fetch('/api/system/daily-stats', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
+                })
+            ]);
+
+            setStats(statsData);
+
+            if (statusResponse.ok) {
+                const statusData = await statusResponse.json();
+                if (statusData.success) {
+                    setSystemStatus(statusData.data);
                 }
-            } catch (err) {
-                setError(err.response?.data?.message || 'Veriler getirilirken bir hata oluştu.');
-                console.error("Admin Data Error:", err);
-            } finally {
-                setLoading(false);
             }
-        };
 
+            if (resourcesResponse.ok) {
+                const resourcesData = await resourcesResponse.json();
+                if (resourcesData.success) {
+                    setSystemResources(resourcesData.data);
+                }
+            }
+
+            if (performanceResponse.ok) {
+                const performanceData = await performanceResponse.json();
+                if (performanceData.success) {
+                    setSystemPerformance(performanceData.data);
+                }
+            }
+
+            if (maintenanceResponse.ok) {
+                const maintenanceData = await maintenanceResponse.json();
+                if (maintenanceData.success) {
+                    setMaintenanceInfo(maintenanceData.data);
+                }
+            }
+
+            if (dailyStatsResponse.ok) {
+                const dailyStatsData = await dailyStatsResponse.json();
+                if (dailyStatsData.success) {
+                    setDailyStats(dailyStatsData.data);
+                }
+            }
+        } catch (err) {
+            setError(err.response?.data?.message || 'Veriler getirilirken bir hata oluştu.');
+            console.error("Admin Data Error:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchData();
         
         // Her 30 saniyede bir sistem verilerini güncelle
@@ -144,28 +147,46 @@ function AdminDashboardPage() {
         <Box sx={{ p: 4 }}>
             {/* Header Section */}
             <Box sx={{ mb: 4 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                    <Box
-                        sx={{
-                            p: 2,
-                            borderRadius: 2,
-                            background: 'linear-gradient(135deg, #1565C0 0%, #2196F3 100%)',
-                            color: 'white',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}
-                    >
-                        <BusinessIcon sx={{ fontSize: 28 }} />
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Box
+                            sx={{
+                                p: 2,
+                                borderRadius: 2,
+                                background: 'linear-gradient(135deg, #1565C0 0%, #2196F3 100%)',
+                                color: 'white',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            <BusinessIcon sx={{ fontSize: 28 }} />
+                        </Box>
+                        <Box>
+                            <Typography variant="h4" component="h1" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                                Genel Bakış
+                            </Typography>
+                            <Typography variant="body1" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                                Sistem genel bakış ve istatistikler
+                            </Typography>
+                        </Box>
                     </Box>
-                    <Box>
-                        <Typography variant="h4" component="h1" sx={{ fontWeight: 700, color: 'text.primary' }}>
-                            Genel Bakış
-                        </Typography>
-                        <Typography variant="body1" sx={{ color: 'text.secondary', mt: 0.5 }}>
-                            Sistem genel bakış ve istatistikler
-                        </Typography>
-                    </Box>
+                    
+                    <Tooltip title="Verileri Yenile">
+                        <IconButton 
+                            onClick={fetchData}
+                            disabled={loading}
+                            sx={{ 
+                                backgroundColor: 'white',
+                                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                                '&:hover': {
+                                    backgroundColor: 'grey.50',
+                                },
+                            }}
+                        >
+                            <RefreshIcon />
+                        </IconButton>
+                    </Tooltip>
                 </Box>
                 
                 <Chip 
