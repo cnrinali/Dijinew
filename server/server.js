@@ -14,6 +14,7 @@ const corporateRoutes = require('./api/corporate/corporate.routes.js'); // Kurum
 const activityRoutes = require('./api/activities/activity.routes.js'); // Activity rotalarını import et
 const analyticsRoutes = require('./api/analytics/analytics.routes.js'); // Analytics rotalarını import et
 const systemRoutes = require('./api/system'); // Sistem bilgileri rotalarını import et
+const apiLogger = require('./middleware/apiLogger'); // API logger middleware'ini import et
 
 const app = express();
 const port = process.env.PORT || 5001;
@@ -63,6 +64,9 @@ app.use((req, res, next) => {
   next();
 });
 app.use(express.json()); // Gelen JSON isteklerini parse etmek için
+
+// API Logger Middleware (tüm API isteklerini kaydet)
+app.use(apiLogger);
 
 // Statik dosyaları (yüklenen resimler) sunmak için
 app.use('/uploads', express.static(uploadsDir));

@@ -45,6 +45,7 @@ function AdminDashboardPage() {
     const [stats, setStats] = useState(null);
     const [systemStatus, setSystemStatus] = useState(null);
     const [systemResources, setSystemResources] = useState(null);
+    const [systemPerformance, setSystemPerformance] = useState(null);
     const [maintenanceInfo, setMaintenanceInfo] = useState(null);
     const [dailyStats, setDailyStats] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -56,7 +57,7 @@ function AdminDashboardPage() {
             setError('');
             try {
                 // Paralel olarak tüm verileri çek
-                const [statsData, statusResponse, resourcesResponse, maintenanceResponse, dailyStatsResponse] = await Promise.all([
+                const [statsData, statusResponse, resourcesResponse, performanceResponse, maintenanceResponse, dailyStatsResponse] = await Promise.all([
                     getDashboardStats(),
                     fetch('/api/system/status', {
                         headers: {
@@ -64,6 +65,11 @@ function AdminDashboardPage() {
                         }
                     }),
                     fetch('/api/system/resources', {
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        }
+                    }),
+                    fetch('/api/system/performance', {
                         headers: {
                             'Authorization': `Bearer ${localStorage.getItem('token')}`
                         }
@@ -93,6 +99,13 @@ function AdminDashboardPage() {
                     const resourcesData = await resourcesResponse.json();
                     if (resourcesData.success) {
                         setSystemResources(resourcesData.data);
+                    }
+                }
+
+                if (performanceResponse.ok) {
+                    const performanceData = await performanceResponse.json();
+                    if (performanceData.success) {
+                        setSystemPerformance(performanceData.data);
                     }
                 }
 
@@ -236,13 +249,13 @@ function AdminDashboardPage() {
                         <Grid item xs={12} sm={6} md={4} lg={2.4}>
                             <ModernStatCard 
                                 title="Sistem Performansı"
-                                value={systemStatus?.memory?.percentage ? `${100 - systemStatus.memory.percentage}%` : "98%"}
+                                value={systemPerformance?.performance_score ? `${systemPerformance.performance_score}%` : "98%"}
                                 icon={<SpeedIcon />}
                                 color="warning"
                                 trend="up"
                                 trendValue="+2%"
                                 subtitle="Genel sistem performansı"
-                                progress={systemStatus?.memory?.percentage ? 100 - systemStatus.memory.percentage : 98}
+                                progress={systemPerformance?.performance_score || 98}
                             />
                         </Grid>
                     </Grid>
