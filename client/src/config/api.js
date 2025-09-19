@@ -21,7 +21,9 @@ export const API_ENDPOINTS = {
   ADMIN: `${API_BASE_URL}/api/admin`,
   CORPORATE: `${API_BASE_URL}/api/corporate`,
   UPLOAD: `${API_BASE_URL}/api/upload`,
-  PUBLIC: `${API_BASE_URL}/api/public`
+  PUBLIC: `${API_BASE_URL}/api/public`,
+  WIZARD: `${API_BASE_URL}/api/wizard`,
+  SIMPLE_WIZARD: `${API_BASE_URL}/api/simple-wizard`
 };
 
 export default API_BASE_URL; 

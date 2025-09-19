@@ -40,7 +40,13 @@ const getCards = async (req, res) => {
             // VEYA .input('userId', sql.UniqueIdentifier, userId) // Users.id UUID ise
             .query('SELECT * FROM Cards WHERE userId = @userId ORDER BY createdAt DESC'); // En yeniden eskiye sırala
         
-        res.status(200).json(result.recordset); // Kullanıcının kartlarını dizi olarak dön
+        // Status kolonunu isActive olarak map et
+        const cardsWithMappedStatus = result.recordset.map(card => ({
+            ...card,
+            isActive: card.status === 1 || card.status === '1' || card.status === true
+        }));
+        
+        res.status(200).json(cardsWithMappedStatus); // Kullanıcının kartlarını dizi olarak dön
 
     } catch (error) {
         console.error("Kartvizitleri getirme hatası:", error);
@@ -581,10 +587,10 @@ const toggleCardStatus = async (req, res) => {
         const updateResult = await pool.request()
             .input('cardId', sql.Int, parseInt(cardId))
             .input('userId', sql.Int, userId)
-            .input('isActive', sql.Bit, isActive) // SQL Server'da boolean için BIT kullanılır
+            .input('status', sql.Bit, isActive) // SQL Server'da boolean için BIT kullanılır
             .query(`
                 UPDATE Cards 
-                SET isActive = @isActive 
+                SET status = @status 
                 WHERE id = @cardId AND userId = @userId;
             `);
 
@@ -596,11 +602,16 @@ const toggleCardStatus = async (req, res) => {
         // Güncellenmiş kartı al
         const selectResult = await pool.request()
             .input('cardId', sql.Int, parseInt(cardId))
-            .query('SELECT id, isActive FROM Cards WHERE id = @cardId');
+            .query('SELECT id, status FROM Cards WHERE id = @cardId');
+
+        const cardWithMappedStatus = {
+            ...selectResult.recordset[0],
+            isActive: selectResult.recordset[0].status === 1 || selectResult.recordset[0].status === '1' || selectResult.recordset[0].status === true
+        };
 
         res.status(200).json({
             message: `Kartvizit başarıyla ${isActive ? 'aktif' : 'pasif'} hale getirildi.`,
-            card: selectResult.recordset[0]
+            card: cardWithMappedStatus
         });
 
     } catch (error) {

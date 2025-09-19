@@ -14,6 +14,8 @@ const corporateRoutes = require('./api/corporate/corporate.routes.js'); // Kurum
 const activityRoutes = require('./api/activities/activity.routes.js'); // Activity rotalarını import et
 const analyticsRoutes = require('./api/analytics/analytics.routes.js'); // Analytics rotalarını import et
 const systemRoutes = require('./api/system'); // Sistem bilgileri rotalarını import et
+const wizardRoutes = require('./api/wizard/wizard.routes.js'); // Wizard rotalarını import et
+const simpleWizardRoutes = require('./api/simple-wizard/simple-wizard.routes.js'); // Simple Wizard rotalarını import et
 const apiLogger = require('./middleware/apiLogger'); // API logger middleware'ini import et
 
 const app = express();
@@ -84,6 +86,8 @@ app.use('/api/corporate', corporateRoutes); // Kurumsal rotaları /api/corporate
 app.use('/api/activities', activityRoutes); // Activity rotalarını /api/activities altına bağla
 app.use('/api/analytics', analyticsRoutes); // Analytics rotalarını /api/analytics altına bağla
 app.use('/api/system', systemRoutes); // Sistem bilgileri rotalarını /api/system altına bağla
+app.use('/api/wizard', wizardRoutes); // Wizard rotalarını /api/wizard altına bağla
+app.use('/api/simple-wizard', simpleWizardRoutes); // Simple Wizard rotalarını /api/simple-wizard altına bağla
 
 // Card Rotaları (Farklı base path'ler ile)
 app.use('/api/public', publicCardRoutes); // Public card rotalarını /api/public altına bağla

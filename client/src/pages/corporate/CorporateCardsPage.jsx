@@ -5,6 +5,8 @@ import {
     getCorporateUsers
 } from '../../services/corporateService';
 import { useNotification } from '../../context/NotificationContext';
+import wizardService from '../../services/wizardService';
+import EmailWizardModal from '../../components/EmailWizardModal';
 import {
     Box,
     Container,
@@ -40,7 +42,8 @@ import {
     Person as PersonIcon,
     Email as EmailIcon,
     Phone as PhoneIcon,
-    Business as BusinessIcon
+    Business as BusinessIcon,
+    ContentCopy as ContentCopyIcon
 } from '@mui/icons-material';
 
 // Form data removed - now using /cards/new page
@@ -53,6 +56,9 @@ function CorporateCardsPage() {
     const [companyUsers, setCompanyUsers] = useState([]);
     const [loadingUsers, setLoadingUsers] = useState(false);
     const { showNotification } = useNotification();
+
+    // Email Wizard Modal states
+    const [emailWizardOpen, setEmailWizardOpen] = useState(false);
 
     // Modal states - removed as we now navigate to /cards/new
 
@@ -93,6 +99,36 @@ function CorporateCardsPage() {
         fetchCards();
         fetchUsers();
     }, [fetchCards, fetchUsers]);
+
+    // Sihirbaz Token Oluştur ve Linki Kopyala
+    const handleCreateWizardLink = async () => {
+        try {
+            const response = await wizardService.createWizardToken('corporate', 7);
+            const wizardUrl = response.data.wizardUrl;
+            
+            // Linki panoya kopyala
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(wizardUrl);
+            } else {
+                // Fallback for older browsers or non-HTTPS
+                const textArea = document.createElement('textarea');
+                textArea.value = wizardUrl;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+            }
+            
+            showNotification(`Sihirbaz linki oluşturuldu ve kopyalandı! Link 7 gün süreyle geçerli.`, 'success');
+        } catch (error) {
+            console.error('Sihirbaz linki oluşturma hatası:', error);
+            showNotification(error.response?.data?.message || 'Sihirbaz linki oluşturulamadı.', 'error');
+        }
+    };
 
     // Modal functions removed - now navigating to /cards/new
 
@@ -164,10 +200,26 @@ function CorporateCardsPage() {
                                     px: 3,
                                     py: 1.5,
                                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                    mr: 1,
                                 }}
                             >
-                                Yeni Kartvizit
-                </Button>
+                                Manuel Kurulum
+                            </Button>
+                                                        <Button
+                                variant="outlined"
+                                startIcon={<ContentCopyIcon />}
+                                onClick={() => setEmailWizardOpen(true)}
+                                disabled={loading || loadingUsers}
+                                sx={{
+                                    borderRadius: 2,
+                                    textTransform: 'none',
+                                    fontWeight: 600,
+                                    px: 3,
+                                    py: 1.5,
+                                }}
+                            >
+                                Sihirbaz Oluştur
+                            </Button>
             </Box>
                     </Box>
                 </Box>
@@ -281,9 +333,18 @@ function CorporateCardsPage() {
                             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
                                 İlk kartvizitinizi oluşturmak için "Yeni Kartvizit" butonuna tıklayın
                             </Typography>
-                            <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/cards/new')}>
-                                Yeni Kartvizit Oluştur
-                            </Button>
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                                <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/cards/new')}>
+                                    Manuel Kurulum
+                                </Button>
+                                                                 <Button
+                                     variant="outlined"
+                                     startIcon={<ContentCopyIcon />}
+                                     onClick={() => setEmailWizardOpen(true)}
+                                 >
+                                     Sihirbaz Oluştur
+                                 </Button>
+                            </Box>
                         </Box>
                     ) : (
                         <TableContainer>
@@ -401,6 +462,13 @@ function CorporateCardsPage() {
                 </Paper>
 
                 {/* Modal removed - now navigating to /cards/new */}
+
+                {/* Email Wizard Modal */}
+                <EmailWizardModal 
+                    open={emailWizardOpen} 
+                    onClose={() => setEmailWizardOpen(false)}
+                    wizardType="corporate"
+                />
             </Container>
         </Box>
     );

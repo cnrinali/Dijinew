@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import { getCards, deleteCard, getCompanies, getUsers, createCard, updateCard } from '../../services/adminService'; // getCompanies eklendi
 import { useNotification } from '../../context/NotificationContext';
 // QR Kod Modal komponentini import et
 import QrCodeModal from '../../components/QrCodeModal';
+import wizardService from '../../services/wizardService';
+import EmailWizardModal from '../../components/EmailWizardModal';
 import * as XLSX from 'xlsx'; // xlsx kütüphanesini import et
 import JSZip from 'jszip'; // JSZip kütüphanesini import et
 import { DataGrid, useGridApiRef } from '@mui/x-data-grid';
@@ -12,6 +15,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import QrCodeIcon from '@mui/icons-material/QrCode'; // QR Kodu ikonu
 import FileDownloadIcon from '@mui/icons-material/FileDownload'; // Excel ikonu için
 import UploadFileIcon from '@mui/icons-material/UploadFile'; // Import ikonu
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'; // Kopyala ikonu
 import Alert from '@mui/material/Alert';
 
 // MUI Imports
@@ -78,6 +82,9 @@ function CardManagementPage() {
     const [formLoading, setFormLoading] = useState(false);
     const [formError, setFormError] = useState(''); // Form içi hata mesajı
     const [zipLoading, setZipLoading] = useState(false); // QR ZIP indirme için yükleme durumu
+
+    // Email Wizard Modal states
+    const [emailWizardOpen, setEmailWizardOpen] = useState(false);
 
     // Filter states
     const [searchQuery, setSearchQuery] = useState('');
@@ -642,6 +649,36 @@ function CardManagementPage() {
         }
     };
 
+    // Sihirbaz Token Oluştur ve Linki Kopyala
+    const handleCreateWizardLink = async () => {
+        try {
+            const response = await wizardService.createWizardToken('admin', 7);
+            const wizardUrl = response.data.wizardUrl;
+            
+            // Linki panoya kopyala
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(wizardUrl);
+            } else {
+                // Fallback for older browsers or non-HTTPS
+                const textArea = document.createElement('textarea');
+                textArea.value = wizardUrl;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+            }
+            
+            showNotification(`Sihirbaz linki oluşturuldu ve kopyalandı! Link 7 gün süreyle geçerli.`, 'success');
+        } catch (error) {
+            console.error('Sihirbaz linki oluşturma hatası:', error);
+            showNotification(error.response?.data?.message || 'Sihirbaz linki oluşturulamadı.', 'error');
+        }
+    };
+
     // DataGrid Kolonları
     const columns = [
         { field: 'id', headerName: 'ID', width: 70 }, 
@@ -742,11 +779,21 @@ function CardManagementPage() {
                      <Button
                         variant="contained"
                         startIcon={<AddIcon />}
-                        onClick={() => handleOpenModal()}
+                        component={RouterLink}
+                        to="/admin/cards/new"
                         disabled={loading}
+                        sx={{ mr: 1 }}
                      >
-                        Yeni Kart Ekle
+                        Manuel Kurulum
                     </Button>
+                                         <Button
+                         variant="outlined"
+                         startIcon={<ContentCopyIcon />}
+                         onClick={() => setEmailWizardOpen(true)}
+                         disabled={loading}
+                     >
+                         Sihirbaz Oluştur
+                     </Button>
                 </Box>
                 </Box>
             </Box>
@@ -1104,6 +1151,13 @@ function CardManagementPage() {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Email Wizard Modal */}
+            <EmailWizardModal 
+                open={emailWizardOpen} 
+                onClose={() => setEmailWizardOpen(false)}
+                wizardType="admin"
+            />
 
         </Box>
     );

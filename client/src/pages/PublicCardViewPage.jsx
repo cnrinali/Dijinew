@@ -1,19 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import cardService from '../services/cardService';
+import simpleWizardService from '../services/simpleWizardService';
 import { getThemeComponent } from '../components/CardThemes';
 
 // MUI Imports
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import EditIcon from '@mui/icons-material/Edit';
 
 function PublicCardViewPage() {
     const [cardData, setCardData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const { slug } = useParams();
+    const [searchParams] = useSearchParams();
+    
+    // Edit mode kontrolü
+    const isEditMode = searchParams.get('edit') === '1';
+    const token = searchParams.get('token');
+    const [editModeValid, setEditModeValid] = useState(false);
+    const [editModeLoading, setEditModeLoading] = useState(false);
+    
     console.log('Slug or ID:', slug);
+    console.log('Edit mode:', isEditMode, 'Token:', token);
 
     // Tema uyumlu arka plan renklerini belirle
     const getBackgroundStyle = (theme) => {
@@ -65,29 +79,55 @@ function PublicCardViewPage() {
     };
 
     useEffect(() => {
-        const fetchPublicCard = async () => {
+        const fetchCardData = async () => {
             setLoading(true);
             setError('');
             try {
-                const data = await cardService.getPublicCard(slug);
-                console.log('[PublicCardViewPage] Gelen Kart Verisi:', data);
+                let data;
+                
+                // Edit mode ise token ile veri al
+                if (isEditMode && token) {
+                    setEditModeLoading(true);
+                    try {
+                        const tokenResponse = await simpleWizardService.getCardByToken(token);
+                        if (tokenResponse.success) {
+                            data = tokenResponse.data;
+                            setEditModeValid(true);
+                            console.log('[PublicCardViewPage] Token ile alınan kart verisi:', data);
+                        } else {
+                            throw new Error(tokenResponse.message || 'Token geçersiz');
+                        }
+                    } catch (tokenErr) {
+                        console.error('Token ile kart getirme hatası:', tokenErr);
+                        setError(tokenErr.response?.data?.message || 'Geçersiz veya süresi dolmuş link.');
+                        setEditModeValid(false);
+                        return;
+                    } finally {
+                        setEditModeLoading(false);
+                    }
+                } else {
+                    // Normal public view
+                    data = await cardService.getPublicCard(slug);
+                    console.log('[PublicCardViewPage] Public kart verisi:', data);
+                }
+                
                 setCardData(data);
             } catch (err) {
-                console.error("Herkese açık kartvizit getirilirken hata:", err);
+                console.error("Kartvizit getirilirken hata:", err);
                 const errorMsg = err.response?.data?.message || 'Kartvizit yüklenemedi.';
-                setError(errorMsg); // Hata mesajını API'den veya varsayılan olarak ayarla
+                setError(errorMsg);
             } finally {
                 setLoading(false);
             }
         };
 
         if (slug) {
-            fetchPublicCard();
+            fetchCardData();
         } else {
             setError('Kartvizit kimliği veya özel URL belirtilmemiş.');
             setLoading(false);
         }
-    }, [slug]);
+    }, [slug, isEditMode, token]);
 
     if (loading) {
         return (

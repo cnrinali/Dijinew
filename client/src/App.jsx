@@ -30,6 +30,7 @@ import PublicCardViewPage from './pages/PublicCardViewPage';
 import CreateCardPage from './pages/CreateCardPage';
 import EditCardPage from './pages/EditCardPage';
 import AnalyticsPage from './pages/AnalyticsPage';
+import CardWizard from './components/CardWizard';
 
 const navItems = [
   { label: 'Ana Sayfa', path: '/home', public: true },
@@ -81,9 +82,12 @@ function AppContent() {
   return (
     <NotificationProvider>
       <Routes>
-        {/* Public card view without navbar */}
-        <Route path="/card/:slug" element={<PublicCardViewPage />} />
-        <Route path="/qr/:slug" element={<QrCardPage />} />
+                        {/* Public card view without navbar */}
+                <Route path="/card/:slug" element={<PublicCardViewPage />} />
+                <Route path="/qr/:slug" element={<QrCardPage />} />
+                
+                {/* Card Wizard - Public route for new users */}
+                <Route path="/wizard/:cardSlug" element={<CardWizard />} />
         
         {/* All other routes with navbar */}
         <Route path="*" element={
