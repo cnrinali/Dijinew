@@ -52,12 +52,18 @@ const getCards = async (req, res) => {
             SELECT 
                 c.id, c.name, c.title, c.email, c.phone, c.website, c.address, 
                 c.status, c.qrCodeData, c.createdAt, c.updatedAt, 
-                c.customSlug, -- customSlug'ı da seçelim
+                c.customSlug, c.isActive, c.permanentSlug,
                 c.companyId, co.name as companyName,
-                c.userId, u.name as userName, u.email as userEmail
+                c.userId, u.name as userName, u.email as userEmail,
+                swt.token as wizardToken, swt.isUsed as wizardUsed,
+                CASE 
+                    WHEN swt.token IS NOT NULL AND c.isActive = 0 THEN 1 
+                    ELSE 0 
+                END as showWizardLink
             FROM Cards c 
             LEFT JOIN Companies co ON c.companyId = co.id 
             LEFT JOIN Users u ON c.userId = u.id
+            LEFT JOIN SimpleWizardTokens swt ON c.id = swt.cardId AND swt.isUsed = 0
         `;
         let request = pool.request();
         let whereConditions = [];

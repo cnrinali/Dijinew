@@ -16,8 +16,14 @@ const CardCreationChoicePage = () => {
         setModalOpen(false);
         
         if (method === 'manual') {
-            // Manuel oluşturma sayfasına yönlendir
-            navigate('/cards/new-manual');
+            // Admin ve corporate için doğru manual route'a yönlendir
+            if (user?.role === 'admin') {
+                navigate('/admin/cards/new-manual');
+            } else if (user?.role === 'corporate') {
+                navigate('/cards/new-manual');
+            } else {
+                navigate('/cards/new-manual');
+            }
         } else if (method === 'wizard') {
             // Sihirbaz modal'ını aç
             setWizardModalOpen(true);

@@ -4,7 +4,6 @@ import { getCards, deleteCard, getCompanies, getUsers, createCard, updateCard } 
 import { useNotification } from '../../context/NotificationContext';
 // QR Kod Modal komponentini import et
 import QrCodeModal from '../../components/QrCodeModal';
-import wizardService from '../../services/wizardService';
 import EmailWizardModal from '../../components/EmailWizardModal';
 import * as XLSX from 'xlsx'; // xlsx kütüphanesini import et
 import JSZip from 'jszip'; // JSZip kütüphanesini import et
@@ -649,35 +648,6 @@ function CardManagementPage() {
         }
     };
 
-    // Sihirbaz Token Oluştur ve Linki Kopyala
-    const handleCreateWizardLink = async () => {
-        try {
-            const response = await wizardService.createWizardToken('admin', 7);
-            const wizardUrl = response.data.wizardUrl;
-            
-            // Linki panoya kopyala
-            if (navigator.clipboard && window.isSecureContext) {
-                await navigator.clipboard.writeText(wizardUrl);
-            } else {
-                // Fallback for older browsers or non-HTTPS
-                const textArea = document.createElement('textarea');
-                textArea.value = wizardUrl;
-                textArea.style.position = 'fixed';
-                textArea.style.left = '-999999px';
-                textArea.style.top = '-999999px';
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-            }
-            
-            showNotification(`Sihirbaz linki oluşturuldu ve kopyalandı! Link 7 gün süreyle geçerli.`, 'success');
-        } catch (error) {
-            console.error('Sihirbaz linki oluşturma hatası:', error);
-            showNotification(error.response?.data?.message || 'Sihirbaz linki oluşturulamadı.', 'error');
-        }
-    };
 
     // DataGrid Kolonları
     const columns = [
@@ -703,7 +673,7 @@ function CardManagementPage() {
         { field: 'companyName', headerName: 'Şirket', width: 180, renderCell: (params) => params.value || '-' }, 
         { field: 'userName', headerName: 'Kullanıcı', width: 180, renderCell: (params) => params.value || '-' },
         {
-             field: 'status',
+             field: 'isActive',
              headerName: 'Durum',
              width: 90,
              type: 'boolean',
@@ -711,6 +681,34 @@ function CardManagementPage() {
         },
         { field: 'email', headerName: 'Email', width: 180 },
         { field: 'phone', headerName: 'Telefon', width: 130 },
+        {
+            field: 'wizardLink',
+            headerName: 'Sihirbaz',
+            width: 120,
+            sortable: false,
+            disableColumnMenu: true,
+            renderCell: (params) => {
+                // Sadece aktif olmayan kartlarda ve wizardToken varsa göster
+                if (params.row.showWizardLink && params.row.wizardToken) {
+                    const wizardUrl = `${window.location.origin}/wizard/${params.row.customSlug || params.row.permanentSlug}?token=${params.row.wizardToken}`;
+                    return (
+                        <Tooltip title="Sihirbaz Linkini Kopyala">
+                            <IconButton 
+                                size="small" 
+                                onClick={() => {
+                                    navigator.clipboard.writeText(wizardUrl);
+                                    showNotification('Sihirbaz linki kopyalandı!', 'success');
+                                }}
+                                color="primary"
+                            >
+                                <ContentCopyIcon />
+                            </IconButton>
+                        </Tooltip>
+                    );
+                }
+                return '-';
+            }
+        },
         {
             field: 'actions',
             headerName: 'İşlemler',

@@ -429,8 +429,10 @@ const updateCardByToken = async (req, res) => {
             });
         }
 
-        // Kartı güncelle
-        const isActiveValue = cardData.isActive === true ? 1 : 0;
+        // Kartı güncelle - sihirbaz tamamlanırsa otomatik aktif et
+        // Eğer cardData'da name var ise sihirbaz dolduruluyor demektir, otomatik aktif et
+        const shouldActivate = cardData.name && cardData.name.trim() !== '' && cardData.name !== 'Henüz Belirtilmedi';
+        const isActiveValue = shouldActivate ? 1 : (cardData.isActive === true ? 1 : 0);
         
         const updateResult = await pool.request()
             .input('cardId', sql.Int, tokenData.cardId)

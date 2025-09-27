@@ -153,8 +153,8 @@ function CardListPage() {
                     </Typography>
                 </Grid>
                 <Grid item>
-                    {/* Bireysel kullanıcılar için kart sayısı kontrolü */}
-                    {(!user || user.role !== 'user' || cards.length === 0) && (
+                    {/* Sadece admin ve corporate kullanıcılar kart oluşturabilir */}
+                    {user && (user.role === 'admin' || user.role === 'corporate') && (
                         <Button 
                             variant="contained" 
                             color="primary" 

@@ -172,14 +172,21 @@ export default function EmailWizardModal({ open, onClose, wizardType = 'admin' }
             const url = DOMURL.createObjectURL(svgBlob);
             
             img.onload = function () {
-                canvas.width = 256;
-                canvas.height = 256;
-                ctx.drawImage(img, 0, 0);
+                // Daha büyük boyut (512x512)
+                canvas.width = 512;
+                canvas.height = 512;
+                ctx.drawImage(img, 0, 0, 512, 512);
                 DOMURL.revokeObjectURL(url);
                 
-                const imgURI = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
+                const imgURI = canvas.toDataURL('image/png');
                 const link = document.createElement('a');
-                link.download = `qr-${item.email.replace(/[^a-zA-Z0-9]/g, '-')}.png`;
+                
+                // Daha anlaşılır dosya adı: cardId-permanentSlug-email.png
+                const cleanEmail = item.email.replace(/[^a-zA-Z0-9]/g, '-');
+                const cardSlug = item.permanentSlug || item.cardSlug || 'unknown';
+                const fileName = `qr-card-${item.cardId}-${cardSlug.substring(0, 8)}-${cleanEmail}.png`;
+                
+                link.download = fileName;
                 link.href = imgURI;
                 link.click();
             };
@@ -211,13 +218,17 @@ export default function EmailWizardModal({ open, onClose, wizardType = 'admin' }
                         
                         await new Promise((resolve) => {
                             img.onload = function () {
-                                canvas.width = 256;
-                                canvas.height = 256;
-                                ctx.drawImage(img, 0, 0);
+                                // Daha büyük boyut (512x512)
+                                canvas.width = 512;
+                                canvas.height = 512;
+                                ctx.drawImage(img, 0, 0, 512, 512);
                                 DOMURL.revokeObjectURL(url);
                                 
                                 canvas.toBlob((blob) => {
-                                    const fileName = `qr-${item.email.replace(/[^a-zA-Z0-9]/g, '-')}.png`;
+                                    // Daha anlaşılır dosya adı: cardId-permanentSlug-email.png
+                                    const cleanEmail = item.email.replace(/[^a-zA-Z0-9]/g, '-');
+                                    const cardSlug = item.permanentSlug || item.cardSlug || 'unknown';
+                                    const fileName = `qr-card-${item.cardId}-${cardSlug.substring(0, 8)}-${cleanEmail}.png`;
                                     zip.file(fileName, blob);
                                     resolve();
                                 }, 'image/png');
@@ -231,7 +242,10 @@ export default function EmailWizardModal({ open, onClose, wizardType = 'admin' }
             const content = await zip.generateAsync({ type: 'blob' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(content);
-            link.download = `qr-kodlari-${new Date().toISOString().split('T')[0]}.zip`;
+            
+            // Daha anlaşılır ZIP dosya adı
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
+            link.download = `dijinew-qr-kodlari-${wizardUrls.length}adet-${timestamp}.zip`;
             link.click();
             
             showNotification('Tüm QR kodlar ZIP olarak indirildi!', 'success');
@@ -426,21 +440,23 @@ export default function EmailWizardModal({ open, onClose, wizardType = 'admin' }
                                             </Box>
                                             
                                             {/* Orta - QR Kod Görseli */}
-                                            <Box sx={{ 
-                                                display: 'flex', 
-                                                flexDirection: 'column', 
+                                            <Box sx={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
                                                 alignItems: 'center',
                                                 bgcolor: 'white',
-                                                p: 1,
+                                                p: 1.5,
                                                 borderRadius: 1,
                                                 border: '1px solid',
-                                                borderColor: 'grey.300'
+                                                borderColor: 'grey.300',
+                                                minWidth: 140
                                             }}>
                                                 <QRCodeSVG 
                                                     id={`qr-${item.id}`}
                                                     value={item.qrValue || item.url}
-                                                    size={80}
+                                                    size={120}
                                                     includeMargin={true}
+                                                    level="M"
                                                 />
                                                 <Typography variant="caption" sx={{ mt: 0.5, textAlign: 'center' }}>
                                                     QR Kod

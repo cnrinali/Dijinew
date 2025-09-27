@@ -309,7 +309,8 @@ function AppContent() {
                 <Route path="/admin/users" element={user && user.role === 'admin' ? <AdminLayout><AdminUserListPage /></AdminLayout> : <Navigate to="/login" />} />
                 <Route path="/admin/companies" element={user && user.role === 'admin' ? <AdminLayout><AdminCompanyListPage /></AdminLayout> : <Navigate to="/login" />} />
                 <Route path="/admin/cards" element={user && user.role === 'admin' ? <AdminLayout><CardManagementPage /></AdminLayout> : <Navigate to="/login" />} />
-                <Route path="/admin/cards/new" element={user && user.role === 'admin' ? <AdminLayout><AdminCardCreatePage /></AdminLayout> : <Navigate to="/login" />} />
+                <Route path="/admin/cards/new" element={user && user.role === 'admin' ? <AdminLayout><CardCreationChoicePage /></AdminLayout> : <Navigate to="/login" />} />
+                <Route path="/admin/cards/new-manual" element={user && user.role === 'admin' ? <AdminLayout><CreateCardPage /></AdminLayout> : <Navigate to="/login" />} />
                 <Route path="/admin/activities" element={user && user.role === 'admin' ? <AdminLayout><AdminActivitiesPage /></AdminLayout> : <Navigate to="/login" />} />
 
                 {/* Corporate Routes */}
@@ -334,26 +335,26 @@ function AppContent() {
                   )
                 } />
                 <Route path="/cards/new" element={
-                  user && (user.role === 'user' || user.role === 'corporate' || user.role === 'admin') ? (
+                  user && (user.role === 'corporate' || user.role === 'admin') ? (
                     user.role === 'corporate' ? (
                       <CorporateLayout><CardCreationChoicePage /></CorporateLayout>
                     ) : user.role === 'admin' ? (
                       <AdminLayout><CardCreationChoicePage /></AdminLayout>
                     ) : (
-                      <CardCreationChoicePage />
+                      <Navigate to="/login" />
                     )
                   ) : (
                     <Navigate to="/login" />
                   )
                 } />
                 <Route path="/cards/new-manual" element={
-                  user && (user.role === 'user' || user.role === 'corporate' || user.role === 'admin') ? (
+                  user && (user.role === 'corporate' || user.role === 'admin') ? (
                     user.role === 'corporate' ? (
                       <CorporateLayout><CreateCardPage /></CorporateLayout>
                     ) : user.role === 'admin' ? (
                       <AdminLayout><CreateCardPage /></AdminLayout>
                     ) : (
-                      <CreateCardPage />
+                      <Navigate to="/login" />
                     )
                   ) : (
                     <Navigate to="/login" />
