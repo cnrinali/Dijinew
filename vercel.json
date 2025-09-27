@@ -1,7 +1,14 @@
 {
   "version": 2,
-  "name": "dijinew-api",
+  "name": "dijinew-fullstack",
   "builds": [
+    {
+      "src": "client/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    },
     {
       "src": "server/server.js",
       "use": "@vercel/node"
@@ -11,18 +18,22 @@
     {
       "src": "/api/(.*)",
       "dest": "server/server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "client/dist/$1"
     }
   ],
+  "outputDirectory": "client/dist",
+  "buildCommand": "cd client && npm install && npm run build",
   "env": {
     "NODE_ENV": "production",
     "CLIENT_URL": "https://dijinew.vercel.app",
-    "BACKEND_API_URL": "https://dijinew-api.vercel.app"
+    "BACKEND_API_URL": "https://dijinew.vercel.app"
   },
-  "build": {
-    "env": {
-      "CLIENT_URL": "https://dijinew.vercel.app",
-      "BACKEND_API_URL": "https://dijinew-api.vercel.app"
+  "functions": {
+    "server/server.js": {
+      "includeFiles": "server/**"
     }
   }
 }
-

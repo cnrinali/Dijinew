@@ -1,14 +1,13 @@
 // API Base URL konfigürasyonu
 const getApiBaseUrl = () => {
-  // Production'da Render backend URL'ini kullan, development'ta local server
+  // Production'da aynı domain kullan (Vercel single app), development'ta local server
   const isDevelopment = import.meta.env.MODE === 'development';
   
   if (isDevelopment) {
     return 'http://localhost:5001';
   } else {
-    // Production environment
-    // Geçici çözüm: localhost backend kullan
-    return 'http://localhost:5001';
+    // Production environment - aynı domain kullan (Vercel deployed)
+    return window.location.origin;
   }
 };
 

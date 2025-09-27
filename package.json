@@ -1,6 +1,26 @@
 {
+  "name": "dijinew-fullstack",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "scripts": {
+    "build": "cd client && npm install && npm run build",
+    "start": "node server/server.js",
+    "dev:client": "cd client && npm run dev",
+    "dev:server": "cd server && npm run start",
+    "install:client": "cd client && npm install",
+    "install:server": "cd server && npm install",
+    "install:all": "npm run install:client && npm run install:server"
+  },
   "dependencies": {
     "jszip": "^3.10.1",
     "qrcode.react": "^4.2.0"
-  }
+  },
+  "workspaces": [
+    "client",
+    "server"
+  ]
 }
