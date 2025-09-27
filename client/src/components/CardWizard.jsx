@@ -128,8 +128,8 @@ export default function CardWizard() {
 
             try {
                 setTokenValidating(true);
-                // Simple wizard API'sini kullan
-                const response = await fetch(`http://localhost:5001/api/simple-wizard/validate/${token}`);
+                // Simple wizard API'sini kullan - Merkezi config
+                const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5001'}/api/simple-wizard/validate/${token}`);
                 const data = await response.json();
                 
                 if (data.success) {
@@ -159,7 +159,7 @@ export default function CardWizard() {
     // Kartın sahipliğini güncelle
     const updateCardOwnership = useCallback(async (token, newUserId) => {
         try {
-            const response = await fetch(`http://localhost:5001/api/simple-wizard/update-ownership/${token}`, {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5001'}/api/simple-wizard/update-ownership/${token}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -182,7 +182,7 @@ export default function CardWizard() {
     // Token ile kart verilerini yükle
     const loadCardData = async (token) => {
         try {
-            const response = await fetch(`http://localhost:5001/api/simple-wizard/card/${token}`);
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5001'}/api/simple-wizard/card/${token}`);
             const data = await response.json();
             
             if (data.success && data.data) {
@@ -330,7 +330,7 @@ export default function CardWizard() {
             };
 
             // Simple wizard API ile kartı güncelle
-            const response = await fetch(`http://localhost:5001/api/simple-wizard/card/${token}`, {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5001'}/api/simple-wizard/card/${token}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -343,7 +343,7 @@ export default function CardWizard() {
             if (data.success) {
                 // Token'ı kullanıldı olarak işaretle
                 try {
-                    const markUsedResponse = await fetch(`http://localhost:5001/api/simple-wizard/use/${token}`, {
+                    const markUsedResponse = await fetch(`${import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5001'}/api/simple-wizard/use/${token}`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',

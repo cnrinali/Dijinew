@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 const emailService = require('../../services/emailService');
 const qrcode = require('qrcode');
+const { getWizardUrl, getQRUrl } = require('../../config/urls');
 
 // Helper function to generate QR code for card
 const generateCardQRCode = async (cardData) => {
@@ -106,17 +107,39 @@ const createSimpleWizard = async (req, res) => {
             
             if (hasPermanentSlugColumn) {
                 request.input('permanentSlug', sql.NVarChar(255), uniqueSlug);
-                cardResult = await request.query(`
+                // OUTPUT clause trigger'larla uyumlu değil, ayrı SELECT kullan
+                await request.query(`
                     INSERT INTO Cards (cardName, customSlug, name, email, userId, companyId, permanentSlug, isActive)
-                    OUTPUT INSERTED.id, INSERTED.customSlug, INSERTED.permanentSlug
                     VALUES (@cardName, @customSlug, @name, @email, @userId, @companyId, @permanentSlug, @isActive)
                 `);
+
+                // Oluşturulan kartı ayrı sorgu ile al
+                const cardSelectResult = await pool.request()
+                    .input('customSlug', sql.NVarChar(255), uniqueSlug)
+                    .query(`
+                        SELECT TOP 1 id, customSlug, permanentSlug 
+                        FROM Cards 
+                        WHERE customSlug = @customSlug
+                        ORDER BY createdAt DESC
+                    `);
+                cardResult = cardSelectResult;
             } else {
-                cardResult = await request.query(`
+                // OUTPUT clause trigger'larla uyumlu değil, ayrı SELECT kullan
+                await request.query(`
                     INSERT INTO Cards (cardName, customSlug, name, email, userId, companyId, isActive)
-                    OUTPUT INSERTED.id, INSERTED.customSlug
                     VALUES (@cardName, @customSlug, @name, @email, @userId, @companyId, @isActive)
                 `);
+
+                // Oluşturulan kartı ayrı sorgu ile al
+                const cardSelectResult = await pool.request()
+                    .input('customSlug', sql.NVarChar(255), uniqueSlug)
+                    .query(`
+                        SELECT TOP 1 id, customSlug 
+                        FROM Cards 
+                        WHERE customSlug = @customSlug
+                        ORDER BY createdAt DESC
+                    `);
+                cardResult = cardSelectResult;
             }
         } else {
             // CompanyId kolonu yoksa veya bireysel kullanıcıysa normal oluştur
@@ -130,17 +153,39 @@ const createSimpleWizard = async (req, res) => {
             
             if (hasPermanentSlugColumn) {
                 request.input('permanentSlug', sql.NVarChar(255), uniqueSlug);
-                cardResult = await request.query(`
+                // OUTPUT clause trigger'larla uyumlu değil, ayrı SELECT kullan
+                await request.query(`
                     INSERT INTO Cards (cardName, customSlug, name, email, userId, permanentSlug, isActive)
-                    OUTPUT INSERTED.id, INSERTED.customSlug, INSERTED.permanentSlug
                     VALUES (@cardName, @customSlug, @name, @email, @userId, @permanentSlug, @isActive)
                 `);
+
+                // Oluşturulan kartı ayrı sorgu ile al
+                const cardSelectResult = await pool.request()
+                    .input('customSlug', sql.NVarChar(255), uniqueSlug)
+                    .query(`
+                        SELECT TOP 1 id, customSlug, permanentSlug 
+                        FROM Cards 
+                        WHERE customSlug = @customSlug
+                        ORDER BY createdAt DESC
+                    `);
+                cardResult = cardSelectResult;
             } else {
-                cardResult = await request.query(`
+                // OUTPUT clause trigger'larla uyumlu değil, ayrı SELECT kullan
+                await request.query(`
                     INSERT INTO Cards (cardName, customSlug, name, email, userId, isActive)
-                    OUTPUT INSERTED.id, INSERTED.customSlug
                     VALUES (@cardName, @customSlug, @name, @email, @userId, @isActive)
                 `);
+
+                // Oluşturulan kartı ayrı sorgu ile al
+                const cardSelectResult = await pool.request()
+                    .input('customSlug', sql.NVarChar(255), uniqueSlug)
+                    .query(`
+                        SELECT TOP 1 id, customSlug 
+                        FROM Cards 
+                        WHERE customSlug = @customSlug
+                        ORDER BY createdAt DESC
+                    `);
+                cardResult = cardSelectResult;
             }
         }
 
@@ -148,7 +193,8 @@ const createSimpleWizard = async (req, res) => {
         console.log('💳 Card creation result:', card);
         
         // Token'ı veritabanına kaydet
-        const tokenResult = await pool.request()
+        // OUTPUT clause trigger'larla uyumlu değil, ayrı SELECT kullan
+        await pool.request()
             .input('token', sql.NVarChar, token)
             .input('email', sql.NVarChar, email)
             .input('createdBy', sql.Int, userId)
@@ -158,45 +204,31 @@ const createSimpleWizard = async (req, res) => {
             .input('expiresAt', sql.DateTime2, expiresAt)
             .query(`
                 INSERT INTO SimpleWizardTokens (token, email, createdBy, createdByType, companyId, cardId, expiresAt)
-                OUTPUT INSERTED.id, INSERTED.token, INSERTED.email, INSERTED.expiresAt, INSERTED.createdAt
                 VALUES (@token, @email, @createdBy, @createdByType, @companyId, @cardId, @expiresAt)
             `);
 
+        // Oluşturulan token'ı ayrı sorgu ile al
+        const tokenSelectResult = await pool.request()
+            .input('token', sql.NVarChar, token)
+            .query(`
+                SELECT TOP 1 id, token, email, expiresAt, createdAt 
+                FROM SimpleWizardTokens 
+                WHERE token = @token
+                ORDER BY createdAt DESC
+            `);
+        const tokenResult = tokenSelectResult;
+
         const wizardToken = tokenResult.recordset[0];
         
-        // Wizard URL oluştur - Production'da her zaman dijinew.vercel.app kullan
-        console.log('🔍 Environment CLIENT_URL:', process.env.CLIENT_URL);
-        console.log('🔍 NODE_ENV:', process.env.NODE_ENV);
-        console.log('🔍 Request host:', req.get('host'));
-        console.log('🔍 Request origin:', req.get('origin'));
-        console.log('🔍 Request referer:', req.get('referer'));
-        
-        let clientBaseUrl;
-        
-        // Production'da her zaman dijinew.vercel.app kullan
-        const isProduction = process.env.NODE_ENV === 'production' || 
-                            req.get('host')?.includes('vercel.app') || 
-                            req.get('origin')?.includes('dijinew.vercel.app') ||
-                            req.get('referer')?.includes('dijinew.vercel.app');
-        
-        if (isProduction) {
-            clientBaseUrl = 'https://dijinew.vercel.app';
-            console.log('🔍 Using production URL (hardcoded):', clientBaseUrl);
-        } else {
-            // Development'da localhost kullan
-            clientBaseUrl = 'http://localhost:5173';
-            console.log('🔍 Using development URL:', clientBaseUrl);
-        }
-        
-        console.log('🔗 Final Client Base URL:', clientBaseUrl);
-        const wizardUrl = `${clientBaseUrl}/wizard/${card.customSlug}?token=${token}`;
+        // Wizard URL oluştur - Merkezi config kullan
+        const wizardUrl = getWizardUrl(card.customSlug, token, req);
 
         // Kart için QR kod oluştur
         const qrResult = await generateCardQRCode(card);
         let qrCodeUrl = null;
         
         if (qrResult.success) {
-            qrCodeUrl = `${clientBaseUrl}/qr/${card.customSlug}`;
+            qrCodeUrl = getQRUrl(card.customSlug, req);
             console.log('QR kod başarıyla oluşturuldu:', qrResult.cardPath);
         } else {
             console.error('QR kod oluşturulamadı:', qrResult.error);

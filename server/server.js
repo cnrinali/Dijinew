@@ -34,10 +34,11 @@ const corsOptions = {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
+    // Merkezi CORS yönetimi - Environment variable'dan al
     const allowedOrigins = [
       'http://localhost:3000',
       'http://localhost:5173', // Vite dev server
-      'https://dijinew.vercel.app', // Production frontend
+      process.env.CLIENT_URL || 'https://dijinew.vercel.app', // Production frontend
     ];
     
     // Allow any Vercel preview URL

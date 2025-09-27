@@ -1,5 +1,6 @@
 const { getPool, sql } = require('../../config/db');
 const crypto = require('crypto');
+const { getClientBaseUrl } = require('../../config/urls');
 
 // Token oluştur (Admin/Corporate kullanıcılar için)
 const createWizardToken = async (req, res) => {
@@ -57,10 +58,8 @@ const createWizardToken = async (req, res) => {
 
         const wizardToken = result.recordset[0];
         
-        // Tam URL oluştur
-        const baseUrl = req.get('host').includes('localhost') 
-            ? `http://${req.get('host')}` 
-            : `https://${req.get('host')}`;
+        // Tam URL oluştur - Merkezi config kullan
+        const baseUrl = getClientBaseUrl(req);
         const wizardUrl = `${baseUrl}/wizard?token=${token}`;
 
         res.status(201).json({

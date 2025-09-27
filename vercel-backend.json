@@ -15,7 +15,14 @@
   ],
   "env": {
     "NODE_ENV": "production",
-    "CLIENT_URL": "https://dijinew.vercel.app"
+    "CLIENT_URL": "https://dijinew.vercel.app",
+    "BACKEND_API_URL": "https://dijinew-api.vercel.app"
+  },
+  "build": {
+    "env": {
+      "CLIENT_URL": "https://dijinew.vercel.app",
+      "BACKEND_API_URL": "https://dijinew-api.vercel.app"
+    }
   }
 }
 
