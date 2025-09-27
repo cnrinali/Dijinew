@@ -2,6 +2,30 @@ const { getPool, sql } = require('../../config/db');
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 const emailService = require('../../services/emailService');
+const qrcode = require('qrcode');
+
+// Helper function to generate QR code for card
+const generateCardQRCode = async (cardData) => {
+    try {
+        // QR kod yolunu oluştur
+        const cardPath = cardData.customSlug ? `/card/${cardData.customSlug}` : `/card/${cardData.id}`;
+        
+        // QR kodu oluştur (Data URL formatında)
+        const qrCodeDataURL = await qrcode.toDataURL(cardPath);
+        
+        return {
+            success: true,
+            cardPath,
+            qrCodeDataURL
+        };
+    } catch (error) {
+        console.error('QR kod oluşturma hatası:', error);
+        return {
+            success: false,
+            error: error.message
+        };
+    }
+};
 
 // Basit Sihirbaz Token Oluştur (Sadece email ile)
 const createSimpleWizard = async (req, res) => {
@@ -32,21 +56,96 @@ const createSimpleWizard = async (req, res) => {
         // Sadece kesinlikle var olan kolonları kullanarak kart oluşturalım
         // GUID ile unique slug oluştur
         const uniqueSlug = uuidv4();
+        console.log('🏷️ Generated UUID slug:', uniqueSlug);
         
-        const cardResult = await pool.request()
-            .input('cardName', sql.NVarChar, 'Yeni Kartvizit')
-            .input('customSlug', sql.NVarChar, uniqueSlug)
-            .input('name', sql.NVarChar, 'Henüz Belirtilmedi')
-            .input('email', sql.NVarChar, email || '')
-            .input('userId', sql.Int, userId)
-            .input('isActive', sql.Bit, false) // Başlangıçta pasif
+        // Kurumsal kullanıcı için companyId kontrolü
+        let companyId = null;
+        let companyName = null;
+        
+        if (userRole === 'corporate') {
+            // Kullanıcının şirket bilgilerini al
+            const companyResult = await pool.request()
+                .input('userId', sql.Int, userId)
+                .query(`
+                    SELECT u.companyId, c.name as companyName 
+                    FROM Users u 
+                    LEFT JOIN Companies c ON u.companyId = c.id 
+                    WHERE u.id = @userId
+                `);
+            
+            if (companyResult.recordset.length > 0 && companyResult.recordset[0].companyId) {
+                companyId = companyResult.recordset[0].companyId;
+                companyName = companyResult.recordset[0].companyName;
+            }
+        }
+
+        // Önce Cards tablosunda companyId kolonu var mı kontrol et
+        const columnCheckResult = await pool.request()
             .query(`
-                INSERT INTO Cards (cardName, customSlug, name, email, userId, isActive)
-                OUTPUT INSERTED.id, INSERTED.customSlug
-                VALUES (@cardName, @customSlug, @name, @email, @userId, @isActive)
+                SELECT 
+                    SUM(CASE WHEN COLUMN_NAME = 'companyId' THEN 1 ELSE 0 END) as hasCompanyId,
+                    SUM(CASE WHEN COLUMN_NAME = 'permanentSlug' THEN 1 ELSE 0 END) as hasPermanentSlug
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_NAME = 'Cards' AND COLUMN_NAME IN ('companyId', 'permanentSlug')
             `);
+        
+        const hasCompanyIdColumn = columnCheckResult.recordset[0].hasCompanyId > 0;
+        const hasPermanentSlugColumn = columnCheckResult.recordset[0].hasPermanentSlug > 0;
+        
+        let cardResult;
+        if (hasCompanyIdColumn && userRole === 'corporate' && companyId) {
+            // CompanyId kolonu varsa ve kurumsal kullanıcıysa company bilgisi ile oluştur
+            const request = pool.request()
+                .input('cardName', sql.NVarChar(255), 'Yeni Kartvizit')
+                .input('customSlug', sql.NVarChar(255), uniqueSlug)
+                .input('name', sql.NVarChar(255), 'Henüz Belirtilmedi')
+                .input('email', sql.NVarChar(255), email || '')
+                .input('userId', sql.Int, userId)
+                .input('companyId', sql.Int, companyId)
+                .input('isActive', sql.Bit, false);
+            
+            if (hasPermanentSlugColumn) {
+                request.input('permanentSlug', sql.NVarChar(255), uniqueSlug);
+                cardResult = await request.query(`
+                    INSERT INTO Cards (cardName, customSlug, name, email, userId, companyId, permanentSlug, isActive)
+                    OUTPUT INSERTED.id, INSERTED.customSlug, INSERTED.permanentSlug
+                    VALUES (@cardName, @customSlug, @name, @email, @userId, @companyId, @permanentSlug, @isActive)
+                `);
+            } else {
+                cardResult = await request.query(`
+                    INSERT INTO Cards (cardName, customSlug, name, email, userId, companyId, isActive)
+                    OUTPUT INSERTED.id, INSERTED.customSlug
+                    VALUES (@cardName, @customSlug, @name, @email, @userId, @companyId, @isActive)
+                `);
+            }
+        } else {
+            // CompanyId kolonu yoksa veya bireysel kullanıcıysa normal oluştur
+            const request = pool.request()
+                .input('cardName', sql.NVarChar(255), 'Yeni Kartvizit')
+                .input('customSlug', sql.NVarChar(255), uniqueSlug)
+                .input('name', sql.NVarChar(255), 'Henüz Belirtilmedi')
+                .input('email', sql.NVarChar(255), email || '')
+                .input('userId', sql.Int, userId)
+                .input('isActive', sql.Bit, false);
+            
+            if (hasPermanentSlugColumn) {
+                request.input('permanentSlug', sql.NVarChar(255), uniqueSlug);
+                cardResult = await request.query(`
+                    INSERT INTO Cards (cardName, customSlug, name, email, userId, permanentSlug, isActive)
+                    OUTPUT INSERTED.id, INSERTED.customSlug, INSERTED.permanentSlug
+                    VALUES (@cardName, @customSlug, @name, @email, @userId, @permanentSlug, @isActive)
+                `);
+            } else {
+                cardResult = await request.query(`
+                    INSERT INTO Cards (cardName, customSlug, name, email, userId, isActive)
+                    OUTPUT INSERTED.id, INSERTED.customSlug
+                    VALUES (@cardName, @customSlug, @name, @email, @userId, @isActive)
+                `);
+            }
+        }
 
         const card = cardResult.recordset[0];
+        console.log('💳 Card creation result:', card);
         
         // Token'ı veritabanına kaydet
         const tokenResult = await pool.request()
@@ -70,6 +169,17 @@ const createSimpleWizard = async (req, res) => {
             ? `http://localhost:5173` 
             : `https://${req.get('host').replace(':5001', '')}`;
         const wizardUrl = `${clientBaseUrl}/wizard/${card.customSlug}?token=${token}`;
+
+        // Kart için QR kod oluştur
+        const qrResult = await generateCardQRCode(card);
+        let qrCodeUrl = null;
+        
+        if (qrResult.success) {
+            qrCodeUrl = `${clientBaseUrl}/qr/${card.customSlug}`;
+            console.log('QR kod başarıyla oluşturuldu:', qrResult.cardPath);
+        } else {
+            console.error('QR kod oluşturulamadı:', qrResult.error);
+        }
 
         // Email göndermeyi dene (opsiyonel - sadece geçerli email varsa)
         let emailResult = { success: false, message: 'Email belirtilmedi' };
@@ -106,17 +216,22 @@ const createSimpleWizard = async (req, res) => {
             console.log('Email gönderilmiyor - geçersiz veya boş email:', email);
         }
 
-        res.status(201).json({
-            success: true,
-            data: {
-                ...wizardToken,
-                cardId: card.id,
-                wizardUrl,
-                emailSent: emailResult?.success || false,
-                emailMessage: emailResult?.message
-            },
-            message: 'Sihirbaz linki başarıyla oluşturuldu.' + (emailResult?.success ? ' Email gönderildi.' : '')
-        });
+            res.status(201).json({
+                success: true,
+                data: {
+                    ...wizardToken,
+                    cardId: card.id,
+                    cardSlug: card.customSlug,
+                    permanentSlug: card.permanentSlug || card.customSlug, // Fallback to customSlug if permanentSlug doesn't exist yet
+                    wizardUrl,
+                    qrCodeUrl,
+                    qrCodeDataURL: qrResult.success ? qrResult.qrCodeDataURL : null,
+                    cardPath: qrResult.success ? qrResult.cardPath : null,
+                    emailSent: emailResult?.success || false,
+                    emailMessage: emailResult?.message
+                },
+                message: 'Sihirbaz linki başarıyla oluşturuldu.' + (emailResult?.success ? ' Email gönderildi.' : '') + (qrResult.success ? ' QR kod hazırlandı.' : '')
+            });
 
     } catch (error) {
         console.error('Basit sihirbaz token oluşturma hatası:', error);
@@ -229,12 +344,15 @@ const getCardByToken = async (req, res) => {
                     c.isActive,
                     c.profileImageUrl,
                     c.qrCodeData,
+                    c.companyId,
+                    comp.name as companyName,
                     CASE 
                         WHEN swt.expiresAt < GETDATE() THEN 1 
                         ELSE 0 
                     END as isExpired
                 FROM SimpleWizardTokens swt
                 INNER JOIN Cards c ON swt.cardId = c.id
+                LEFT JOIN Companies comp ON c.companyId = comp.id
                 WHERE swt.token = @token
             `);
 
@@ -323,7 +441,7 @@ const updateCardByToken = async (req, res) => {
             .input('website', sql.NVarChar, cardData.website || '')
             .input('address', sql.NVarChar, cardData.address || '')
             .input('bio', sql.NVarChar, cardData.bio || '')
-            .input('status', sql.Bit, isActiveValue)
+            .input('isActive', sql.Bit, isActiveValue)
             .query(`
                 UPDATE Cards 
                 SET name = @name,
@@ -333,7 +451,7 @@ const updateCardByToken = async (req, res) => {
                     website = @website,
                     address = @address,
                     bio = @bio,
-                    status = @status,
+                    isActive = @isActive,
                     updatedAt = GETDATE()
                 WHERE id = @cardId
             `);
@@ -349,7 +467,7 @@ const updateCardByToken = async (req, res) => {
         const cardResult = await pool.request()
             .input('cardId', sql.Int, tokenData.cardId)
             .query(`
-                SELECT id, name, customSlug, status 
+                SELECT id, name, customSlug, isActive 
                 FROM Cards 
                 WHERE id = @cardId
             `);
@@ -570,12 +688,155 @@ const getUserSimpleWizards = async (req, res) => {
     }
 };
 
-module.exports = {
-    createSimpleWizard,
-    validateSimpleWizardToken,
-    getCardByToken,
-    updateCardByToken,
-    updateCardOwnership,
-    markSimpleTokenAsUsed,
-    getUserSimpleWizards
+// Debug/Migration endpoint - Database şemasını kontrol et ve düzelt
+const debugDatabaseSchema = async (req, res) => {
+    try {
+        const pool = await getPool();
+        
+        console.log('🔍 Checking database schema...');
+        
+        // Cards tablosundaki kolonları listele
+        const columnsResult = await pool.request().query(`
+            SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_NAME = 'Cards' 
+            ORDER BY ORDINAL_POSITION
+        `);
+        
+        const columns = columnsResult.recordset.map(col => ({
+            name: col.COLUMN_NAME,
+            type: col.DATA_TYPE,
+            nullable: col.IS_NULLABLE
+        }));
+        
+        // CompanyId kolonu var mı kontrol et
+        const hasCompanyId = columns.some(col => col.name === 'companyId');
+        const hasPermanentSlug = columns.some(col => col.name === 'permanentSlug');
+        
+        let migrationResults = [];
+        
+        if (!hasCompanyId) {
+            console.log('🔧 Adding companyId column...');
+            try {
+                await pool.request().query(`
+                    ALTER TABLE Cards ADD companyId INT NULL;
+                `);
+                migrationResults.push('CompanyId column added successfully');
+                
+                // Foreign key constraint ekle
+                try {
+                    await pool.request().query(`
+                        ALTER TABLE Cards ADD CONSTRAINT FK_Cards_Companies 
+                        FOREIGN KEY (companyId) REFERENCES Companies(id);
+                    `);
+                    migrationResults.push('Foreign key constraint added');
+                } catch (fkError) {
+                    migrationResults.push(`Foreign key constraint failed: ${fkError.message}`);
+                }
+            } catch (error) {
+                migrationResults.push(`Column addition failed: ${error.message}`);
+            }
+        } else {
+            migrationResults.push('CompanyId column already exists');
+        }
+        
+        // PermanentSlug kolonu kontrolü ve ekleme
+        if (!hasPermanentSlug) {
+            console.log('🔧 Adding permanentSlug column...');
+            try {
+                await pool.request().query(`
+                    ALTER TABLE Cards ADD permanentSlug NVARCHAR(255) NULL;
+                `);
+                migrationResults.push('PermanentSlug column added successfully');
+                
+                // Unique index ekle
+                try {
+                    await pool.request().query(`
+                        CREATE UNIQUE INDEX IX_Cards_PermanentSlug 
+                        ON Cards(permanentSlug) 
+                        WHERE permanentSlug IS NOT NULL;
+                    `);
+                    migrationResults.push('PermanentSlug unique index added');
+                } catch (indexError) {
+                    migrationResults.push(`PermanentSlug index failed: ${indexError.message}`);
+                }
+            } catch (error) {
+                migrationResults.push(`PermanentSlug column addition failed: ${error.message}`);
+            }
+        } else {
+            migrationResults.push('PermanentSlug column already exists');
+        }
+        
+        // Son kartları kontrol et
+        const recentCardsResult = await pool.request().query(`
+            SELECT TOP 5 id, cardName, name, userId, companyId, customSlug, permanentSlug, isActive, createdAt 
+            FROM Cards 
+            ORDER BY createdAt DESC
+        `);
+        
+        res.json({
+            success: true,
+            data: {
+                columns,
+                hasCompanyId,
+                hasPermanentSlug,
+                migrationResults,
+                recentCards: recentCardsResult.recordset
+            },
+            message: 'Database schema check completed'
+        });
+        
+    } catch (error) {
+        console.error('Database schema check error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
 };
+
+    const testPermanentSlug = async (req, res) => {
+        try {
+            const pool = await getPool();
+            const testSlug = '71f358a2-cd21-4dfa-8ec9-6e1b2b68d35d';
+            
+            // Test different queries
+            const queries = [
+                { name: 'exact_match', query: `SELECT id, permanentSlug FROM Cards WHERE permanentSlug = '${testSlug}'` },
+                { name: 'lower_match', query: `SELECT id, permanentSlug FROM Cards WHERE LOWER(permanentSlug) = LOWER('${testSlug}')` },
+                { name: 'like_match', query: `SELECT id, permanentSlug FROM Cards WHERE permanentSlug LIKE '%${testSlug}%'` },
+                { name: 'all_permanent', query: `SELECT id, permanentSlug, LEN(permanentSlug) as len FROM Cards WHERE permanentSlug IS NOT NULL` }
+            ];
+            
+            const results = {};
+            for (const q of queries) {
+                const result = await pool.request().query(q.query);
+                results[q.name] = result.recordset;
+            }
+            
+            res.json({
+                success: true,
+                testSlug,
+                results
+            });
+            
+        } catch (error) {
+            console.error('Test permanent slug error:', error);
+            res.status(500).json({
+                success: false,
+                message: error.message
+            });
+        }
+    };
+
+    module.exports = {
+        createSimpleWizard,
+        validateSimpleWizardToken,
+        getCardByToken,
+        updateCardByToken,
+        updateCardOwnership,
+        markSimpleTokenAsUsed,
+        getUserSimpleWizards,
+        debugDatabaseSchema,
+        testPermanentSlug
+    };

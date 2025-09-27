@@ -153,22 +153,25 @@ const AnalyticsPage = () => {
                         </Select>
                     </FormControl>
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                    <FormControl fullWidth>
-                        <InputLabel>Kart Seçin</InputLabel>
-                        <Select
-                            value={selectedCard}
-                            label="Kart Seçin"
-                            onChange={(e) => setSelectedCard(e.target.value)}
-                        >
-                            {userStats.map((card) => (
-                                <MenuItem key={card.cardId} value={card.cardId}>
-                                    {card.cardName}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                </Grid>
+                {/* Kart Seçin alanını sadece admin ve corporate kullanıcılar için göster */}
+                {(user?.role === 'admin' || user?.role === 'corporate') && (
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                        <FormControl fullWidth>
+                            <InputLabel>Kart Seçin</InputLabel>
+                            <Select
+                                value={selectedCard}
+                                label="Kart Seçin"
+                                onChange={(e) => setSelectedCard(e.target.value)}
+                            >
+                                {userStats.map((card) => (
+                                    <MenuItem key={card.cardId} value={card.cardId}>
+                                        {card.cardName}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </Grid>
+                )}
             </Grid>
 
             {/* Genel Özet Kartları */}

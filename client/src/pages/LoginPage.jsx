@@ -127,15 +127,10 @@ function LoginPage() {
                     >
                         {loading ? <CircularProgress size={24} /> : 'Giriş Yap'}
                     </Button>
-                    <Grid container>
-                        <Grid item xs>
+                    <Grid container justifyContent="center">
+                        <Grid item>
                             <Link component={RouterLink} to="/forgot-password" variant="body2">
                                 Şifremi Unuttum
-                            </Link>
-                        </Grid>
-                        <Grid item>
-                            <Link component={RouterLink} to="/register" variant="body2">
-                                {"Hesabınız yok mu? Kayıt Olun"}
                             </Link>
                         </Grid>
                     </Grid>

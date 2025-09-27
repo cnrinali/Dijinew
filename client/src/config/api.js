@@ -7,7 +7,8 @@ const getApiBaseUrl = () => {
     return 'http://localhost:5001';
   } else {
     // Production environment
-    return 'https://dijinew.onrender.com';
+    // Geçici çözüm: localhost backend kullan
+    return 'http://localhost:5001';
   }
 };
 

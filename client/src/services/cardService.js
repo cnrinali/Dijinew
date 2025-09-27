@@ -62,7 +62,7 @@ const deleteCard = async (id) => {
 // Yeni fonksiyon: Herkese açık kartvizit bilgisini getir
 export const getPublicCard = async (slugOrId) => {
     // Bu istek için token GEREKMEZ
-    const response = await axios.get(`/api/public/${slugOrId}`);
+    const response = await axios.get(`${API_ENDPOINTS.PUBLIC}/${slugOrId}`);
     return response.data;
 };
 

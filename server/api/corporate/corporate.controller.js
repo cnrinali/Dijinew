@@ -31,16 +31,43 @@ const getCompanyCards = async (req, res) => {
 
     try {
         const pool = await getPool();
+        
+        // Önce Cards tablosunda companyId kolonu var mı kontrol et
+        const columnCheckResult = await pool.request()
+            .query(`
+                SELECT COUNT(*) as hasCompanyId 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_NAME = 'Cards' AND COLUMN_NAME = 'companyId'
+            `);
+        
+        const hasCompanyIdColumn = columnCheckResult.recordset[0].hasCompanyId > 0;
+        
+        if (!hasCompanyIdColumn) {
+            // CompanyId kolonu yoksa boş liste döndür
+            return res.status(200).json({
+                success: true,
+                data: [],
+                totalCount: 0,
+                page: pageNum,
+                limit: limitNum,
+                totalPages: 0,
+                message: 'CompanyId kolonu henüz eklenmemiş. Database migration çalıştırın.'
+            });
+        }
+
         const request = pool.request();
 
         // Her zaman kullanıcının şirket ID'si ile filtrele
         request.input('companyId', sql.Int, companyId);
         
-        let baseQuery = `FROM Cards c JOIN Users u ON c.userId = u.id WHERE c.companyId = @companyId`;
+        let baseQuery = `FROM Cards c 
+                        LEFT JOIN Users u ON c.userId = u.id 
+                        LEFT JOIN SimpleWizardTokens swt ON c.id = swt.cardId 
+                        WHERE c.companyId = @companyId`;
         let whereConditions = []; // Temel companyId filtresi zaten baseQuery'de
 
         if (search) {
-            whereConditions.push('(c.cardName LIKE @searchTerm OR u.name LIKE @searchTerm)');
+            whereConditions.push('(c.cardName LIKE @searchTerm OR c.name LIKE @searchTerm OR u.name LIKE @searchTerm)');
             request.input('searchTerm', sql.NVarChar, `%${search}%`);
         }
         if (isActiveFilter !== null) {
@@ -55,7 +82,13 @@ const getCompanyCards = async (req, res) => {
         const totalCount = countResult.recordset[0].totalCount;
 
         const dataQuery = `
-            SELECT c.*, u.name as userName, u.email as userEmail 
+            SELECT c.*, 
+                   COALESCE(u.name, 'Sihirbaz Kartı') as userName, 
+                   COALESCE(u.email, c.email) as userEmail,
+                   CASE 
+                       WHEN swt.cardId IS NOT NULL THEN 'Sihirbaz ile oluşturuldu'
+                       ELSE 'Manuel oluşturuldu'
+                   END as creationType
             ${baseQuery}
             ${whereClause} 
             ORDER BY c.createdAt DESC 

@@ -5,8 +5,18 @@ const ActivityLogger = require('../../middleware/activityLogger');
 const validateAndCleanSlug = (slug) => {
     if (!slug) return null; // Slug boşsa null dön
 
-    // Küçük harfe çevir, baştaki/sondaki boşlukları kaldır
-    let cleanedSlug = slug.toLowerCase().trim();
+    // Trim yap
+    const trimmedSlug = slug.trim();
+    
+    // UUID formatı kontrolü (36 karakter, doğru pozisyonlarda tireler)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidRegex.test(trimmedSlug)) {
+        // UUID formatında ise olduğu gibi döndür (lowercase)
+        return trimmedSlug.toLowerCase();
+    }
+    
+    // UUID değilse geleneksel slug temizleme
+    let cleanedSlug = trimmedSlug.toLowerCase();
 
     // İzin verilmeyen karakterleri kaldır (sadece harf, rakam ve tireye izin ver)
     // Birden fazla tireyi tek tireye indir
@@ -17,9 +27,9 @@ const validateAndCleanSlug = (slug) => {
 
     // Çok kısaysa (örn. sadece tirelerden oluşuyorsa) veya hala geçersizse null dön
     if (cleanedSlug.length < 1) return null;
-    // Basit bir regex kontrolü (isteğe bağlı, yukarıdaki temizleme yeterli olabilir)
+    
+    // Geleneksel slug format kontrolü
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(cleanedSlug)) {
-        // Bu durumun oluşması zor ama ek kontrol
         console.warn('Slug temizleme sonrası beklenmedik format:', cleanedSlug);
         return null;
     }
@@ -515,31 +525,56 @@ const getPublicCard = async (req, res) => {
     let inputType;
     let inputValue;
 
-    // Gelen parametrenin sayı (ID) mı yoksa string (slug) mı olduğunu kontrol et
-    if (!isNaN(parseInt(slugOrId))) {
-        // Sayı ise ID'ye göre ara
-        query = 'SELECT TOP 1 * FROM Cards WHERE id = @idValue AND isActive = 1';
-        inputName = 'idValue';
-        inputType = sql.Int;
-        inputValue = parseInt(slugOrId);
-    } else {
-        // Sayı değilse customSlug'a göre ara
-        const cleanedSlug = validateAndCleanSlug(slugOrId); // Gelen slug'ı temizle
-        if (!cleanedSlug) {
-             return res.status(400).json({ message: 'Geçersiz kartvizit URL formatı.' });
-        }
-        query = 'SELECT TOP 1 * FROM Cards WHERE customSlug = @slugValue AND isActive = 1';
-        inputName = 'slugValue';
-        inputType = sql.VarChar;
-        inputValue = cleanedSlug;
-    }
-
     try {
         const pool = await getPool();
+        
+        // Gelen parametrenin sayı (ID) mı yoksa string (slug) mı olduğunu kontrol et
+        if (!isNaN(parseInt(slugOrId))) {
+            // Sayı ise ID'ye göre ara
+            query = 'SELECT TOP 1 * FROM Cards WHERE id = @idValue AND isActive = 1';
+            inputName = 'idValue';
+            inputType = sql.Int;
+            inputValue = parseInt(slugOrId);
+        } else {
+            // Sayı değilse customSlug veya permanentSlug'a göre ara
+            const cleanedSlug = validateAndCleanSlug(slugOrId); // Gelen slug'ı temizle
+            if (!cleanedSlug) {
+                 return res.status(400).json({ message: 'Geçersiz kartvizit URL formatı.' });
+            }
+            
+            // Önce permanentSlug kolonu var mı kontrol et
+            const columnCheckResult = await pool.request()
+                .query(`
+                    SELECT COUNT(*) as hasPermanentSlug 
+                    FROM INFORMATION_SCHEMA.COLUMNS 
+                    WHERE TABLE_NAME = 'Cards' AND COLUMN_NAME = 'permanentSlug'
+                `);
+            
+            const hasPermanentSlug = columnCheckResult.recordset[0].hasPermanentSlug > 0;
+            
+            if (hasPermanentSlug) {
+                query = `SELECT TOP 1 *, 
+                    CASE WHEN LOWER(customSlug) = LOWER(@slugValue) THEN 'customSlug' 
+                         WHEN LOWER(permanentSlug) = LOWER(@slugValue) THEN 'permanentSlug'
+                         ELSE 'none' END as matchType
+                    FROM Cards WHERE 
+                    (LOWER(customSlug) = LOWER(@slugValue) OR LOWER(permanentSlug) = LOWER(@slugValue)) 
+                    AND isActive = 1`;
+            } else {
+                query = 'SELECT TOP 1 * FROM Cards WHERE LOWER(customSlug) = LOWER(@slugValue) AND isActive = 1';
+            }
+            
+            inputName = 'slugValue';
+            inputType = sql.NVarChar;
+            inputValue = cleanedSlug;
+        }
+
+        console.log('🔍 Public card query:', { query, inputName, inputValue });
         const result = await pool.request()
             .input(inputName, inputType, inputValue)
             .query(query);
 
+        console.log('📊 Query result count:', result.recordset.length);
         if (result.recordset.length === 0) {
             return res.status(404).json({ message: 'Aktif kartvizit bulunamadı' });
         }

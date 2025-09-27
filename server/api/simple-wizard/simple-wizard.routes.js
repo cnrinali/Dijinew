@@ -1,14 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const { protect: authMiddleware } = require('../../middleware/authMiddleware');
-const {
-    createSimpleWizard,
-    validateSimpleWizardToken,
-    getCardByToken,
-    updateCardByToken,
-    updateCardOwnership,
+const { 
+    createSimpleWizard, 
+    validateSimpleWizardToken, 
+    getCardByToken, 
+    updateCardByToken, 
+    updateCardOwnership, 
     markSimpleTokenAsUsed,
-    getUserSimpleWizards
+    getUserSimpleWizards,
+    debugDatabaseSchema,
+    testPermanentSlug
 } = require('./simple-wizard.controller');
 
 // Sihirbaz oluştur (Admin/Corporate için - korumalı)
@@ -31,5 +33,11 @@ router.put('/use/:token', markSimpleTokenAsUsed);
 
 // Kullanıcının sihirbazlarını listele (Admin/Corporate için - korumalı)
 router.get('/my-wizards', authMiddleware, getUserSimpleWizards);
+
+// Debug: Database şemasını kontrol et ve düzelt (Herkese açık - debugging için)
+router.get('/debug-schema', debugDatabaseSchema);
+
+// Debug: PermanentSlug test (Herkese açık - debugging için)
+router.get('/test-permanent-slug', testPermanentSlug);
 
 module.exports = router;

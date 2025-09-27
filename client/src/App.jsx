@@ -31,6 +31,9 @@ import CreateCardPage from './pages/CreateCardPage';
 import EditCardPage from './pages/EditCardPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import CardWizard from './components/CardWizard';
+import CardCreationChoicePage from './pages/CardCreationChoicePage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 
 const navItems = [
   { label: 'Ana Sayfa', path: '/home', public: true },
@@ -88,6 +91,7 @@ function AppContent() {
                 
                 {/* Card Wizard - Public route for new users */}
                 <Route path="/wizard/:cardSlug" element={<CardWizard />} />
+                
         
         {/* All other routes with navbar */}
         <Route path="*" element={
@@ -286,6 +290,8 @@ function AppContent() {
                 <Route path="/home" element={<HomePage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/reset-password/:resetToken" element={<ResetPasswordPage />} />
                 <Route path="/profile" element={
                   user ? (
                     user.role === 'admin' ? (
@@ -328,6 +334,19 @@ function AppContent() {
                   )
                 } />
                 <Route path="/cards/new" element={
+                  user && (user.role === 'user' || user.role === 'corporate' || user.role === 'admin') ? (
+                    user.role === 'corporate' ? (
+                      <CorporateLayout><CardCreationChoicePage /></CorporateLayout>
+                    ) : user.role === 'admin' ? (
+                      <AdminLayout><CardCreationChoicePage /></AdminLayout>
+                    ) : (
+                      <CardCreationChoicePage />
+                    )
+                  ) : (
+                    <Navigate to="/login" />
+                  )
+                } />
+                <Route path="/cards/new-manual" element={
                   user && (user.role === 'user' || user.role === 'corporate' || user.role === 'admin') ? (
                     user.role === 'corporate' ? (
                       <CorporateLayout><CreateCardPage /></CorporateLayout>
