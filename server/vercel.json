@@ -1,0 +1,25 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/server.js"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "CLIENT_URL": "https://dijinew.vercel.app",
+    "BACKEND_API_URL": "https://dijinew-api.vercel.app",
+    "DB_HOST": "@db_host",
+    "DB_USER": "@db_user", 
+    "DB_PASS": "@db_pass",
+    "DB_DATABASE": "@db_database",
+    "JWT_SECRET": "@jwt_secret"
+  }
+}
