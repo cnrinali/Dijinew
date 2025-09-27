@@ -164,10 +164,27 @@ const createSimpleWizard = async (req, res) => {
 
         const wizardToken = tokenResult.recordset[0];
         
-        // Wizard URL oluştur (CLIENT tarafında - port 5173)
-        const clientBaseUrl = req.get('host').includes('localhost') 
-            ? `http://localhost:5173` 
-            : `https://${req.get('host').replace(':5001', '')}`;
+        // Wizard URL oluştur - Environment variable kullan
+        let clientBaseUrl = process.env.CLIENT_URL;
+        
+        if (!clientBaseUrl) {
+            // Fallback: Request header'larından domain tespit et
+            const host = req.get('host');
+            const origin = req.get('origin');
+            
+            if (host && host.includes('localhost')) {
+                clientBaseUrl = 'http://localhost:5173';
+            } else if (origin && origin.includes('dijinew.vercel.app')) {
+                clientBaseUrl = 'https://dijinew.vercel.app';
+            } else if (host) {
+                clientBaseUrl = `https://${host.replace(':5001', '')}`;
+            } else {
+                // Son fallback
+                clientBaseUrl = 'https://dijinew.vercel.app';
+            }
+        }
+        
+        console.log('🔗 Client Base URL:', clientBaseUrl);
         const wizardUrl = `${clientBaseUrl}/wizard/${card.customSlug}?token=${token}`;
 
         // Kart için QR kod oluştur
