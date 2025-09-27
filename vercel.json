@@ -1,14 +1,28 @@
 {
   "version": 2,
-  "buildCommand": "cd client && npm install && npm run build",
-  "outputDirectory": "client/dist",
+  "name": "dijinew-api",
+  "builds": [
+    {
+      "src": "server/server.js",
+      "use": "@vercel/node"
+    }
+  ],
   "routes": [
     {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "src": "/api/(.*)",
+      "dest": "server/server.js"
     }
-  ]
-} 
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "CLIENT_URL": "https://dijinew.vercel.app",
+    "BACKEND_API_URL": "https://dijinew-api.vercel.app"
+  },
+  "build": {
+    "env": {
+      "CLIENT_URL": "https://dijinew.vercel.app",
+      "BACKEND_API_URL": "https://dijinew-api.vercel.app"
+    }
+  }
+}
+

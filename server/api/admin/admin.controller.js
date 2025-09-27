@@ -372,30 +372,15 @@ const updateAnyUser = async (req, res) => { // Fonksiyon adı değiştirildi
                 updateRequest.input('companyId', sql.Int, companyIdToSet);
             }
             
-            // OUTPUT clause trigger'larla uyumlu değil, ayrı SELECT kullan
-            const updateQuery = `UPDATE Users SET ${setClauses} WHERE id = @userId`;
+            const updateQuery = `UPDATE Users SET ${setClauses} OUTPUT inserted.id, inserted.name, inserted.email, inserted.role, inserted.createdAt, inserted.companyId WHERE id = @userId`;
             const updateResult = await updateRequest.query(updateQuery);
 
-            if (updateResult.rowsAffected[0] === 0) {
+            if (updateResult.recordset.length === 0) {
                 await transaction.rollback();
                 return res.status(404).json({ message: 'Güncellenecek kullanıcı bulunamadı.' });
             }
 
-            // Güncellenmiş kullanıcıyı ayrı sorgu ile al
-            const selectRequest = new sql.Request(transaction);
-            selectRequest.input('userId', sql.Int, userIdToUpdate);
-            const selectResult = await selectRequest.query(`
-                SELECT id, name, email, role, createdAt, companyId 
-                FROM Users 
-                WHERE id = @userId
-            `);
-
-            if (selectResult.recordset.length === 0) {
-                await transaction.rollback();
-                return res.status(404).json({ message: 'Güncellenmiş kullanıcı bilgisi alınamadı.' });
-            }
-
-            const updatedUser = selectResult.recordset[0];
+            const updatedUser = updateResult.recordset[0];
 
             // Güncellenen kullanıcıya şirket adını ekle (varsa)
              if (updatedUser.companyId) {

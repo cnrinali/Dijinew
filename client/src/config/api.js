@@ -1,21 +1,14 @@
-// API Base URL konfigürasyonu - Merkezi URL Yönetimi
+// API Base URL konfigürasyonu
 const getApiBaseUrl = () => {
-  // 1. Environment variable'dan al (en yüksek öncelik)
-  if (import.meta.env.VITE_BACKEND_API_URL) {
-    console.log('🔗 Using VITE_BACKEND_API_URL from environment:', import.meta.env.VITE_BACKEND_API_URL);
-    return import.meta.env.VITE_BACKEND_API_URL;
-  }
-
-  // 2. Development ortamı kontrolü
+  // Production'da Render backend URL'ini kullan, development'ta local server
   const isDevelopment = import.meta.env.MODE === 'development';
   
   if (isDevelopment) {
-    console.log('🔗 Using development backend URL: http://localhost:5001');
     return 'http://localhost:5001';
   } else {
-    // 3. Production environment
-    console.log('🔗 Using production backend URL: https://dijinew-api.vercel.app');
-    return 'https://dijinew-api.vercel.app';
+    // Production environment
+    // Geçici çözüm: localhost backend kullan
+    return 'http://localhost:5001';
   }
 };
 

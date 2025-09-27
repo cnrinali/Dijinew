@@ -3,7 +3,6 @@ const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 const emailService = require('../../services/emailService');
 const qrcode = require('qrcode');
-const { getWizardUrl, getQRUrl } = require('../../config/urls');
 
 // Helper function to generate QR code for card
 const generateCardQRCode = async (cardData) => {
@@ -107,39 +106,17 @@ const createSimpleWizard = async (req, res) => {
             
             if (hasPermanentSlugColumn) {
                 request.input('permanentSlug', sql.NVarChar(255), uniqueSlug);
-                // OUTPUT clause trigger'larla uyumlu değil, ayrı SELECT kullan
-                await request.query(`
+                cardResult = await request.query(`
                     INSERT INTO Cards (cardName, customSlug, name, email, userId, companyId, permanentSlug, isActive)
+                    OUTPUT INSERTED.id, INSERTED.customSlug, INSERTED.permanentSlug
                     VALUES (@cardName, @customSlug, @name, @email, @userId, @companyId, @permanentSlug, @isActive)
                 `);
-
-                // Oluşturulan kartı ayrı sorgu ile al
-                const cardSelectResult = await pool.request()
-                    .input('customSlug', sql.NVarChar(255), uniqueSlug)
-                    .query(`
-                        SELECT TOP 1 id, customSlug, permanentSlug 
-                        FROM Cards 
-                        WHERE customSlug = @customSlug
-                        ORDER BY createdAt DESC
-                    `);
-                cardResult = cardSelectResult;
             } else {
-                // OUTPUT clause trigger'larla uyumlu değil, ayrı SELECT kullan
-                await request.query(`
+                cardResult = await request.query(`
                     INSERT INTO Cards (cardName, customSlug, name, email, userId, companyId, isActive)
+                    OUTPUT INSERTED.id, INSERTED.customSlug
                     VALUES (@cardName, @customSlug, @name, @email, @userId, @companyId, @isActive)
                 `);
-
-                // Oluşturulan kartı ayrı sorgu ile al
-                const cardSelectResult = await pool.request()
-                    .input('customSlug', sql.NVarChar(255), uniqueSlug)
-                    .query(`
-                        SELECT TOP 1 id, customSlug 
-                        FROM Cards 
-                        WHERE customSlug = @customSlug
-                        ORDER BY createdAt DESC
-                    `);
-                cardResult = cardSelectResult;
             }
         } else {
             // CompanyId kolonu yoksa veya bireysel kullanıcıysa normal oluştur
@@ -153,39 +130,17 @@ const createSimpleWizard = async (req, res) => {
             
             if (hasPermanentSlugColumn) {
                 request.input('permanentSlug', sql.NVarChar(255), uniqueSlug);
-                // OUTPUT clause trigger'larla uyumlu değil, ayrı SELECT kullan
-                await request.query(`
+                cardResult = await request.query(`
                     INSERT INTO Cards (cardName, customSlug, name, email, userId, permanentSlug, isActive)
+                    OUTPUT INSERTED.id, INSERTED.customSlug, INSERTED.permanentSlug
                     VALUES (@cardName, @customSlug, @name, @email, @userId, @permanentSlug, @isActive)
                 `);
-
-                // Oluşturulan kartı ayrı sorgu ile al
-                const cardSelectResult = await pool.request()
-                    .input('customSlug', sql.NVarChar(255), uniqueSlug)
-                    .query(`
-                        SELECT TOP 1 id, customSlug, permanentSlug 
-                        FROM Cards 
-                        WHERE customSlug = @customSlug
-                        ORDER BY createdAt DESC
-                    `);
-                cardResult = cardSelectResult;
             } else {
-                // OUTPUT clause trigger'larla uyumlu değil, ayrı SELECT kullan
-                await request.query(`
+                cardResult = await request.query(`
                     INSERT INTO Cards (cardName, customSlug, name, email, userId, isActive)
+                    OUTPUT INSERTED.id, INSERTED.customSlug
                     VALUES (@cardName, @customSlug, @name, @email, @userId, @isActive)
                 `);
-
-                // Oluşturulan kartı ayrı sorgu ile al
-                const cardSelectResult = await pool.request()
-                    .input('customSlug', sql.NVarChar(255), uniqueSlug)
-                    .query(`
-                        SELECT TOP 1 id, customSlug 
-                        FROM Cards 
-                        WHERE customSlug = @customSlug
-                        ORDER BY createdAt DESC
-                    `);
-                cardResult = cardSelectResult;
             }
         }
 
@@ -193,8 +148,7 @@ const createSimpleWizard = async (req, res) => {
         console.log('💳 Card creation result:', card);
         
         // Token'ı veritabanına kaydet
-        // OUTPUT clause trigger'larla uyumlu değil, ayrı SELECT kullan
-        await pool.request()
+        const tokenResult = await pool.request()
             .input('token', sql.NVarChar, token)
             .input('email', sql.NVarChar, email)
             .input('createdBy', sql.Int, userId)
@@ -204,31 +158,41 @@ const createSimpleWizard = async (req, res) => {
             .input('expiresAt', sql.DateTime2, expiresAt)
             .query(`
                 INSERT INTO SimpleWizardTokens (token, email, createdBy, createdByType, companyId, cardId, expiresAt)
+                OUTPUT INSERTED.id, INSERTED.token, INSERTED.email, INSERTED.expiresAt, INSERTED.createdAt
                 VALUES (@token, @email, @createdBy, @createdByType, @companyId, @cardId, @expiresAt)
             `);
 
-        // Oluşturulan token'ı ayrı sorgu ile al
-        const tokenSelectResult = await pool.request()
-            .input('token', sql.NVarChar, token)
-            .query(`
-                SELECT TOP 1 id, token, email, expiresAt, createdAt 
-                FROM SimpleWizardTokens 
-                WHERE token = @token
-                ORDER BY createdAt DESC
-            `);
-        const tokenResult = tokenSelectResult;
-
         const wizardToken = tokenResult.recordset[0];
         
-        // Wizard URL oluştur - Merkezi config kullan
-        const wizardUrl = getWizardUrl(card.customSlug, token, req);
+        // Wizard URL oluştur - Environment variable kullan
+        let clientBaseUrl = process.env.CLIENT_URL;
+        
+        if (!clientBaseUrl) {
+            // Fallback: Request header'larından domain tespit et
+            const host = req.get('host');
+            const origin = req.get('origin');
+            
+            if (host && host.includes('localhost')) {
+                clientBaseUrl = 'http://localhost:5173';
+            } else if (origin && origin.includes('dijinew.vercel.app')) {
+                clientBaseUrl = 'https://dijinew.vercel.app';
+            } else if (host) {
+                clientBaseUrl = `https://${host.replace(':5001', '')}`;
+            } else {
+                // Son fallback
+                clientBaseUrl = 'https://dijinew.vercel.app';
+            }
+        }
+        
+        console.log('🔗 Client Base URL:', clientBaseUrl);
+        const wizardUrl = `${clientBaseUrl}/wizard/${card.customSlug}?token=${token}`;
 
         // Kart için QR kod oluştur
         const qrResult = await generateCardQRCode(card);
         let qrCodeUrl = null;
         
         if (qrResult.success) {
-            qrCodeUrl = getQRUrl(card.customSlug, req);
+            qrCodeUrl = `${clientBaseUrl}/qr/${card.customSlug}`;
             console.log('QR kod başarıyla oluşturuldu:', qrResult.cardPath);
         } else {
             console.error('QR kod oluşturulamadı:', qrResult.error);
@@ -884,37 +848,14 @@ const debugDatabaseSchema = async (req, res) => {
         }
     };
 
-// Environment test endpoint
-const testEnvironment = async (req, res) => {
-    try {
-        res.json({
-            success: true,
-            environment: {
-                NODE_ENV: process.env.NODE_ENV,
-                CLIENT_URL: process.env.CLIENT_URL,
-                requestHost: req.get('host'),
-                requestOrigin: req.get('origin'),
-                requestReferer: req.get('referer')
-            }
-        });
-    } catch (error) {
-        console.error('Environment test error:', error);
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
-    }
-};
-
-module.exports = {
-    createSimpleWizard,
-    validateSimpleWizardToken,
-    getCardByToken,
-    updateCardByToken,
-    updateCardOwnership,
-    markSimpleTokenAsUsed,
-    getUserSimpleWizards,
-    debugDatabaseSchema,
-    testPermanentSlug,
-    testEnvironment
-};
+    module.exports = {
+        createSimpleWizard,
+        validateSimpleWizardToken,
+        getCardByToken,
+        updateCardByToken,
+        updateCardOwnership,
+        markSimpleTokenAsUsed,
+        getUserSimpleWizards,
+        debugDatabaseSchema,
+        testPermanentSlug
+    };

@@ -166,35 +166,17 @@ const createCard = async (req, res) => {
             insertRequest.input('customSlug', sql.NVarChar, slugToCheck); // slug'ı ekle (null olabilir)
             
             // INSERT ve OUTPUT sorgusuna customSlug ekle
-            // OUTPUT clause trigger'larla uyumlu değil, ayrı SELECT kullan
             const insertResult = await insertRequest.query(`
                 INSERT INTO Cards (companyId, userId, name, title, email, phone, website, address, status, customSlug)
+                OUTPUT INSERTED.id, INSERTED.companyId, INSERTED.userId, INSERTED.name, INSERTED.title, INSERTED.email, INSERTED.phone, INSERTED.website, INSERTED.address, INSERTED.status, INSERTED.customSlug, INSERTED.createdAt, INSERTED.updatedAt 
                 VALUES (@companyId, @userId, @name, @title, @email, @phone, @website, @address, @status, @customSlug)
             `);
 
-            if (insertResult.rowsAffected[0] === 0) {
-                await transaction.rollback();
-                return res.status(500).json({ message: 'Kart oluşturulamadı.' });
+            if (insertResult.recordset.length === 0) {
+                throw new Error('Kart oluşturulamadı, ekleme sonucu boş.');
             }
 
-            // Oluşturulan kartı ayrı sorgu ile al
-            const selectRequest = new sql.Request(transaction);
-            selectRequest.input('companyId', sql.Int, companyId);
-            selectRequest.input('userId', sql.Int, userId);
-            selectRequest.input('name', sql.NVarChar, name);
-            const selectResult = await selectRequest.query(`
-                SELECT TOP 1 id, companyId, userId, name, title, email, phone, website, address, status, customSlug, createdAt, updatedAt 
-                FROM Cards 
-                WHERE companyId = @companyId AND userId = @userId AND name = @name
-                ORDER BY createdAt DESC
-            `);
-
-            if (selectResult.recordset.length === 0) {
-                await transaction.rollback();
-                return res.status(500).json({ message: 'Oluşturulan kart bilgisi alınamadı.' });
-            }
-
-            const newCard = selectResult.recordset[0];
+            const newCard = insertResult.recordset[0];
 
             // QR Kodunu oluştur (newCard'da customSlug olacak)
             const qrCodeData = await generateQRCodeDataURL(newCard);
@@ -387,30 +369,35 @@ const updateCard = async (req, res) => {
                 updateRequest.input('customSlug', sql.NVarChar, slugToCheck); // null olabilir
             }
 
-            // OUTPUT clause trigger'larla uyumlu değil, ayrı SELECT kullan
-            const updateQuery = `UPDATE Cards SET ${setClauses} WHERE id = @cardId`;
+            // OUTPUT tablosuna ve sorgusuna customSlug ekle
+            const declareOutputTable = `
+                DECLARE @UpdatedCards TABLE (
+                    id INT, companyId INT NULL, userId INT NULL, name NVARCHAR(MAX),
+                    title NVARCHAR(MAX), email NVARCHAR(MAX), phone NVARCHAR(MAX),
+                    website NVARCHAR(MAX), address NVARCHAR(MAX), status BIT,
+                    customSlug NVARCHAR(MAX) NULL, -- Eklendi
+                    createdAt DATETIME2, updatedAt DATETIME2, qrCodeData NVARCHAR(MAX) NULL
+                );
+            `;
+            
+            const updateQuery = `
+                ${declareOutputTable}
+                UPDATE Cards SET ${setClauses}
+                OUTPUT INSERTED.id, INSERTED.companyId, INSERTED.userId, INSERTED.name, INSERTED.title, INSERTED.email, INSERTED.phone, INSERTED.website, INSERTED.address, INSERTED.status, INSERTED.customSlug, INSERTED.createdAt, INSERTED.updatedAt, INSERTED.qrCodeData 
+                INTO @UpdatedCards
+                WHERE id = @cardId;
+
+                SELECT * FROM @UpdatedCards;
+            `;
+            
             const updateResult = await updateRequest.query(updateQuery);
 
-            if (updateResult.rowsAffected[0] === 0) {
+            if (updateResult.recordset.length === 0) {
                 await transaction.rollback();
-                return res.status(404).json({ message: 'Güncellenecek kart bulunamadı.' });
+                return res.status(404).json({ message: 'Kart güncellenirken bir hata oluştu.' });
             }
 
-            // Güncellenmiş kartı ayrı sorgu ile al
-            const selectRequest = new sql.Request(transaction);
-            selectRequest.input('cardId', sql.Int, cardId);
-            const selectResult = await selectRequest.query(`
-                SELECT id, companyId, userId, name, title, email, phone, website, address, status, customSlug, createdAt, updatedAt, qrCodeData 
-                FROM Cards 
-                WHERE id = @cardId
-            `);
-
-            if (selectResult.recordset.length === 0) {
-                await transaction.rollback();
-                return res.status(404).json({ message: 'Güncellenmiş kart bilgisi alınamadı.' });
-            }
-
-            const updatedCard = selectResult.recordset[0];
+            const updatedCard = updateResult.recordset[0];
             
             // QR Kodunu yeniden oluştur (updatedCard'da yeni slug olabilir)
             const qrCodeData = await generateQRCodeDataURL(updatedCard);
