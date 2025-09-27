@@ -10,7 +10,8 @@ const {
     markSimpleTokenAsUsed,
     getUserSimpleWizards,
     debugDatabaseSchema,
-    testPermanentSlug
+    testPermanentSlug,
+    testEnvironment
 } = require('./simple-wizard.controller');
 
 // Sihirbaz oluştur (Admin/Corporate için - korumalı)
@@ -39,5 +40,8 @@ router.get('/debug-schema', debugDatabaseSchema);
 
 // Debug: PermanentSlug test (Herkese açık - debugging için)
 router.get('/test-permanent-slug', testPermanentSlug);
+
+// Debug: Environment test (Herkese açık - debugging için)
+router.get('/test-environment', testEnvironment);
 
 module.exports = router;

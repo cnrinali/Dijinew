@@ -164,27 +164,31 @@ const createSimpleWizard = async (req, res) => {
 
         const wizardToken = tokenResult.recordset[0];
         
-        // Wizard URL oluştur - Environment variable kullan
-        let clientBaseUrl = process.env.CLIENT_URL;
+        // Wizard URL oluştur - Production'da her zaman dijinew.vercel.app kullan
+        console.log('🔍 Environment CLIENT_URL:', process.env.CLIENT_URL);
+        console.log('🔍 NODE_ENV:', process.env.NODE_ENV);
+        console.log('🔍 Request host:', req.get('host'));
+        console.log('🔍 Request origin:', req.get('origin'));
+        console.log('🔍 Request referer:', req.get('referer'));
         
-        if (!clientBaseUrl) {
-            // Fallback: Request header'larından domain tespit et
-            const host = req.get('host');
-            const origin = req.get('origin');
-            
-            if (host && host.includes('localhost')) {
-                clientBaseUrl = 'http://localhost:5173';
-            } else if (origin && origin.includes('dijinew.vercel.app')) {
-                clientBaseUrl = 'https://dijinew.vercel.app';
-            } else if (host) {
-                clientBaseUrl = `https://${host.replace(':5001', '')}`;
-            } else {
-                // Son fallback
-                clientBaseUrl = 'https://dijinew.vercel.app';
-            }
+        let clientBaseUrl;
+        
+        // Production'da her zaman dijinew.vercel.app kullan
+        const isProduction = process.env.NODE_ENV === 'production' || 
+                            req.get('host')?.includes('vercel.app') || 
+                            req.get('origin')?.includes('dijinew.vercel.app') ||
+                            req.get('referer')?.includes('dijinew.vercel.app');
+        
+        if (isProduction) {
+            clientBaseUrl = 'https://dijinew.vercel.app';
+            console.log('🔍 Using production URL (hardcoded):', clientBaseUrl);
+        } else {
+            // Development'da localhost kullan
+            clientBaseUrl = 'http://localhost:5173';
+            console.log('🔍 Using development URL:', clientBaseUrl);
         }
         
-        console.log('🔗 Client Base URL:', clientBaseUrl);
+        console.log('🔗 Final Client Base URL:', clientBaseUrl);
         const wizardUrl = `${clientBaseUrl}/wizard/${card.customSlug}?token=${token}`;
 
         // Kart için QR kod oluştur
@@ -848,14 +852,37 @@ const debugDatabaseSchema = async (req, res) => {
         }
     };
 
-    module.exports = {
-        createSimpleWizard,
-        validateSimpleWizardToken,
-        getCardByToken,
-        updateCardByToken,
-        updateCardOwnership,
-        markSimpleTokenAsUsed,
-        getUserSimpleWizards,
-        debugDatabaseSchema,
-        testPermanentSlug
-    };
+// Environment test endpoint
+const testEnvironment = async (req, res) => {
+    try {
+        res.json({
+            success: true,
+            environment: {
+                NODE_ENV: process.env.NODE_ENV,
+                CLIENT_URL: process.env.CLIENT_URL,
+                requestHost: req.get('host'),
+                requestOrigin: req.get('origin'),
+                requestReferer: req.get('referer')
+            }
+        });
+    } catch (error) {
+        console.error('Environment test error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+module.exports = {
+    createSimpleWizard,
+    validateSimpleWizardToken,
+    getCardByToken,
+    updateCardByToken,
+    updateCardOwnership,
+    markSimpleTokenAsUsed,
+    getUserSimpleWizards,
+    debugDatabaseSchema,
+    testPermanentSlug,
+    testEnvironment
+};
