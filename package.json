@@ -7,9 +7,10 @@
     "npm": ">=8.0.0"
   },
   "scripts": {
-    "build": "cd client && npm install && npm run build",
-    "start": "cd client && npm run preview",
-    "dev": "cd client && npm run dev"
+    "build": "npm run build --prefix client",
+    "start": "npm run preview --prefix client",
+    "dev": "npm run dev --prefix client",
+    "vercel-build": "cd client && npm ci && npm run build"
   },
   "dependencies": {
     "jszip": "^3.10.1",
