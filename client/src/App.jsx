@@ -38,7 +38,6 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 const navItems = [
   { label: 'Ana Sayfa', path: '/home', public: true },
   { label: 'Giriş Yap', path: '/login', public: true, hideWhenLoggedIn: true },
-  { label: 'Kayıt Ol', path: '/register', public: true, hideWhenLoggedIn: true },
   { label: 'Profilim', path: '/profile', roles: ['user', 'admin', 'corporate'] },
   { label: 'Dijital Kartım', path: '/cards', roles: ['user'] },
   { label: 'İstatistikler', path: '/analytics', roles: ['user', 'admin', 'corporate'] },
