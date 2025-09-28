@@ -330,21 +330,9 @@ function CorporateCardsPage() {
                             <Typography variant="h6" sx={{ color: 'text.secondary', mb: 1 }}>
                                 Henüz kartvizit yok
                             </Typography>
-                            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
-                                İlk kartvizitinizi oluşturmak için "Yeni Kartvizit" butonuna tıklayın
+                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                İlk kartvizitinizi oluşturmak için yukarıdaki butonları kullanın
                             </Typography>
-                            <Box sx={{ display: 'flex', gap: 1 }}>
-                                <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/cards/new')}>
-                                    Manuel Kurulum
-                                </Button>
-                                                                 <Button
-                                     variant="outlined"
-                                     startIcon={<ContentCopyIcon />}
-                                     onClick={() => setEmailWizardOpen(true)}
-                                 >
-                                     Sihirbaz Oluştur
-                                 </Button>
-                            </Box>
                         </Box>
                     ) : (
                         <TableContainer>

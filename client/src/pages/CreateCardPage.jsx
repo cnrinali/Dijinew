@@ -550,7 +550,7 @@ function CreateCardPage() {
                                                 label="İsim Soyisim"
                                                 value={formData.name}
                                                 onChange={onChange}
-                                                disabled={loading || formData.selectedUserId}
+                                                disabled={loading}
                                                 sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                                             />
                                         </Grid>
@@ -588,7 +588,7 @@ function CreateCardPage() {
                                                 type="tel"
                                                 value={formData.phone}
                                                 onChange={onChange}
-                                                disabled={loading || formData.selectedUserId}
+                                                disabled={loading}
                                                 sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                                             />
                                         </Grid>
@@ -601,7 +601,7 @@ function CreateCardPage() {
                                                 type="email"
                                                 value={formData.email}
                                                 onChange={onChange}
-                                                disabled={loading || formData.selectedUserId}
+                                                disabled={loading}
                                                 sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                                             />
                                         </Grid>
