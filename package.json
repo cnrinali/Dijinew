@@ -10,7 +10,7 @@
     "build": "npm run build --prefix client",
     "start": "npm run preview --prefix client",
     "dev": "npm run dev --prefix client",
-    "vercel-build": "cd client && npm ci && npm run build"
+    "vercel-build": "cd client && npm install && npm run vercel-build"
   },
   "dependencies": {
     "jszip": "^3.10.1",
