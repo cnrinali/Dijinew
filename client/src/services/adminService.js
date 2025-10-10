@@ -20,7 +20,7 @@ const getAuthConfig = () => {
 // Excel export için FormData'yı response type ile kullanmak gerekiyor.
 // File download için özel header'lar eklenecek.
 
-const API_URL = API_ENDPOINTS.ADMIN; // https://dijinew.onrender.com/api/admin
+const API_URL = API_ENDPOINTS.ADMIN; // https://api.dijinew.com/api/admin
 
 // Admin stats endpoint'i
 export const getAdminStats = async () => {

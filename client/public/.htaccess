@@ -1,0 +1,11 @@
+RewriteEngine On
+RewriteBase /
+
+# Doğrudan var olan dosya/klasörleri sun
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Kalan tüm istekleri SPA girişine yönlendir
+RewriteRule . /index.html [L]
+

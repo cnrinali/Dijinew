@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api.js';
 
-const API_URL = API_ENDPOINTS.USERS; // https://dijinew.onrender.com/api/users
+const API_URL = API_ENDPOINTS.USERS; // https://api.dijinew.com/api/users
 
 // Axios instance oluştur (isteğe bağlı, ama token yönetimi için faydalı olabilir)
 // Şimdilik basit axios kullanıyoruz, token AuthContext'ten alınmalı veya interceptor ile eklenmeli.

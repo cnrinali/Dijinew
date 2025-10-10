@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Box,
     Card,
@@ -15,9 +15,17 @@ import {
     IconButton,
     Stack,
     Paper,
-    Chip
+    Chip,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Button,
+    Snackbar,
+    Alert
 } from '@mui/material';
 import analyticsService, { trackClick } from '../services/analyticsService';
+import { QRCodeSVG } from 'qrcode.react';
 
 // Icon Imports
 import PhoneIcon from '@mui/icons-material/Phone';
@@ -36,6 +44,9 @@ import LocalFloristIcon from '@mui/icons-material/LocalFlorist';
 import HomeIcon from '@mui/icons-material/Home';
 import DeliveryDiningIcon from '@mui/icons-material/DeliveryDining';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
+import QrCodeIcon from '@mui/icons-material/QrCode';
+import ShareIcon from '@mui/icons-material/Share';
+import CloseIcon from '@mui/icons-material/Close';
 import { formatIban, getBankLogo } from '../constants/turkishBanks';
 
 // Pazaryeri ikonları ve isimleri
@@ -71,8 +82,96 @@ const getMarketplaceName = (marketplace) => {
     }
 };
 
+// Ortak QR kod ve paylaş fonksiyonları
+const useCardActions = (cardData) => {
+    const [qrModalOpen, setQrModalOpen] = useState(false);
+    const [shareSnackbarOpen, setShareSnackbarOpen] = useState(false);
+
+    const cardUrl = `${window.location.origin}/card/${cardData?.customSlug || cardData?.id}`;
+
+    const handleQrClick = () => {
+        if (cardData?.id) {
+            trackClick(cardData.id, 'qr_code');
+        }
+        setQrModalOpen(true);
+    };
+
+    const handleShareClick = async () => {
+        if (cardData?.id) {
+            trackClick(cardData.id, 'share');
+        }
+
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: cardData?.name || 'Kartvizit',
+                    text: `${cardData?.name || 'Kartvizit'} - ${cardData?.title || ''}`,
+                    url: cardUrl
+                });
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    copyToClipboard();
+                }
+            }
+        } else {
+            copyToClipboard();
+        }
+    };
+
+    const copyToClipboard = async () => {
+        try {
+            await navigator.clipboard.writeText(cardUrl);
+            setShareSnackbarOpen(true);
+        } catch (error) {
+            console.error('Panoya kopyalama hatası:', error);
+        }
+    };
+
+    const QrModal = () => (
+        <Dialog open={qrModalOpen} onClose={() => setQrModalOpen(false)} maxWidth="xs" fullWidth>
+            <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                Kartvizit QR Kodu
+                <IconButton onClick={() => setQrModalOpen(false)} size="small">
+                    <CloseIcon />
+                </IconButton>
+            </DialogTitle>
+            <DialogContent sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                <QRCodeSVG value={cardUrl} size={256} includeMargin={true} />
+            </DialogContent>
+            <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
+                <Button variant="outlined" onClick={() => setQrModalOpen(false)}>
+                    Kapat
+                </Button>
+            </DialogActions>
+        </Dialog>
+    );
+
+    const ShareSnackbar = () => (
+        <Snackbar
+            open={shareSnackbarOpen}
+            autoHideDuration={3000}
+            onClose={() => setShareSnackbarOpen(false)}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+            <Alert onClose={() => setShareSnackbarOpen(false)} severity="success">
+                Link panoya kopyalandı!
+            </Alert>
+        </Snackbar>
+    );
+
+    return {
+        handleQrClick,
+        handleShareClick,
+        QrModal,
+        ShareSnackbar,
+        cardUrl
+    };
+};
+
 // Default tema (şu anki)
 export const DefaultTheme = ({ cardData }) => {
+    const { handleQrClick, handleShareClick, QrModal, ShareSnackbar } = useCardActions(cardData);
+
     // Kart görüntülenmesini kaydet
     useEffect(() => {
         if (cardData?.id) {
@@ -417,11 +516,42 @@ export const DefaultTheme = ({ cardData }) => {
             )}
 
             <Divider />
-            <CardContent sx={{ py: '8px !important', textAlign: 'center' }}>
+            
+            {/* QR Kod ve Paylaş Butonları */}
+            <CardContent sx={{ py: 2, textAlign: 'center' }}>
+                <Stack direction="row" spacing={2} justifyContent="center" sx={{ mb: 2 }}>
+                    <IconButton
+                        onClick={handleQrClick}
+                        sx={{
+                            backgroundColor: 'primary.main',
+                            color: 'white',
+                            '&:hover': {
+                                backgroundColor: 'primary.dark',
+                            },
+                        }}
+                    >
+                        <QrCodeIcon />
+                    </IconButton>
+                    <IconButton
+                        onClick={handleShareClick}
+                        sx={{
+                            backgroundColor: 'secondary.main',
+                            color: 'white',
+                            '&:hover': {
+                                backgroundColor: 'secondary.dark',
+                            },
+                        }}
+                    >
+                        <ShareIcon />
+                    </IconButton>
+                </Stack>
                 <Typography variant="caption" color="text.secondary">
                     {cardData.cardName}
                 </Typography>
             </CardContent>
+            
+            <QrModal />
+            <ShareSnackbar />
         </Card>
     );
 };
@@ -730,6 +860,8 @@ export const MinimalistTheme = ({ cardData }) => {
 
 // İkon Grid Tema (ekran görüntüsündeki gibi)
 export const IconGridTheme = ({ cardData }) => {
+    const { handleQrClick, handleShareClick, QrModal, ShareSnackbar } = useCardActions(cardData);
+
     // Kart görüntülenmesini kaydet
     useEffect(() => {
         if (cardData?.id) {
@@ -834,8 +966,18 @@ export const IconGridTheme = ({ cardData }) => {
                                 <Typography variant="caption" display="block">HAKKIMDA</Typography>
                             </Box>
                         )}
-                        <Box sx={{ textAlign: 'center', cursor: 'pointer', p: 1, borderRadius: 2, backgroundColor: 'grey.100', minWidth: 80 }}>
-                            <BusinessIcon sx={{ fontSize: 28, color: 'grey.600', mb: 0.5 }} />
+                        <Box 
+                            onClick={handleQrClick}
+                            sx={{ textAlign: 'center', cursor: 'pointer', p: 1, borderRadius: 2, backgroundColor: 'primary.50', minWidth: 80 }}
+                        >
+                            <QrCodeIcon sx={{ fontSize: 28, color: 'primary.main', mb: 0.5 }} />
+                            <Typography variant="caption" display="block">QR KOD</Typography>
+                        </Box>
+                        <Box 
+                            onClick={handleShareClick}
+                            sx={{ textAlign: 'center', cursor: 'pointer', p: 1, borderRadius: 2, backgroundColor: 'secondary.50', minWidth: 80 }}
+                        >
+                            <ShareIcon sx={{ fontSize: 28, color: 'secondary.main', mb: 0.5 }} />
                             <Typography variant="caption" display="block">PAYLAŞ</Typography>
                         </Box>
                     </Stack>
@@ -939,6 +1081,9 @@ export const IconGridTheme = ({ cardData }) => {
                     </Typography>
                 </Box>
             </Paper>
+            
+            <QrModal />
+            <ShareSnackbar />
         </Box>
     );
 };

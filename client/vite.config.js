@@ -36,7 +36,7 @@ export default defineConfig(({ mode }) => ({
     // Environment variables
     'import.meta.env.VITE_API_URL': JSON.stringify(
       mode === 'production' 
-        ? 'https://dijinew.onrender.com' 
+        ? 'https://api.dijinew.com' 
         : 'http://localhost:5001'
     )
   }

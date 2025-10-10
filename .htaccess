@@ -1,0 +1,15 @@
+# Passenger ile Node.js uygulamasını başlat
+# Yolunuzu kendi hesabınıza göre düzeltin:
+# /home/KULLANICI_ADI/api.dijinew.com/server -> sizin server klasörünüzün TAM yolu
+
+PassengerAppRoot /home/KULLANICI_ADI/api.dijinew.com/server
+PassengerAppType node
+PassengerStartupFile server.js
+
+# Ortam değişkenleri
+PassengerEnvVar NODE_ENV production
+# cPanel genelde port atar; PORT zorunlu değil. Gerekirse açın:
+# PassengerEnvVar PORT 5001
+
+# İsteğe bağlı - daha okunur hata sayfası
+PassengerFriendlyErrorPages on

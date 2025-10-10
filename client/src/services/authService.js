@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api.js';
 
-const API_URL = API_ENDPOINTS.AUTH + '/'; // https://dijinew.onrender.com/api/auth/
+const API_URL = API_ENDPOINTS.AUTH + '/'; // https://api.dijinew.com/api/auth/
 
 // Register user
 const register = async (userData) => {

@@ -2,7 +2,7 @@ import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api.js';
 
 // Axios instance'ı veya temel URL'yi merkezi bir yerden almak daha iyi olabilir.
-const API_BASE_URL = API_ENDPOINTS.CORPORATE; // https://dijinew.onrender.com/api/corporate
+const API_BASE_URL = API_ENDPOINTS.CORPORATE; // https://api.dijinew.com/api/corporate
 
 // Token'ı localStorage'dan al ve header'a ekle
 const getAuthConfig = () => {

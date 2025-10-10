@@ -31,26 +31,28 @@ if (!fs.existsSync(uploadsDir)){
 // CORS Middleware
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
+
     const allowedOrigins = [
       'http://localhost:3000',
       'http://localhost:5173', // Vite dev server
-      'https://dijinew.vercel.app', // Production frontend
+      'https://dijinew.vercel.app',
+      'https://app.dijinew.com',
+      'https://dijinew.com',
+      'https://www.dijinew.com',
+      'https://api.dijinew.com',
     ];
-    
-    // Allow any Vercel preview URL
+
     if (origin.includes('dijinew') && origin.includes('vercel.app')) {
       return callback(null, true);
     }
-    
+
     if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log('CORS blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
+      return callback(null, true);
     }
+
+    console.log('CORS blocked origin:', origin);
+    return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],

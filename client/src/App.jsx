@@ -34,6 +34,7 @@ import CardWizard from './components/CardWizard';
 import CardCreationChoicePage from './pages/CardCreationChoicePage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import MyDigitalCardPage from './pages/MyDigitalCardPage';
 
 const navItems = [
   { label: 'Ana Sayfa', path: '/home', public: true },
@@ -86,6 +87,7 @@ function AppContent() {
       <Routes>
                         {/* Public card view without navbar */}
                 <Route path="/card/:slug" element={<PublicCardViewPage />} />
+                <Route path="/card/my-digital-card" element={<MyDigitalCardPage />} />
                 <Route path="/qr/:slug" element={<QrCardPage />} />
                 
                 {/* Card Wizard - Public route for new users */}

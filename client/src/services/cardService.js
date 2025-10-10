@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api.js';
 
-const API_URL = API_ENDPOINTS.CARDS; // https://dijinew.onrender.com/api/cards
+const API_URL = API_ENDPOINTS.CARDS; // https://api.dijinew.com/api/cards
 
 // Axios instance oluşturup default header eklemek daha temiz olabilir,
 // ama şimdilik her istekte token'ı manuel ekleyeceğiz
