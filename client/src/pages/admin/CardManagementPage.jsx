@@ -954,7 +954,7 @@ function CardManagementPage() {
                     <CircularProgress />
                 </Box>
             ) : (
-                <Paper sx={{ borderRadius: 3, border: '1px solid', borderColor: 'grey.200' }}>
+                <Paper sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', background: 'background.paper' }}>
                  <DataGrid
                         rows={filteredCards}
                     columns={columns}

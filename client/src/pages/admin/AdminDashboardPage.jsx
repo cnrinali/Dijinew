@@ -651,8 +651,8 @@ function AdminDashboardPage() {
                                 sx={{ 
                                     borderRadius: 3,
                                     border: '1px solid',
-                                    borderColor: 'grey.200',
-                                    background: 'white',
+                                    borderColor: 'divider',
+                                    background: 'background.paper',
                                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                                 }}
                             >

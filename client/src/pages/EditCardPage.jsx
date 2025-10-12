@@ -6,6 +6,7 @@ import { API_ENDPOINTS } from '../config/api.js';
 import { useNotification } from '../context/NotificationContext.jsx';
 import ThemePreview from '../components/ThemePreview';
 import { TURKISH_BANKS, formatIban, validateTurkishIban } from '../constants/turkishBanks';
+import { optimizeImageForUpload } from '../utils/imageCompression.jsx';
 
 // MUI Imports
 import Box from '@mui/material/Box';
@@ -183,22 +184,51 @@ function EditCardPage() {
         }
     }, [cardId, navigate, showNotification]);
 
-    const onChange = (e) => {
+    const onChange = async (e) => {
         if (e.target.type === 'file') {
             const file = e.target.files[0];
             const name = e.target.name;
-            setFormData((prevState) => ({ ...prevState, [name]: file }));
-
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                if (name === 'profileImage') setProfilePreview(reader.result);
-                else if (name === 'coverImage') setCoverPreview(reader.result);
-            };
-            if (file) {
-                reader.readAsDataURL(file);
-            } else {
+            
+            if (!file) {
                 if (name === 'profileImage') setProfilePreview(formData.profileImageUrl || null);
                 else if (name === 'coverImage') setCoverPreview(formData.coverImageUrl || null);
+                return;
+            }
+            
+            try {
+                // Dosya boyutu kontrolü ve sıkıştırma
+                const originalSizeInMB = file.size / (1024 * 1024);
+                console.log(`Orijinal dosya boyutu: ${originalSizeInMB.toFixed(2)}MB`);
+                
+                let optimizedFile = file;
+                
+                // Eğer dosya 10MB'dan büyükse sıkıştır
+                if (originalSizeInMB > 10) {
+                    showNotification('Dosya sıkıştırılıyor, lütfen bekleyin...', 'info');
+                    
+                    optimizedFile = await optimizeImageForUpload(file, 10);
+                    
+                    const optimizedSizeInMB = optimizedFile.size / (1024 * 1024);
+                    const compressionRatio = ((originalSizeInMB - optimizedSizeInMB) / originalSizeInMB * 100).toFixed(1);
+                    
+                    showNotification(
+                        `Dosya sıkıştırıldı: ${originalSizeInMB.toFixed(1)}MB → ${optimizedSizeInMB.toFixed(1)}MB (${compressionRatio}% azaltıldı)`, 
+                        'success'
+                    );
+                }
+                
+                setFormData((prevState) => ({ ...prevState, [name]: optimizedFile }));
+
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    if (name === 'profileImage') setProfilePreview(reader.result);
+                    else if (name === 'coverImage') setCoverPreview(reader.result);
+                };
+                reader.readAsDataURL(optimizedFile);
+                
+            } catch (error) {
+                console.error('Dosya işleme hatası:', error);
+                showNotification('Dosya işlenirken hata oluştu. Lütfen başka bir dosya seçin.', 'error');
             }
         } else {
             const { name, value, type, checked } = e.target;
@@ -267,11 +297,17 @@ function EditCardPage() {
                  errorMsg = err.response.data.message;
                  if (errorMsg.toLowerCase().includes('slug already exists')) {
                      errorMsg = 'Girdiğiniz özel URL zaten başka bir kart tarafından kullanılıyor.';
+                 } else if (errorMsg.toLowerCase().includes('file too large')) {
+                     errorMsg = 'Dosya boyutu çok büyük. Lütfen 10MB\'dan küçük bir dosya seçin.';
+                 } else if (errorMsg.toLowerCase().includes('desteklenmeyen dosya türü')) {
+                     errorMsg = 'Desteklenmeyen dosya türü. Lütfen sadece resim dosyaları (JPG, PNG, GIF) yükleyin.';
                  }
              } else if (axios.isCancel(err)) { 
                  errorMsg = 'İşlem iptal edildi.';
              } else if (err.message.includes('Network Error')) {
                  errorMsg = 'Sunucuya bağlanılamadı. İnternet bağlantınızı kontrol edin.';
+             } else if (err.code === 'ECONNREFUSED') {
+                 errorMsg = 'Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.';
              }
 
             showNotification(errorMsg, 'error');
@@ -374,15 +410,54 @@ function EditCardPage() {
     };
 
     return (
-        <Container component="main" maxWidth="md">
-             <Paper sx={{ p: { xs: 2, md: 4 }, mt: 4, mb: 4 }}>
-                <Typography component="h1" variant="h4" align="center" gutterBottom>
-                    Kartviziti Düzenle
-                </Typography>
+        <Container component="main" maxWidth="lg" sx={{ px: { xs: 0.5, sm: 1, md: 2 } }}>
+             <Paper sx={{ 
+               p: { xs: 1.5, sm: 2.5, md: 4 }, 
+               mt: { xs: 1, sm: 2, md: 3 }, 
+               mb: { xs: 1, sm: 2, md: 3 }, 
+               boxShadow: { xs: 1, sm: 2, md: 3 },
+               mx: { xs: 0.5, sm: 0 }
+             }}>
+                <Box sx={{ borderBottom: 1, borderColor: 'divider', pb: { xs: 1, sm: 2 }, mb: { xs: 2, sm: 3 } }}>
+                    <Typography 
+                      component="h1" 
+                      variant="h4" 
+                      sx={{ 
+                        fontWeight: 600, 
+                        color: 'text.primary',
+                        fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }
+                      }}
+                    >
+                        Kartviziti Düzenle
+                    </Typography>
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary" 
+                      sx={{ 
+                        mt: 1,
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                        display: { xs: 'none', sm: 'block' }
+                      }}
+                    >
+                        Dijital kartvizitinizin bilgilerini güncelleyin ve yönetin
+                    </Typography>
+                </Box>
                 
                 {/* Tab Navigation */}
-                <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-                    <Tabs value={tabValue} onChange={handleTabChange} aria-label="Kart düzenleme sekmeleri">
+                <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: { xs: 2, sm: 3, md: 4 } }}>
+                    <Tabs 
+                      value={tabValue} 
+                      onChange={handleTabChange} 
+                      aria-label="Kart düzenleme sekmeleri"
+                      variant="fullWidth"
+                      sx={{
+                        '& .MuiTab-root': {
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                          minHeight: { xs: 40, sm: 44 },
+                          px: { xs: 1, sm: 2 }
+                        }
+                      }}
+                    >
                         <Tab label="Kart Bilgileri" />
                         <Tab label="Banka Hesapları" />
                     </Tabs>
@@ -391,50 +466,150 @@ function EditCardPage() {
                 {/* Tab 0: Kart Bilgileri */}
                 {tabValue === 0 && (
                     <Box component="form" noValidate onSubmit={onSubmit} sx={{ mt: 1 }}>
-                        <Grid container spacing={3}>
-                        <Grid xs={12} sx={{ textAlign: 'right' }}>
-                             <FormControlLabel
-                                control={<Switch checked={formData.isActive} onChange={onChange} name="isActive" />}
-                                label="Kart Aktif" 
-                                labelPlacement="start"
-                                disabled={formLoading}
-                                sx={{ mb: 1 }}
-                            />
+                        <Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+                        <Grid item xs={12}>
+                            <Paper sx={{ 
+                              p: { xs: 1.5, sm: 2 }, 
+                              backgroundColor: 'background.paper', 
+                              border: '1px solid', 
+                              borderColor: 'divider' 
+                            }}>
+                                <Box sx={{ 
+                                  display: 'flex', 
+                                  flexDirection: { xs: 'column', sm: 'row' },
+                                  justifyContent: 'space-between', 
+                                  alignItems: { xs: 'flex-start', sm: 'center' },
+                                  gap: { xs: 2, sm: 0 }
+                                }}>
+                                    <Box>
+                                        <Typography 
+                                          variant="subtitle1" 
+                                          sx={{ 
+                                            fontWeight: 600,
+                                            fontSize: { xs: '0.875rem', sm: '1rem' }
+                                          }}
+                                        >
+                                            Kart Durumu
+                                        </Typography>
+                                        <Typography 
+                                          variant="body2" 
+                                          color="text.secondary"
+                                          sx={{
+                                            fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                                            display: { xs: 'none', sm: 'block' }
+                                          }}
+                                        >
+                                            Kartınızın aktif/pasif durumunu yönetin
+                                        </Typography>
+                                    </Box>
+                                    <FormControlLabel
+                                        control={<Switch checked={formData.isActive} onChange={onChange} name="isActive" />}
+                                        label="Kart Aktif" 
+                                        labelPlacement="start"
+                                        disabled={formLoading}
+                                        sx={{
+                                          '& .MuiFormControlLabel-label': {
+                                            fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                                          }
+                                        }}
+                                    />
+                                    </Box>
+                            </Paper>
                         </Grid>
                         
-                        <Grid item xs={12} sm={6} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <Typography variant="h6" gutterBottom>Profil Fotoğrafı</Typography>
-                            <Avatar src={profilePreview || '/placeholder-avatar.png'} sx={{ width: 150, height: 150, mb: 2, border: '1px solid lightgrey' }} />
-                            <input type="file" name="profileImage" ref={profileInputRef} onChange={onChange} style={{ display: 'none' }} accept="image/*" />
-                            <Button variant="outlined" onClick={() => profileInputRef.current.click()} disabled={formLoading}>
-                                {formData.profileImageUrl || profilePreview ? 'Değiştir' : 'Profil Resmi Seç'}
-                            </Button>
+                        <Grid item xs={12}>
+                            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'text.primary' }}>
+                                Görsel Yönetimi
+                            </Typography>
                         </Grid>
-                        <Grid item xs={12} sm={6} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: { xs: 2, sm: 0 } }}>
-                            <Typography variant="h6" gutterBottom>Kapak Fotoğrafı</Typography>
-                            <CardMedia
-                                component="img"
-                                image={coverPreview || '/placeholder-cover.png'}
-                                alt="Kapak Fotoğrafı Önizlemesi"
-                                sx={{ width: '100%', height: 150, objectFit: 'cover', mb: 2, borderRadius: 1, border: '1px solid lightgrey' }}
-                            />
-                            <input
-                                type="file"
-                                name="coverImage"
-                                ref={coverInputRef}
-                                onChange={onChange}
-                                style={{ display: 'none' }}
-                                accept="image/*"
-                            />
-                            <Button
-                                variant="outlined"
-                                onClick={() => coverInputRef.current.click()}
-                                disabled={formLoading}
-                            >
-                                {formData.coverImageUrl || coverPreview ? 'Kapak Fotoğrafını Değiştir' : 'Kapak Fotoğrafı Seç'}
-                            </Button>
+                        <Grid item xs={12} sm={6}>
+                            <Paper sx={{ 
+                              p: { xs: 2, sm: 3 }, 
+                              textAlign: 'center', 
+                              border: '1px solid', 
+                              borderColor: 'divider',
+                              backgroundColor: 'background.paper' 
+                            }}>
+                                <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
+                                    Profil Fotoğrafı
+                                </Typography>
+                                <Avatar 
+                                    src={profilePreview || '/placeholder-avatar.png'} 
+                                    sx={{ 
+                                        width: { xs: 100, sm: 120 }, 
+                                        height: { xs: 100, sm: 120 }, 
+                                        mb: 2, 
+                                        border: '2px solid', 
+                                        borderColor: 'grey.300',
+                                        mx: 'auto'
+                                    }} 
+                                />
+                                <input type="file" name="profileImage" ref={profileInputRef} onChange={onChange} style={{ display: 'none' }} accept="image/*" />
+                                <Button 
+                                    variant="outlined" 
+                                    onClick={() => profileInputRef.current.click()} 
+                                    disabled={formLoading}
+                                    sx={{ mb: 1, width: { xs: '100%', sm: 'auto' } }}
+                                >
+                                    {formData.profileImageUrl || profilePreview ? 'Değiştir' : 'Profil Resmi Seç'}
+                                </Button>
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                                    Maksimum 10MB. Büyük dosyalar otomatik sıkıştırılır.
+                                </Typography>
+                            </Paper>
                         </Grid>
-                        <Grid xs={12} sm={6}>
+                        <Grid item xs={12} sm={6}>
+                            <Paper sx={{ 
+                              p: { xs: 2, sm: 3 }, 
+                              textAlign: 'center', 
+                              border: '1px solid', 
+                              borderColor: 'divider',
+                              backgroundColor: 'background.paper' 
+                            }}>
+                                <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
+                                    Kapak Fotoğrafı
+                                </Typography>
+                                <CardMedia
+                                    component="img"
+                                    image={coverPreview || '/placeholder-cover.png'}
+                                    alt="Kapak Fotoğrafı Önizlemesi"
+                                    sx={{ 
+                                        width: '100%', 
+                                        height: { xs: 100, sm: 120 }, 
+                                        objectFit: 'cover', 
+                                        mb: 2, 
+                                        borderRadius: 1, 
+                                        border: '2px solid', 
+                                        borderColor: 'grey.300'
+                                    }}
+                                />
+                                <input
+                                    type="file"
+                                    name="coverImage"
+                                    ref={coverInputRef}
+                                    onChange={onChange}
+                                    style={{ display: 'none' }}
+                                    accept="image/*"
+                                />
+                                <Button
+                                    variant="outlined"
+                                    onClick={() => coverInputRef.current.click()}
+                                    disabled={formLoading}
+                                    sx={{ mb: 1, width: { xs: '100%', sm: 'auto' } }}
+                                >
+                                    {formData.coverImageUrl || coverPreview ? 'Kapak Fotoğrafını Değiştir' : 'Kapak Fotoğrafı Seç'}
+                                </Button>
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                                    Maksimum 10MB. Büyük dosyalar otomatik sıkıştırılır.
+                                </Typography>
+                            </Paper>
+                        </Grid>
+                        <Grid item xs={12}>
+                            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'text.primary' }}>
+                                Temel Bilgiler
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
                             <TextField
                                 name="cardName"
                                 required
@@ -447,7 +622,7 @@ function EditCardPage() {
                                 autoFocus
                             />
                         </Grid>
-                        <Grid xs={12} sm={6}>
+                        <Grid item xs={12} sm={6}>
                             <TextField
                                 name="name"
                                 fullWidth
@@ -458,7 +633,7 @@ function EditCardPage() {
                                 disabled={formLoading}
                             />
                         </Grid>
-                         <Grid xs={12} sm={6}>
+                        <Grid item xs={12} sm={6}>
                             <TextField
                                 name="title"
                                 fullWidth
@@ -469,7 +644,7 @@ function EditCardPage() {
                                 disabled={formLoading}
                             />
                         </Grid>
-                         <Grid xs={12} sm={6}>
+                        <Grid item xs={12} sm={6}>
                             <TextField
                                 name="company"
                                 fullWidth
@@ -480,7 +655,7 @@ function EditCardPage() {
                                 disabled={formLoading}
                             />
                         </Grid>
-                         <Grid xs={12} sm={6}>
+                        <Grid item xs={12} sm={6}>
                             <TextField
                                 name="phone"
                                 fullWidth
@@ -492,7 +667,7 @@ function EditCardPage() {
                                 disabled={formLoading}
                             />
                         </Grid>
-                         <Grid xs={12} sm={6}>
+                        <Grid item xs={12} sm={6}>
                             <TextField
                                 name="email"
                                 fullWidth
@@ -504,7 +679,7 @@ function EditCardPage() {
                                 disabled={formLoading}
                             />
                         </Grid>
-                         <Grid xs={12}>
+                        <Grid item xs={12} sm={6}>
                             <TextField
                                 name="website"
                                 fullWidth
@@ -516,7 +691,7 @@ function EditCardPage() {
                                 disabled={formLoading}
                             />
                         </Grid>
-                        <Grid xs={12}>
+                        <Grid item xs={12}>
                             <TextField
                                 name="address"
                                 fullWidth
@@ -529,7 +704,7 @@ function EditCardPage() {
                                 disabled={formLoading}
                             />
                         </Grid>
-                         <Grid xs={12}>
+                        <Grid item xs={12}>
                             <TextField
                                 name="bio"
                                 fullWidth
@@ -542,7 +717,12 @@ function EditCardPage() {
                                 disabled={formLoading}
                             />
                         </Grid>
-                        <Grid xs={12} sm={6}>
+                        <Grid item xs={12}>
+                            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'text.primary' }}>
+                                Gelişmiş Ayarlar
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
                             <TextField
                                 name="customSlug"
                                 fullWidth
@@ -554,7 +734,7 @@ function EditCardPage() {
                                 helperText="Boş bırakırsanız veya değiştirmezseniz mevcut kalır. Sadece küçük harf, rakam ve tire kullanın."
                             />
                         </Grid>
-                        <Grid xs={12} sm={6}>
+                        <Grid item xs={12} sm={6}>
                             <FormControl fullWidth disabled={formLoading}>
                                 <InputLabel id="theme-select-label">Tema</InputLabel>
                                 <Select
@@ -578,9 +758,14 @@ function EditCardPage() {
                             </FormControl>
                         </Grid>
 
-                         <Grid item xs={12}>
-                            <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>Sosyal Medya (isteğe bağlı)</Typography>
-                         </Grid>
+                        <Grid item xs={12}>
+                            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'text.primary' }}>
+                                Sosyal Medya Bağlantıları
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                Sosyal medya profillerinizi ekleyerek kartınızı daha etkili hale getirin
+                            </Typography>
+                        </Grid>
                          <Grid item xs={12} sm={6} md={4}>
                              <TextField
                                 name="linkedinUrl"
@@ -638,9 +823,11 @@ function EditCardPage() {
 
                         {/* Pazaryeri Alanları */}
                         <Grid item xs={12}>
-                            <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>Pazaryeri Linkleri (isteğe bağlı)</Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                Türkiye'deki popüler pazaryerlerindeki mağaza linklerinizi ekleyebilirsiniz
+                            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'text.primary' }}>
+                                E-ticaret Platformları
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                                Türkiye'deki popüler e-ticaret platformlarındaki mağaza linklerinizi ekleyebilirsiniz
                             </Typography>
                         </Grid>
                         
@@ -873,33 +1060,51 @@ function EditCardPage() {
                         </Grid>
 
                         {/* Tema Önizlemesi */}
-                        <Grid xs={12}>
+                        <Grid item xs={12}>
+                            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'text.primary' }}>
+                                Tema Önizlemesi
+                            </Typography>
                             <ThemePreview formData={formData} />
                         </Grid>
 
                         </Grid>
+                        <Box sx={{ mt: 4, pt: 3, borderTop: 1, borderColor: 'divider' }}>
                         <Button
                             type="submit"
                             fullWidth
                             variant="contained"
-                            sx={{ mt: 3, mb: 2 }}
+                            size="large"
                             disabled={formLoading || pageLoading}
+                            sx={{ 
+                                py: { xs: 1.5, sm: 2 },
+                                fontSize: { xs: '0.875rem', sm: '1rem' },
+                                fontWeight: 600
+                            }}
                         >
                             {formLoading ? <CircularProgress size={24} /> : 'Değişiklikleri Kaydet'}
                         </Button>
+                        </Box>
                     </Box>
                 )}
 
                 {/* Tab 1: Banka Hesapları */}
                 {tabValue === 1 && (
                     <Box sx={{ mt: 1 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                            <Typography variant="h6">Banka Hesapları</Typography>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                            <Box>
+                                <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                                    Banka Hesapları
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    Kartınızda görünecek banka hesap bilgilerinizi yönetin
+                                </Typography>
+                            </Box>
                             <Button
                                 variant="contained"
                                 startIcon={<AddIcon />}
                                 onClick={() => handleBankDialogOpen()}
                                 disabled={bankAccountsLoading}
+                                sx={{ fontWeight: 500 }}
                             >
                                 Hesap Ekle
                             </Button>
@@ -910,33 +1115,63 @@ function EditCardPage() {
                                 <CircularProgress />
                             </Box>
                         ) : bankAccounts.length === 0 ? (
-                            <Paper sx={{ p: 3, textAlign: 'center' }}>
-                                <AccountBalanceIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
-                                <Typography variant="body1" color="text.secondary">
+                            <Paper sx={{ 
+                              p: 4, 
+                              textAlign: 'center', 
+                              border: '2px dashed', 
+                              borderColor: 'divider',
+                              backgroundColor: 'background.paper'
+                            }}>
+                                <AccountBalanceIcon sx={{ fontSize: 48, color: 'grey.400', mb: 2 }} />
+                                <Typography variant="h6" sx={{ mb: 1, fontWeight: 600, color: 'text.primary' }}>
                                     Henüz banka hesabı eklenmemiş
                                 </Typography>
-                                <Typography variant="body2" color="text.secondary">
+                                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                                     Kartvizitinizde gösterilecek banka hesap bilgilerini ekleyebilirsiniz
                                 </Typography>
+                                <Button
+                                    variant="outlined"
+                                    startIcon={<AddIcon />}
+                                    onClick={() => handleBankDialogOpen()}
+                                    sx={{ fontWeight: 500 }}
+                                >
+                                    İlk Hesabı Ekle
+                                </Button>
                             </Paper>
                         ) : (
-                            <List>
+                            <List sx={{ '& .MuiListItem-root': { px: 0 } }}>
                                 {bankAccounts.map((account) => (
-                                    <ListItem key={account.id} divider>
+                                    <ListItem 
+                                        key={account.id} 
+                                        sx={{ 
+                                            p: 3, 
+                                            mb: 2, 
+                                            border: '1px solid', 
+                                            borderColor: 'divider',
+                                            borderRadius: 2,
+                                            backgroundColor: 'background.paper',
+                                            '&:hover': {
+                                                borderColor: 'primary.main',
+                                                boxShadow: 1
+                                            }
+                                        }}
+                                    >
                                         <ListItemText
                                             primary={
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                                                     <AccountBalanceIcon color="primary" />
-                                                    <Typography variant="subtitle1">{account.bankName}</Typography>
+                                                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                                                        {account.bankName}
+                                                    </Typography>
                                                 </Box>
                                             }
                                             secondary={
                                                 <Box>
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        {formatIban(account.iban)}
+                                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                                                        <strong>IBAN:</strong> {formatIban(account.iban)}
                                                     </Typography>
                                                     <Typography variant="body2" color="text.secondary">
-                                                        Hesap Sahibi: {account.accountName}
+                                                        <strong>Hesap Sahibi:</strong> {account.accountName}
                                                     </Typography>
                                                 </Box>
                                             }
@@ -946,7 +1181,7 @@ function EditCardPage() {
                                                 edge="end"
                                                 aria-label="düzenle"
                                                 onClick={() => handleBankDialogOpen(account)}
-                                                sx={{ mr: 1 }}
+                                                sx={{ mr: 1, color: 'primary.main' }}
                                             >
                                                 <EditIcon />
                                             </IconButton>
@@ -968,8 +1203,13 @@ function EditCardPage() {
 
                 {/* Banka Hesabı Ekleme/Düzenleme Modalı */}
                 <Dialog open={bankDialogOpen} onClose={handleBankDialogClose} maxWidth="sm" fullWidth>
-                    <DialogTitle>
-                        {editingBankAccount ? 'Banka Hesabını Düzenle' : 'Yeni Banka Hesabı Ekle'}
+                    <DialogTitle sx={{ pb: 1 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                            {editingBankAccount ? 'Banka Hesabını Düzenle' : 'Yeni Banka Hesabı Ekle'}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            {editingBankAccount ? 'Banka hesap bilgilerini güncelleyin' : 'Kartınızda görünecek banka hesap bilgilerini ekleyin'}
+                        </Typography>
                     </DialogTitle>
                     <DialogContent>
                         <Grid container spacing={2} sx={{ mt: 1 }}>
@@ -1015,14 +1255,19 @@ function EditCardPage() {
                             </Grid>
                         </Grid>
                     </DialogContent>
-                    <DialogActions>
-                        <Button onClick={handleBankDialogClose} disabled={bankFormLoading}>
+                    <DialogActions sx={{ p: 3, pt: 1 }}>
+                        <Button 
+                            onClick={handleBankDialogClose} 
+                            disabled={bankFormLoading}
+                            sx={{ fontWeight: 500 }}
+                        >
                             İptal
                         </Button>
                         <Button 
                             onClick={handleBankSave} 
                             variant="contained" 
                             disabled={bankFormLoading}
+                            sx={{ fontWeight: 500 }}
                         >
                             {bankFormLoading ? <CircularProgress size={20} /> : 'Kaydet'}
                         </Button>

@@ -5,12 +5,7 @@ const {
     deleteUser,
     updateAnyUser,
     createUserAdmin,
-    getDashboardStats,
-    createCompany,
-    getCompanies,
-    getCompanyById,
-    updateCompany,
-    deleteCompany
+    getDashboardStats
 } = require('./admin.controller');
 const { protect } = require('../../middleware/authMiddleware');
 const { authorize } = require('../../middleware/authMiddleware');
@@ -36,16 +31,6 @@ router.route('/users/:id')
 // Kartvizit Yönetimi
 // router.route('/cards')
 //     .get(getAllCards);
-
-// Şirket Yönetimi (YENİ)
-router.route('/companies')
-    .post(createCompany)
-    .get(getCompanies);
-
-router.route('/companies/:id')
-    .get(getCompanyById)
-    .put(updateCompany)
-    .delete(deleteCompany);
 
 // Şirket Yönetimi Route'ları
 router.use('/companies', companyRoutes);

@@ -7,6 +7,7 @@ import { useNotification } from '../context/NotificationContext.jsx';
 import { API_ENDPOINTS } from '../config/api.js';
 import ThemePreview from '../components/ThemePreview';
 import { TURKISH_BANKS, formatIban, validateTurkishIban } from '../constants/turkishBanks';
+import { optimizeImageForUpload } from '../utils/imageCompression.jsx';
 
 // MUI Imports
 import Box from '@mui/material/Box';
@@ -157,10 +158,44 @@ function CreateCardPage() {
         setTabValue(newValue);
     };
 
-    const onChange = (e) => {
+    const onChange = async (e) => {
         if (e.target.type === 'file') {
             const file = e.target.files[0];
-            setFormData((prevState) => ({ ...prevState, [e.target.name]: file }));
+            const name = e.target.name;
+            
+            if (!file) {
+                setFormData((prevState) => ({ ...prevState, [name]: null }));
+                return;
+            }
+            
+            try {
+                // Dosya boyutu kontrolü ve sıkıştırma
+                const originalSizeInMB = file.size / (1024 * 1024);
+                console.log(`Orijinal dosya boyutu: ${originalSizeInMB.toFixed(2)}MB`);
+                
+                let optimizedFile = file;
+                
+                // Eğer dosya 10MB'dan büyükse sıkıştır
+                if (originalSizeInMB > 10) {
+                    showNotification('Dosya sıkıştırılıyor, lütfen bekleyin...', 'info');
+                    
+                    optimizedFile = await optimizeImageForUpload(file, 10);
+                    
+                    const optimizedSizeInMB = optimizedFile.size / (1024 * 1024);
+                    const compressionRatio = ((originalSizeInMB - optimizedSizeInMB) / originalSizeInMB * 100).toFixed(1);
+                    
+                    showNotification(
+                        `Dosya sıkıştırıldı: ${originalSizeInMB.toFixed(1)}MB → ${optimizedSizeInMB.toFixed(1)}MB (${compressionRatio}% azaltıldı)`, 
+                        'success'
+                    );
+                }
+                
+                setFormData((prevState) => ({ ...prevState, [name]: optimizedFile }));
+                
+            } catch (error) {
+                console.error('Dosya işleme hatası:', error);
+                showNotification('Dosya işlenirken hata oluştu. Lütfen başka bir dosya seçin.', 'error');
+            }
         } else {
             setFormData((prevState) => ({ ...prevState, [e.target.name]: e.target.value }));
         }

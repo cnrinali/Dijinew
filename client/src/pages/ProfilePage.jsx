@@ -121,14 +121,51 @@ function ProfilePage() {
 
     return (
         <Container maxWidth="sm" sx={{ py: 4 }}>
-             <Paper sx={{ p: { xs: 2, md: 4 }, borderRadius: 2, elevation: 3 }}>
-                <Typography component="h1" variant="h4" align="center" gutterBottom sx={{ mb: 4 }}>
+             <Paper sx={{ 
+                p: { xs: 2, md: 4 }, 
+                borderRadius: 3, 
+                border: '1px solid',
+                borderColor: 'divider',
+                background: 'background.paper',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            }}>
+                <Typography 
+                    component="h1" 
+                    variant="h4" 
+                    align="center" 
+                    gutterBottom 
+                    sx={{ 
+                        mb: 4,
+                        fontWeight: 700,
+                        color: 'text.primary'
+                    }}
+                >
                     Profilim
                 </Typography>
 
                 {/* Sekmeler */}
                 <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-                    <Tabs value={tabIndex} onChange={handleTabChange} aria-label="Profil ayarları sekmeleri" centered>
+                    <Tabs 
+                        value={tabIndex} 
+                        onChange={handleTabChange} 
+                        aria-label="Profil ayarları sekmeleri" 
+                        centered
+                        sx={{
+                            '& .MuiTab-root': {
+                                fontWeight: 600,
+                                fontSize: '0.95rem',
+                                minHeight: 48,
+                                color: 'text.secondary',
+                                '&.Mui-selected': {
+                                    color: 'primary.main',
+                                }
+                            },
+                            '& .MuiTabs-indicator': {
+                                height: 3,
+                                backgroundColor: 'primary.main'
+                            }
+                        }}
+                    >
                         <Tab label="Bilgilerim" id="profile-tab-0" aria-controls="profile-tabpanel-0" />
                         <Tab label="Şifre İşlemleri" id="profile-tab-1" aria-controls="profile-tabpanel-1" />
                     </Tabs>
@@ -175,7 +212,18 @@ function ProfilePage() {
                                 type="submit"
                                 fullWidth
                                 variant="contained"
-                                sx={{ mt: 3, mb: 2 }} 
+                                sx={{ 
+                                    mt: 3, 
+                                    mb: 2,
+                                    borderRadius: 2,
+                                    textTransform: 'none',
+                                    fontWeight: 600,
+                                    py: 1.5,
+                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                    '&:hover': {
+                                        boxShadow: '0 6px 8px -1px rgba(0, 0, 0, 0.15)',
+                                    }
+                                }} 
                                 disabled={updateLoading}
                             >
                                 {updateLoading ? <CircularProgress size={24} /> : 'Bilgileri Kaydet'}
@@ -240,7 +288,18 @@ function ProfilePage() {
                                 fullWidth
                                 variant="contained"
                                 color="primary" 
-                                sx={{ mt: 3, mb: 2 }} 
+                                sx={{ 
+                                    mt: 3, 
+                                    mb: 2,
+                                    borderRadius: 2,
+                                    textTransform: 'none',
+                                    fontWeight: 600,
+                                    py: 1.5,
+                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                    '&:hover': {
+                                        boxShadow: '0 6px 8px -1px rgba(0, 0, 0, 0.15)',
+                                    }
+                                }} 
                                 disabled={passwordLoading}
                             >
                                 {passwordLoading ? <CircularProgress size={24} /> : 'Şifreyi Değiştir'}

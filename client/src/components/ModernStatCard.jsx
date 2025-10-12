@@ -41,8 +41,9 @@ const ModernStatCard = ({
     <Card
       sx={{
         height: '100%',
-        background: '#FFFFFF',
-        border: '1px solid #E5E7EB',
+        background: 'background.paper',
+        border: '1px solid',
+        borderColor: 'divider',
         borderRadius: 3,
         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
         transition: 'all 0.3s ease-in-out',

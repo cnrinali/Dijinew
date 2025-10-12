@@ -163,10 +163,18 @@ function CorporateCardsPage() {
                                 <CardMembershipIcon sx={{ fontSize: 32 }} />
                             </Box>
                             <Box>
-                                <Typography variant="h4" component="h1" sx={{ fontWeight: 700, color: 'text.primary', mb: 0.5 }}>
-                                    Kartvizitlerim
+                                <Typography variant="h4" component="h1" sx={{ 
+                                    fontWeight: 700, 
+                                    color: 'text.primary', 
+                                    mb: 0.5,
+                                    fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' }
+                                }}>
+                                    KURUMSAL KARTVİZİTLER
                                 </Typography>
-                                <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+                                <Typography variant="body1" sx={{ 
+                                    color: 'text.secondary',
+                                    fontSize: { xs: '0.875rem', sm: '1rem' }
+                                }}>
                                     Şirket kartvizitlerini yönetin ve düzenleyin
                                 </Typography>
                             </Box>
@@ -178,11 +186,18 @@ function CorporateCardsPage() {
                                     onClick={fetchCards}
                                     disabled={loading}
                                     sx={{ 
-                                        backgroundColor: 'white',
+                                        backgroundColor: 'background.paper',
+                                        color: 'text.primary',
+                                        border: '1px solid',
+                                        borderColor: 'divider',
                                         boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
                                         '&:hover': {
-                                            backgroundColor: 'grey.50',
+                                            backgroundColor: 'action.hover',
                                         },
+                                        '&:disabled': {
+                                            backgroundColor: 'action.disabledBackground',
+                                            color: 'action.disabled',
+                                        }
                                     }}
                                 >
                                     <RefreshIcon />
@@ -216,6 +231,18 @@ function CorporateCardsPage() {
                                     fontWeight: 600,
                                     px: 3,
                                     py: 1.5,
+                                    borderColor: 'primary.main',
+                                    color: 'primary.main',
+                                    backgroundColor: 'background.paper',
+                                    '&:hover': {
+                                        borderColor: 'primary.dark',
+                                        backgroundColor: 'primary.50',
+                                    },
+                                    '&:disabled': {
+                                        borderColor: 'action.disabled',
+                                        color: 'action.disabled',
+                                        backgroundColor: 'action.disabledBackground',
+                                    }
                                 }}
                             >
                                 Sihirbaz Oluştur
@@ -224,77 +251,6 @@ function CorporateCardsPage() {
                     </Box>
                 </Box>
 
-                {/* Stats Cards */}
-                <Grid container spacing={3} sx={{ mb: 4 }}>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <Card sx={{ background: 'linear-gradient(135deg, #1565C0 0%, #2196F3 100%)', color: 'white' }}>
-                            <CardContent>
-                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <Box>
-                                        <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-                                            {cards.length}
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                                            Toplam Kartvizit
-                                        </Typography>
-                                    </Box>
-                                    <CardMembershipIcon sx={{ fontSize: 40, opacity: 0.8 }} />
-                                </Box>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <Card sx={{ background: 'linear-gradient(135deg, #10B981 0%, #34D399 100%)', color: 'white' }}>
-                            <CardContent>
-                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <Box>
-                                        <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-                                            {cards.filter(card => card.isActive).length}
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                                            Aktif Kartlar
-                                        </Typography>
-                                    </Box>
-                                    <VisibilityIcon sx={{ fontSize: 40, opacity: 0.8 }} />
-                                </Box>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <Card sx={{ background: 'linear-gradient(135deg, #37474F 0%, #62727B 100%)', color: 'white' }}>
-                            <CardContent>
-                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <Box>
-                                        <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-                                            {companyUsers.length}
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                                            Şirket Çalışanları
-                                        </Typography>
-                                    </Box>
-                                    <PersonIcon sx={{ fontSize: 40, opacity: 0.8 }} />
-                                </Box>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <Card sx={{ background: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)', color: 'white' }}>
-                            <CardContent>
-                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <Box>
-                                        <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-                                            {cards.reduce((total, card) => total + (card.viewCount || 0), 0)}
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                                            Toplam Görüntülenme
-                                        </Typography>
-                                    </Box>
-                                    <QrCodeIcon sx={{ fontSize: 40, opacity: 0.8 }} />
-                                </Box>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                </Grid>
 
                 {/* Cards Table */}
                 <Paper
@@ -302,14 +258,14 @@ function CorporateCardsPage() {
                     sx={{
                         borderRadius: 3,
                         border: '1px solid',
-                        borderColor: 'grey.200',
-                        background: 'white',
+                        borderColor: 'divider',
+                        background: 'background.paper',
                         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                     }}
                 >
                     {loading && <LinearProgress />}
                     
-                    <Box sx={{ p: 3, borderBottom: '1px solid', borderColor: 'grey.100' }}>
+                    <Box sx={{ p: 3, borderBottom: '1px solid', borderColor: 'divider' }}>
                         <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
                             Kartvizit Listesi
                         </Typography>

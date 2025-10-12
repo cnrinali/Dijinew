@@ -4,6 +4,7 @@ import { useTheme } from '@mui/material/styles';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import MenuIcon from '@mui/icons-material/Menu';
+import HomeIcon from '@mui/icons-material/Home';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
 import CardMembershipIcon from '@mui/icons-material/CardMembership';
@@ -17,6 +18,13 @@ import BarChartIcon from '@mui/icons-material/BarChart';
 const drawerWidth = 280;
 
 const menuItems = [
+  {
+    id: 'home',
+    label: 'Anasayfa',
+    icon: <HomeIcon />,
+    path: '/corporate',
+    description: 'Kurumsal ana panel'
+  },
   {
     id: 'dashboard',
     label: 'Genel Bakış',
@@ -82,59 +90,65 @@ function CorporateLayout({ children }) {
 
   const getActiveItem = () => {
     const currentPath = location.pathname;
+    if (currentPath === '/corporate') return 'home';
     if (currentPath === '/corporate/dashboard') return 'dashboard';
-    if (currentPath.includes('/corporate/cards') || currentPath === '/corporate/dashboard') return 'cards';
+    if (currentPath.includes('/corporate/cards')) return 'cards';
     if (currentPath.includes('/corporate/users')) return 'users';
     if (currentPath === '/cards/new') return 'create-card';
     if (currentPath === '/analytics') return 'analytics';
     if (currentPath.includes('/corporate/activities')) return 'activities';
-    return 'dashboard';
+    return 'home';
   };
 
   const drawer = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {/* Header */}
-      <Box sx={{ p: 3, backgroundColor: 'secondary.main', color: 'white' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+      {/* Logo Section - Minimal Kurumsal */}
+      <Box sx={{ 
+        p: 2.5, 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        borderBottom: '1px solid',
+        borderColor: 'divider',
+        background: 'background.paper',
+        minHeight: 64
+      }}>
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 1.5,
+          cursor: 'pointer'
+        }}>
           <Box
             sx={{
-              p: 1.5,
-              borderRadius: 2,
-              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              p: 1,
+              borderRadius: 1.5,
+              backgroundColor: 'primary.main',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
+              justifyContent: 'center'
             }}
           >
-            <BusinessIcon sx={{ fontSize: 24 }} />
+            <BusinessIcon sx={{ fontSize: 20, color: 'white' }} />
           </Box>
-          <Box>
-            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.25rem' }}>
-              Kurumsal Panel
-            </Typography>
-            <Typography variant="body2" sx={{ opacity: 0.9, fontSize: '0.875rem' }}>
-              Şirket Yönetimi
-            </Typography>
-          </Box>
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              fontWeight: 700, 
+              fontSize: '1.1rem',
+              color: 'text.primary',
+              letterSpacing: '-0.01em'
+            }}
+          >
+            DijiCard
+          </Typography>
         </Box>
-        <Chip 
-          label="Corporate"
-          size="small"
-          sx={{ 
-            backgroundColor: 'rgba(255, 255, 255, 0.2)',
-            color: 'white',
-            fontWeight: 500,
-            fontSize: '0.75rem'
-          }}
-        />
       </Box>
 
-      <Divider />
-
-      {/* Navigation Menu */}
-      <Box sx={{ flex: 1, py: 2 }}>
+      {/* Navigation Menu - Minimal Kurumsal */}
+      <Box sx={{ flex: 1, py: 1 }}>
         <List sx={{ px: 2 }}>
-          {menuItems.map((item) => {
+          {menuItems.map((item, index) => {
             const isActive = getActiveItem() === item.id;
             return (
               <ListItemButton
@@ -142,38 +156,36 @@ function CorporateLayout({ children }) {
                 onClick={() => handleNavigation(item.path)}
                 sx={{
                   borderRadius: 2,
-                  mb: 1,
+                  mb: 0.5,
                   py: 1.5,
-                  backgroundColor: isActive ? 'secondary.50' : 'transparent',
-                  border: isActive ? '1px solid' : '1px solid transparent',
-                  borderColor: isActive ? 'secondary.200' : 'transparent',
+                  px: 2,
+                  position: 'relative',
+                  backgroundColor: isActive ? 'primary.main' : 'transparent',
+                  color: isActive ? 'white' : 'text.primary',
                   '&:hover': {
-                    backgroundColor: isActive ? 'secondary.100' : 'grey.50',
-                    borderColor: isActive ? 'secondary.300' : 'grey.200',
+                    backgroundColor: isActive ? 'primary.dark' : 'action.hover',
+                    color: isActive ? 'white' : 'text.primary',
                   },
                   transition: 'all 0.2s ease-in-out',
                 }}
               >
                 <ListItemIcon
                   sx={{
-                    color: isActive ? 'secondary.main' : 'text.secondary',
-                    minWidth: 40,
-                    transition: 'color 0.2s ease-in-out',
+                    color: isActive ? 'white' : 'text.secondary',
+                    minWidth: 36,
+                    '& svg': {
+                      fontSize: 18
+                    }
                   }}
                 >
                   {item.icon}
                 </ListItemIcon>
                 <ListItemText
                   primary={item.label}
-                  secondary={item.description}
                   primaryTypographyProps={{
                     fontWeight: isActive ? 600 : 500,
-                    color: isActive ? 'secondary.main' : 'text.primary',
-                    fontSize: '0.95rem',
-                  }}
-                  secondaryTypographyProps={{
-                    fontSize: '0.8rem',
-                    color: 'text.secondary',
+                    fontSize: '0.875rem',
+                    color: 'inherit'
                   }}
                 />
               </ListItemButton>
@@ -182,81 +194,6 @@ function CorporateLayout({ children }) {
         </List>
       </Box>
 
-      {/* User Profile Section */}
-      <Box sx={{ p: 3, backgroundColor: 'grey.50', borderTop: '1px solid', borderColor: 'grey.200' }}>
-        {user && (
-          <>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-              <Avatar
-                sx={{ 
-                  width: 40, 
-                  height: 40,
-                  backgroundColor: 'secondary.main',
-                  fontSize: '1.1rem',
-                  fontWeight: 600
-                }}
-              >
-                {user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
-              </Avatar>
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {user.name || 'Corporate User'}
-                </Typography>
-                <Typography variant="caption" sx={{ color: 'text.secondary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                  {user.email}
-                </Typography>
-              </Box>
-            </Box>
-            
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Button
-                fullWidth
-                variant="outlined"
-                size="small"
-                startIcon={<AccountCircleIcon />}
-                onClick={() => navigate('/profile')}
-                sx={{ 
-                  borderRadius: 2,
-                  textTransform: 'none',
-                  fontSize: '0.8rem',
-                  py: 0.5,
-                  borderColor: 'grey.300',
-                  color: 'text.secondary',
-                  '&:hover': {
-                    borderColor: 'secondary.main',
-                    color: 'secondary.main',
-                    backgroundColor: 'secondary.50',
-                  },
-                }}
-              >
-                Profil
-              </Button>
-              <Button
-                fullWidth
-                variant="outlined"
-                size="small"
-                startIcon={<ExitToAppIcon />}
-                onClick={logout}
-                sx={{ 
-                  borderRadius: 2,
-                  textTransform: 'none',
-                  fontSize: '0.8rem',
-                  py: 0.5,
-                  borderColor: 'error.main',
-                  color: 'error.main',
-                  '&:hover': {
-                    borderColor: 'error.dark',
-                    backgroundColor: 'error.50',
-                    color: 'error.dark',
-                  },
-                }}
-              >
-                Çıkış
-              </Button>
-            </Box>
-          </>
-        )}
-      </Box>
     </Box>
   );
 
@@ -307,9 +244,10 @@ function CorporateLayout({ children }) {
             '& .MuiDrawer-paper': {
               boxSizing: 'border-box',
               width: drawerWidth,
-              backgroundColor: 'white',
+              backgroundColor: 'background.paper',
               borderRight: '1px solid',
-              borderColor: 'grey.200',
+              borderColor: 'divider',
+              boxShadow: '0 0 0 1px rgba(0, 0, 0, 0.05)',
             },
           }}
         >
@@ -324,9 +262,10 @@ function CorporateLayout({ children }) {
             '& .MuiDrawer-paper': {
               width: drawerWidth,
               boxSizing: 'border-box',
-              backgroundColor: 'white',
+              backgroundColor: 'background.paper',
               borderRight: '1px solid',
-              borderColor: 'grey.200',
+              borderColor: 'divider',
+              boxShadow: '0 0 0 1px rgba(0, 0, 0, 0.05)',
             },
           }}
         >

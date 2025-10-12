@@ -278,11 +278,11 @@ function CompanyManagementPage() {
             </Box>
 
             {/* Filter Section */}
-            <Card sx={{ mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'grey.200' }}>
+            <Card sx={{ mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider', background: 'background.paper' }}>
                 <Box 
                     sx={{ 
                         p: 2, 
-                        backgroundColor: 'grey.50',
+                        backgroundColor: 'background.paper',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',

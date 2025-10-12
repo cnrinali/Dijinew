@@ -174,9 +174,11 @@ const RecentActivitiesWidget = ({ title = "Son Aktiviteler", maxItems = 5 }) => 
                         {title}
                     </Typography>
                     <Tooltip title="Yenile">
-                        <IconButton size="small" onClick={fetchRecentActivities} disabled={loading}>
-                            <RefreshIcon />
-                        </IconButton>
+                        <span>
+                            <IconButton size="small" onClick={fetchRecentActivities} disabled={loading}>
+                                <RefreshIcon />
+                            </IconButton>
+                        </span>
                     </Tooltip>
                 </Box>
 
@@ -210,7 +212,7 @@ const RecentActivitiesWidget = ({ title = "Son Aktiviteler", maxItems = 5 }) => 
                                 </ListItemAvatar>
                                 <ListItemText
                                     primary={
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }} component="div">
                                             <Typography variant="body2" component="span">
                                                 {activity.userName || 'Bilinmeyen'}
                                             </Typography>
@@ -223,15 +225,17 @@ const RecentActivitiesWidget = ({ title = "Son Aktiviteler", maxItems = 5 }) => 
                                         </Box>
                                     }
                                     secondary={
-                                        <Box>
-                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                                        <Box component="div">
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }} component="span">
                                                 {activity.description}
                                             </Typography>
-                                            <Typography variant="caption" color="text.secondary">
+                                            <Typography variant="caption" color="text.secondary" component="span">
                                                 {formatTimeAgo(activity.createdAt)}
                                             </Typography>
                                         </Box>
                                     }
+                                    primaryTypographyProps={{ component: 'div' }}
+                                    secondaryTypographyProps={{ component: 'div' }}
                                 />
                             </ListItem>
                         ))}

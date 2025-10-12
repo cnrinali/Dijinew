@@ -296,7 +296,7 @@ function AdminCardCreatePage() {
                 </Box>
             </Box>
 
-            <Paper sx={{ p: { xs: 2, md: 4 }, borderRadius: 3, border: '1px solid', borderColor: 'grey.200' }}>
+            <Paper sx={{ p: { xs: 2, md: 4 }, borderRadius: 3, border: '1px solid', borderColor: 'divider', background: 'background.paper' }}>
 
                 {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
                 {uploadError && <Alert severity="error" sx={{ mb: 2 }}>{uploadError}</Alert>}
