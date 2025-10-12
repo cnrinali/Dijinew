@@ -33,3 +33,12 @@ yarn-error.log # Client yarn error logs
 *.sln
 *.sublime-* 
 .vercel
+
+# Deploy scripts (don't upload to GitHub)
+deploy.sh
+deploy-manual.sh
+deploy-server.sh
+deploy-server-files.sh
+deploy-client.sh
+deploy-update.sh
+test-ftp.sh
