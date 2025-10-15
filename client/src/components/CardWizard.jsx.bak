@@ -571,11 +571,11 @@ export default function CardWizard() {
                                                 borderWidth: 2,
                                             },
                                             '&:hover fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                             '&.Mui-focused fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                         },
@@ -603,11 +603,11 @@ export default function CardWizard() {
                                                 borderWidth: 2,
                                             },
                                             '&:hover fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                             '&.Mui-focused fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                         },
@@ -655,11 +655,11 @@ export default function CardWizard() {
                                                 borderWidth: 2,
                                             },
                                             '&:hover fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                             '&.Mui-focused fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                         },
@@ -687,11 +687,11 @@ export default function CardWizard() {
                                                 borderWidth: 2,
                                             },
                                             '&:hover fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                             '&.Mui-focused fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                         },
@@ -731,9 +731,9 @@ export default function CardWizard() {
                                                 checked={kvkkConsents.privacyPolicy}
                                                 onChange={() => handleKvkkClick('privacyPolicy')}
                                                 sx={{
-                                                    color: '#1976d2',
+                                                    color: '#667eea',
                                                     '&.Mui-checked': {
-                                                        color: '#1976d2',
+                                                        color: '#667eea',
                                                     },
                                                 }}
                                             />
@@ -753,9 +753,9 @@ export default function CardWizard() {
                                                 checked={kvkkConsents.dataProcessing}
                                                 onChange={() => handleKvkkClick('dataProcessing')}
                                                 sx={{
-                                                    color: '#1976d2',
+                                                    color: '#667eea',
                                                     '&.Mui-checked': {
-                                                        color: '#1976d2',
+                                                        color: '#667eea',
                                                     },
                                                 }}
                                             />
@@ -778,9 +778,9 @@ export default function CardWizard() {
                                                     marketingConsent: e.target.checked 
                                                 }))}
                                                 sx={{
-                                                    color: '#1976d2',
+                                                    color: '#667eea',
                                                     '&.Mui-checked': {
-                                                        color: '#1976d2',
+                                                        color: '#667eea',
                                                     },
                                                 }}
                                             />
@@ -840,11 +840,11 @@ export default function CardWizard() {
                                                 borderWidth: 2,
                                             },
                                             '&:hover fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                             '&.Mui-focused fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                         },
@@ -870,11 +870,11 @@ export default function CardWizard() {
                                                 borderWidth: 2,
                                             },
                                             '&:hover fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                             '&.Mui-focused fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                         },
@@ -900,11 +900,11 @@ export default function CardWizard() {
                                                 borderWidth: 2,
                                             },
                                             '&:hover fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                             '&.Mui-focused fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                         },
@@ -930,11 +930,11 @@ export default function CardWizard() {
                                                 borderWidth: 2,
                                             },
                                             '&:hover fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                             '&.Mui-focused fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                         },
@@ -962,11 +962,11 @@ export default function CardWizard() {
                                                 borderWidth: 2,
                                             },
                                             '&:hover fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                             '&.Mui-focused fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                         },
@@ -1023,11 +1023,11 @@ export default function CardWizard() {
                                                 borderWidth: 2,
                                             },
                                             '&:hover fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                             '&.Mui-focused fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                         },
@@ -1054,11 +1054,11 @@ export default function CardWizard() {
                                                 borderWidth: 2,
                                             },
                                             '&:hover fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                             '&.Mui-focused fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                         },
@@ -1084,11 +1084,11 @@ export default function CardWizard() {
                                                 borderWidth: 2,
                                             },
                                             '&:hover fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                             '&.Mui-focused fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                         },
@@ -1116,11 +1116,11 @@ export default function CardWizard() {
                                                 borderWidth: 2,
                                             },
                                             '&:hover fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                             '&.Mui-focused fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                         },
@@ -1180,11 +1180,11 @@ export default function CardWizard() {
                                                 borderWidth: 2,
                                             },
                                             '&:hover fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                             '&.Mui-focused fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                         },
@@ -1213,11 +1213,11 @@ export default function CardWizard() {
                                                 borderWidth: 2,
                                             },
                                             '&:hover fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                             '&.Mui-focused fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                         },
@@ -1246,11 +1246,11 @@ export default function CardWizard() {
                                                 borderWidth: 2,
                                             },
                                             '&:hover fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                             '&.Mui-focused fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                         },
@@ -1279,11 +1279,11 @@ export default function CardWizard() {
                                                 borderWidth: 2,
                                             },
                                             '&:hover fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                             '&.Mui-focused fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                         },
@@ -1338,11 +1338,11 @@ export default function CardWizard() {
                                     fontSize: { xs: '1rem', sm: '1.1rem' },
                                     fontWeight: 600,
                                     minWidth: { xs: '100%', sm: '300px' },
-                                    background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                                     color: 'white',
                                     boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
                                     '&:hover': {
-                                        background: 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)',
+                                        background: 'linear-gradient(135deg, #5568d3 0%, #6a4190 100%)',
                                         boxShadow: '0 6px 20px rgba(102, 126, 234, 0.6)',
                                         transform: 'translateY(-2px)'
                                     },
@@ -1449,11 +1449,11 @@ export default function CardWizard() {
                                         borderWidth: 2,
                                     },
                                     '&:hover fieldset': {
-                                        borderColor: '#1976d2',
+                                        borderColor: '#667eea',
                                         borderWidth: 2,
                                     },
                                     '&.Mui-focused fieldset': {
-                                        borderColor: '#1976d2',
+                                        borderColor: '#667eea',
                                         borderWidth: 2,
                                     },
                                 },
@@ -1549,14 +1549,14 @@ export default function CardWizard() {
         <Box 
             sx={{ 
                 minHeight: '100vh',
-                background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 display: 'flex',
                 alignItems: 'center',
-                py: { xs: 2, md: 3 },
+                py: { xs: 2, md: 4 },
                 px: 2
             }}
         >
-            <Container maxWidth="lg" sx={{ maxWidth: '1000px !important' }}>
+            <Container maxWidth="xl" sx={{ maxWidth: '1400px !important' }}>
                 <Paper 
                     elevation={8}
                     sx={{ 
@@ -1569,8 +1569,8 @@ export default function CardWizard() {
                     {/* Başlık Bölümü */}
                     <Box 
                         sx={{ 
-                            background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
-                            p: { xs: 2.5, md: 3.5 },
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            p: { xs: 3, md: 5 },
                             textAlign: 'center',
                             color: 'white'
                         }}
@@ -1602,7 +1602,7 @@ export default function CardWizard() {
                     </Box>
 
                     {/* Ana İçerik */}
-                    <Box sx={{ p: { xs: 2.5, md: 4 } }}>
+                    <Box sx={{ p: { xs: 3, md: 6 } }}>
                         {/* Progress Bar */}
                         <Box sx={{ mb: 4 }}>
                             <Box sx={{ 
@@ -1633,7 +1633,7 @@ export default function CardWizard() {
                                                 margin: '0 auto',
                                                 mb: 1,
                                                 background: index <= activeStep 
-                                                    ? 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)'
+                                                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
                                                     : '#e0e0e0',
                                                 color: index <= activeStep ? 'white' : '#999',
                                                 fontWeight: 600,
@@ -1651,7 +1651,7 @@ export default function CardWizard() {
                                             sx={{
                                                 fontSize: { xs: '0.7rem', sm: '0.8rem' },
                                                 fontWeight: index === activeStep ? 700 : 500,
-                                                color: index === activeStep ? '#1976d2' : '#666',
+                                                color: index === activeStep ? '#667eea' : '#666',
                                                 display: 'block',
                                                 lineHeight: 1.3
                                             }}
@@ -1674,7 +1674,7 @@ export default function CardWizard() {
                                     sx={{ 
                                         height: '100%',
                                         width: `${((activeStep + 1) / steps.length) * 100}%`,
-                                        background: 'linear-gradient(90deg, #1976d2 0%, #1565c0 100%)',
+                                        background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
                                         transition: 'width 0.3s ease',
                                         borderRadius: 4
                                     }}
@@ -1685,11 +1685,11 @@ export default function CardWizard() {
                         {/* Form İçeriği */}
                         <Box 
                             sx={{ 
-                                minHeight: 400,
+                                minHeight: 450,
                                 backgroundColor: 'white',
                                 borderRadius: 3,
-                                p: { xs: 2.5, md: 4 },
-                                mb: 3,
+                                p: { xs: 3, md: 6 },
+                                mb: 4,
                                 border: '1px solid #e0e0e0',
                                 boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
                             }}
@@ -1720,14 +1720,14 @@ export default function CardWizard() {
                                     fontSize: { xs: '1rem', sm: '1.1rem' },
                                     fontWeight: 600,
                                     borderWidth: 2,
-                                    borderColor: '#1976d2',
-                                    color: '#1976d2',
+                                    borderColor: '#667eea',
+                                    color: '#667eea',
                                     backgroundColor: 'white',
                                     '&:hover': {
                                         borderWidth: 2,
                                         backgroundColor: '#f5f7ff',
-                                        borderColor: '#1565c0',
-                                        color: '#1565c0',
+                                        borderColor: '#5568d3',
+                                        color: '#5568d3',
                                     },
                                     '&:disabled': {
                                         borderColor: '#e0e0e0',
@@ -1752,11 +1752,11 @@ export default function CardWizard() {
                                     textTransform: 'none',
                                     fontSize: { xs: '1rem', sm: '1.1rem' },
                                     fontWeight: 600,
-                                    background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                                     color: 'white',
                                     boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
                                     '&:hover': {
-                                        background: 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)',
+                                        background: 'linear-gradient(135deg, #5568d3 0%, #6a4190 100%)',
                                         boxShadow: '0 6px 20px rgba(102, 126, 234, 0.6)',
                                         transform: 'translateY(-2px)'
                                     },
@@ -1788,7 +1788,7 @@ export default function CardWizard() {
                 >
                     <DialogTitle 
                         sx={{ 
-                            background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                             color: 'white',
                             py: 3,
                             fontWeight: 600
@@ -1810,11 +1810,11 @@ export default function CardWizard() {
                                                 borderWidth: 2,
                                             },
                                             '&:hover fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                             '&.Mui-focused fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                         },
@@ -1852,11 +1852,11 @@ export default function CardWizard() {
                                                 borderWidth: 2,
                                             },
                                             '&:hover fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                             '&.Mui-focused fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                         },
@@ -1885,11 +1885,11 @@ export default function CardWizard() {
                                                 borderWidth: 2,
                                             },
                                             '&:hover fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                             '&.Mui-focused fieldset': {
-                                                borderColor: '#1976d2',
+                                                borderColor: '#667eea',
                                                 borderWidth: 2,
                                             },
                                         },
@@ -1914,8 +1914,8 @@ export default function CardWizard() {
                                 fontWeight: 600,
                                 fontSize: '1rem',
                                 borderWidth: 2,
-                                borderColor: '#1976d2',
-                                color: '#1976d2',
+                                borderColor: '#667eea',
+                                color: '#667eea',
                                 minWidth: { xs: '100%', sm: '140px' },
                                 '&:hover': {
                                     borderWidth: 2,
@@ -1937,11 +1937,11 @@ export default function CardWizard() {
                                 fontWeight: 600,
                                 fontSize: '1rem',
                                 minWidth: { xs: '100%', sm: '140px' },
-                                background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                                 color: 'white',
                                 boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)',
                                 '&:hover': {
-                                    background: 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)',
+                                    background: 'linear-gradient(135deg, #5568d3 0%, #6a4190 100%)',
                                     boxShadow: '0 6px 16px rgba(102, 126, 234, 0.6)',
                                 }
                             }}
@@ -1971,7 +1971,7 @@ export default function CardWizard() {
                 >
                     <DialogTitle 
                         sx={{ 
-                            background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                             color: 'white',
                             py: 3,
                             px: 4,
@@ -2027,7 +2027,7 @@ export default function CardWizard() {
                                 <Typography 
                                     variant="caption" 
                                     sx={{ 
-                                        color: '#1976d2',
+                                        color: '#667eea',
                                         fontWeight: 700,
                                         fontSize: '1rem',
                                         display: 'inline-block',
@@ -2037,7 +2037,7 @@ export default function CardWizard() {
                                         borderRadius: 3,
                                         boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
                                         pointerEvents: 'auto',
-                                        border: '2px solid #1976d2'
+                                        border: '2px solid #667eea'
                                     }}
                                 >
                                     ↓ Lütfen metni sonuna kadar okuyun ↓
@@ -2086,7 +2086,7 @@ export default function CardWizard() {
                                 fontSize: '1rem',
                                 minWidth: { xs: '100%', sm: '200px' },
                                 background: kvkkScrolledToBottom 
-                                    ? 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)'
+                                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
                                     : '#cccccc',
                                 color: 'white',
                                 boxShadow: kvkkScrolledToBottom 
@@ -2094,7 +2094,7 @@ export default function CardWizard() {
                                     : 'none',
                                 '&:hover': {
                                     background: kvkkScrolledToBottom 
-                                        ? 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)'
+                                        ? 'linear-gradient(135deg, #5568d3 0%, #6a4190 100%)'
                                         : '#cccccc',
                                     boxShadow: kvkkScrolledToBottom 
                                         ? '0 6px 20px rgba(102, 126, 234, 0.6)'

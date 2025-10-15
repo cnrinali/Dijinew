@@ -352,7 +352,7 @@ function RegisterPage() {
             >
                 <DialogTitle 
                     sx={{ 
-                        background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                         color: 'white',
                         py: 3,
                         px: 4,
@@ -408,7 +408,7 @@ function RegisterPage() {
                             <Typography 
                                 variant="caption" 
                                 sx={{ 
-                                    color: '#1976d2',
+                                    color: '#667eea',
                                     fontWeight: 700,
                                     fontSize: '1rem',
                                     display: 'inline-block',
@@ -418,7 +418,7 @@ function RegisterPage() {
                                     borderRadius: 3,
                                     boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
                                     pointerEvents: 'auto',
-                                    border: '2px solid #1976d2'
+                                    border: '2px solid #667eea'
                                 }}
                             >
                                 ↓ Lütfen metni sonuna kadar okuyun ↓
@@ -467,7 +467,7 @@ function RegisterPage() {
                             fontSize: '1rem',
                             minWidth: { xs: '100%', sm: '200px' },
                             background: kvkkScrolledToBottom 
-                                ? 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)'
+                                ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
                                 : '#cccccc',
                             color: 'white',
                             boxShadow: kvkkScrolledToBottom 
@@ -475,7 +475,7 @@ function RegisterPage() {
                                 : 'none',
                             '&:hover': {
                                 background: kvkkScrolledToBottom 
-                                    ? 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)'
+                                    ? 'linear-gradient(135deg, #5568d3 0%, #6a4190 100%)'
                                     : '#cccccc',
                                 boxShadow: kvkkScrolledToBottom 
                                     ? '0 6px 20px rgba(102, 126, 234, 0.6)'
