@@ -226,7 +226,11 @@ function AdminUserListPage() {
             } else {
                 const newUser = await createUserAdmin(userData);
                 setUsers(prevUsers => [...prevUsers, newUser]);
-                showNotification('Kullanıcı başarıyla oluşturuldu.', 'success');
+                const emailSent = newUser.emailSent;
+                const successMsg = emailSent
+                    ? 'Kullanıcı başarıyla oluşturuldu ve giriş bilgileri email ile gönderildi.'
+                    : 'Kullanıcı başarıyla oluşturuldu.';
+                showNotification(successMsg, 'success');
             }
             handleCloseModal(); 
         } catch (err) {
@@ -551,7 +555,8 @@ function AdminUserListPage() {
                             label="Rol"
                             onChange={handleInputChange}
                         >
-                            <MenuItem value="user">User</MenuItem>
+                            <MenuItem value="user">Kullanıcı (User)</MenuItem>
+                            <MenuItem value="corporate">Kurumsal Yönetici (Corporate)</MenuItem>
                             <MenuItem value="admin">Admin</MenuItem>
                         </Select>
                     </FormControl>

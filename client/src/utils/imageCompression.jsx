@@ -119,3 +119,4 @@ export const getImageDimensions = (file) => {
         img.src = URL.createObjectURL(file);
     });
 };
+

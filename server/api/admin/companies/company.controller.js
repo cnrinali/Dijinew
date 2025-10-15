@@ -19,7 +19,7 @@ const createCompany = async (req, res) => {
 
     try {
         const pool = await getPool();
-        const result = await pool.request()
+        const insertResult = await pool.request()
             .input('name', sql.NVarChar, name)
             .input('userLimit', sql.Int, userLimit)
             .input('cardLimit', sql.Int, cardLimit)
@@ -28,9 +28,16 @@ const createCompany = async (req, res) => {
             .input('website', sql.NVarChar, website || null)
             .input('address', sql.NVarChar, address || null)
             // updatedAt eklendi
-            .query('INSERT INTO Companies (name, userLimit, cardLimit, status, phone, website, address, updatedAt) OUTPUT INSERTED.* VALUES (@name, @userLimit, @cardLimit, @status, @phone, @website, @address, GETDATE())');
+            .query('INSERT INTO Companies (name, userLimit, cardLimit, status, phone, website, address, updatedAt) VALUES (@name, @userLimit, @cardLimit, @status, @phone, @website, @address, GETDATE()); SELECT SCOPE_IDENTITY() as id;');
         
-        res.status(201).json(result.recordset[0]);
+        const newId = insertResult.recordset[0].id;
+        
+        // Yeni oluşturulan şirketi getir
+        const selectResult = await pool.request()
+            .input('id', sql.Int, newId)
+            .query('SELECT * FROM Companies WHERE id = @id');
+        
+        res.status(201).json(selectResult.recordset[0]);
     } catch (error) {
         console.error("Şirket oluşturma hatası:", error);
         if (error.number === 2627) { 
@@ -119,14 +126,18 @@ const updateCompany = async (req, res) => {
             request.input('status', sql.Bit, companyStatus);
         }
 
-        const query = `UPDATE Companies SET ${setClauses} OUTPUT INSERTED.* WHERE id = @companyId`;
-        const result = await request.query(query);
+        const query = `UPDATE Companies SET ${setClauses} WHERE id = @companyId`;
+        const updateResult = await request.query(query);
 
-        if (result.rowsAffected[0] === 0) {
+        if (updateResult.rowsAffected[0] === 0) {
             return res.status(404).json({ message: 'Güncellenecek şirket bulunamadı.' });
         }
 
-        res.status(200).json(result.recordset[0]);
+        // Güncellenen şirketi getir
+        const selectRequest = pool.request().input('companyId', sql.Int, companyId);
+        const selectResult = await selectRequest.query('SELECT * FROM Companies WHERE id = @companyId');
+        
+        res.status(200).json(selectResult.recordset[0]);
     } catch (error) {
         console.error("Şirket güncelleme hatası:", error);
          if (error.number === 2627) { 

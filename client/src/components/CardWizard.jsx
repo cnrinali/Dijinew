@@ -63,7 +63,7 @@ export default function CardWizard() {
     const [searchParams] = useSearchParams();
     const { cardSlug } = useParams();
     const navigate = useNavigate();
-    const { login } = useAuth();
+    const { login, isAuthenticated } = useAuth();
     const { showNotification } = useNotification();
     const [loading, setLoading] = useState(false);
 
@@ -240,6 +240,21 @@ export default function CardWizard() {
                             await updateCardOwnership(token, loginResult.id);
                         }
                         
+                        // Token'ı kullanıldı olarak işaretle
+                        try {
+                            const markUsedResponse = await fetch(`http://localhost:5001/api/simple-wizard/use/${token}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                }
+                            });
+                            const markData = await markUsedResponse.json();
+                            console.log('Token kullanıldı olarak işaretlendi:', markData);
+                        } catch (tokenError) {
+                            console.warn('Token kullanıldı olarak işaretlenirken hata:', tokenError);
+                            // Bu hata kullanıcı kaydını engellemez
+                        }
+                        
                         // Kullanıcı bilgilerini kart verilerine aktar
                         setCardData(prev => ({
                             ...prev,
@@ -279,6 +294,21 @@ export default function CardWizard() {
                                 // Kartın sahipliğini mevcut kullanıcıya aktar
                                 if (authLoginResult && authLoginResult.id) {
                                     await updateCardOwnership(token, authLoginResult.id);
+                                }
+                                
+                                // Token'ı kullanıldı olarak işaretle
+                                try {
+                                    const markUsedResponse = await fetch(`http://localhost:5001/api/simple-wizard/use/${token}`, {
+                                        method: 'PUT',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                        }
+                                    });
+                                    const markData = await markUsedResponse.json();
+                                    console.log('Token kullanıldı olarak işaretlendi:', markData);
+                                } catch (tokenError) {
+                                    console.warn('Token kullanıldı olarak işaretlenirken hata:', tokenError);
+                                    // Bu hata kullanıcı kaydını engellemez
                                 }
                                 
                                 // Kullanıcı bilgilerini kart verilerine aktar
@@ -341,21 +371,6 @@ export default function CardWizard() {
             const data = await response.json();
             
             if (data.success) {
-                // Token'ı kullanıldı olarak işaretle
-                try {
-                    const markUsedResponse = await fetch(`http://localhost:5001/api/simple-wizard/use/${token}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        }
-                    });
-                    const markData = await markUsedResponse.json();
-                    console.log('Token kullanıldı olarak işaretlendi:', markData);
-                } catch (tokenError) {
-                    console.warn('Token kullanıldı olarak işaretlenirken hata:', tokenError);
-                    // Bu hata kartvizit oluşturulmasını engellemez
-                }
-                
                 showNotification('Kartvizit başarıyla tamamlandı ve aktifleştirildi!', 'success');
                 // Kullanıcı giriş yapmış olduğundan uygun yere yönlendir
                 const user = JSON.parse(localStorage.getItem('user'));
@@ -381,9 +396,15 @@ export default function CardWizard() {
     // Step ilerletme
     const handleNext = async () => {
         if (activeStep === 0) {
-            // İlk adımda kullanıcı kaydı yap
-            const success = await handleUserRegistration();
-            if (!success) return;
+            // Eğer kullanıcı zaten giriş yapmışsa kayıt işlemini atla
+            if (!isAuthenticated) {
+                // İlk adımda kullanıcı kaydı yap
+                const success = await handleUserRegistration();
+                if (!success) return;
+            } else {
+                // Kullanıcı zaten giriş yapmış, bir sonraki adıma geç
+                console.log('Kullanıcı zaten giriş yapmış, kayıt atlanıyor');
+            }
         }
 
         if (activeStep === steps.length - 1) {
@@ -448,8 +469,28 @@ export default function CardWizard() {
             case 0:
                 return (
                     <Box>
-                        <Typography variant="h6" gutterBottom>
+                        <Typography 
+                            variant="h5" 
+                            gutterBottom 
+                            sx={{ 
+                                fontWeight: 700, 
+                                color: '#1a1a1a',
+                                mb: 2,
+                                textAlign: 'center'
+                            }}
+                        >
                             Hoş Geldiniz! Önce üyelik oluşturalım
+                        </Typography>
+                        <Typography 
+                            variant="body1" 
+                            sx={{ 
+                                color: '#666',
+                                mb: 4,
+                                textAlign: 'center',
+                                fontSize: '0.95rem'
+                            }}
+                        >
+                            Dijital kartvizitinizi oluşturmak için birkaç bilgiye ihtiyacımız var
                         </Typography>
                         <Grid container spacing={3}>
                             <Grid item xs={12}>
@@ -459,6 +500,28 @@ export default function CardWizard() {
                                     value={userData.name}
                                     onChange={(e) => setUserData(prev => ({ ...prev, name: e.target.value }))}
                                     required
+                                    variant="outlined"
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 2,
+                                            backgroundColor: 'white',
+                                            '& fieldset': {
+                                                borderColor: '#d0d0d0',
+                                                borderWidth: 2,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            fontWeight: 500,
+                                        },
+                                    }}
                                 />
                             </Grid>
                             <Grid item xs={12}>
@@ -469,6 +532,28 @@ export default function CardWizard() {
                                     value={userData.email}
                                     onChange={(e) => setUserData(prev => ({ ...prev, email: e.target.value }))}
                                     required
+                                    variant="outlined"
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 2,
+                                            backgroundColor: 'white',
+                                            '& fieldset': {
+                                                borderColor: '#d0d0d0',
+                                                borderWidth: 2,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            fontWeight: 500,
+                                        },
+                                    }}
                                 />
                             </Grid>
                             {wizardType === 'corporate' && (
@@ -479,6 +564,15 @@ export default function CardWizard() {
                                         value={userData.companyName}
                                         onChange={(e) => setUserData(prev => ({ ...prev, companyName: e.target.value }))}
                                         required
+                                        variant="outlined"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                '&:hover fieldset': {
+                                                    borderColor: 'primary.main',
+                                                },
+                                            },
+                                        }}
                                     />
                                 </Grid>
                             )}
@@ -490,6 +584,28 @@ export default function CardWizard() {
                                     value={userData.password}
                                     onChange={(e) => setUserData(prev => ({ ...prev, password: e.target.value }))}
                                     required
+                                    variant="outlined"
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 2,
+                                            backgroundColor: 'white',
+                                            '& fieldset': {
+                                                borderColor: '#d0d0d0',
+                                                borderWidth: 2,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            fontWeight: 500,
+                                        },
+                                    }}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6}>
@@ -500,6 +616,28 @@ export default function CardWizard() {
                                     value={userData.confirmPassword}
                                     onChange={(e) => setUserData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                                     required
+                                    variant="outlined"
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 2,
+                                            backgroundColor: 'white',
+                                            '& fieldset': {
+                                                borderColor: '#d0d0d0',
+                                                borderWidth: 2,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            fontWeight: 500,
+                                        },
+                                    }}
                                 />
                             </Grid>
                         </Grid>
@@ -509,8 +647,28 @@ export default function CardWizard() {
             case 1:
                 return (
                     <Box>
-                        <Typography variant="h6" gutterBottom>
+                        <Typography 
+                            variant="h5" 
+                            gutterBottom 
+                            sx={{ 
+                                fontWeight: 700, 
+                                color: '#1a1a1a',
+                                mb: 2,
+                                textAlign: 'center'
+                            }}
+                        >
                             Kişisel Bilgileriniz
+                        </Typography>
+                        <Typography 
+                            variant="body1" 
+                            sx={{ 
+                                color: '#666',
+                                mb: 4,
+                                textAlign: 'center',
+                                fontSize: '0.95rem'
+                            }}
+                        >
+                            Kartvizitinizde görünecek bilgilerinizi girin
                         </Typography>
                         <Grid container spacing={3}>
                             <Grid item xs={12}>
@@ -519,6 +677,28 @@ export default function CardWizard() {
                                     label="Kart Adı"
                                     value={cardData.cardName}
                                     onChange={(e) => setCardData(prev => ({ ...prev, cardName: e.target.value }))}
+                                    variant="outlined"
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 2,
+                                            backgroundColor: 'white',
+                                            '& fieldset': {
+                                                borderColor: '#d0d0d0',
+                                                borderWidth: 2,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            fontWeight: 500,
+                                        },
+                                    }}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6}>
@@ -527,6 +707,28 @@ export default function CardWizard() {
                                     label="Ad Soyad"
                                     value={cardData.name}
                                     onChange={(e) => setCardData(prev => ({ ...prev, name: e.target.value }))}
+                                    variant="outlined"
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 2,
+                                            backgroundColor: 'white',
+                                            '& fieldset': {
+                                                borderColor: '#d0d0d0',
+                                                borderWidth: 2,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            fontWeight: 500,
+                                        },
+                                    }}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6}>
@@ -535,6 +737,28 @@ export default function CardWizard() {
                                     label="Ünvan/Pozisyon"
                                     value={cardData.title}
                                     onChange={(e) => setCardData(prev => ({ ...prev, title: e.target.value }))}
+                                    variant="outlined"
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 2,
+                                            backgroundColor: 'white',
+                                            '& fieldset': {
+                                                borderColor: '#d0d0d0',
+                                                borderWidth: 2,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            fontWeight: 500,
+                                        },
+                                    }}
                                 />
                             </Grid>
                             <Grid item xs={12}>
@@ -543,6 +767,28 @@ export default function CardWizard() {
                                     label="Şirket"
                                     value={cardData.company}
                                     onChange={(e) => setCardData(prev => ({ ...prev, company: e.target.value }))}
+                                    variant="outlined"
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 2,
+                                            backgroundColor: 'white',
+                                            '& fieldset': {
+                                                borderColor: '#d0d0d0',
+                                                borderWidth: 2,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            fontWeight: 500,
+                                        },
+                                    }}
                                 />
                             </Grid>
                             <Grid item xs={12}>
@@ -553,6 +799,28 @@ export default function CardWizard() {
                                     label="Hakkımda"
                                     value={cardData.bio}
                                     onChange={(e) => setCardData(prev => ({ ...prev, bio: e.target.value }))}
+                                    variant="outlined"
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 2,
+                                            backgroundColor: 'white',
+                                            '& fieldset': {
+                                                borderColor: '#d0d0d0',
+                                                borderWidth: 2,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            fontWeight: 500,
+                                        },
+                                    }}
                                 />
                             </Grid>
                         </Grid>
@@ -562,8 +830,28 @@ export default function CardWizard() {
             case 2:
                 return (
                     <Box>
-                        <Typography variant="h6" gutterBottom>
+                        <Typography 
+                            variant="h5" 
+                            gutterBottom 
+                            sx={{ 
+                                fontWeight: 700, 
+                                color: '#1a1a1a',
+                                mb: 2,
+                                textAlign: 'center'
+                            }}
+                        >
                             İletişim Bilgileri
+                        </Typography>
+                        <Typography 
+                            variant="body1" 
+                            sx={{ 
+                                color: '#666',
+                                mb: 4,
+                                textAlign: 'center',
+                                fontSize: '0.95rem'
+                            }}
+                        >
+                            İletişim bilgilerinizi ekleyin
                         </Typography>
                         <Grid container spacing={3}>
                             <Grid item xs={12} sm={6}>
@@ -572,6 +860,28 @@ export default function CardWizard() {
                                     label="Telefon"
                                     value={cardData.phone}
                                     onChange={(e) => setCardData(prev => ({ ...prev, phone: e.target.value }))}
+                                    variant="outlined"
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 2,
+                                            backgroundColor: 'white',
+                                            '& fieldset': {
+                                                borderColor: '#d0d0d0',
+                                                borderWidth: 2,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            fontWeight: 500,
+                                        },
+                                    }}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6}>
@@ -581,6 +891,28 @@ export default function CardWizard() {
                                     label="E-posta"
                                     value={cardData.email}
                                     onChange={(e) => setCardData(prev => ({ ...prev, email: e.target.value }))}
+                                    variant="outlined"
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 2,
+                                            backgroundColor: 'white',
+                                            '& fieldset': {
+                                                borderColor: '#d0d0d0',
+                                                borderWidth: 2,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            fontWeight: 500,
+                                        },
+                                    }}
                                 />
                             </Grid>
                             <Grid item xs={12}>
@@ -589,6 +921,28 @@ export default function CardWizard() {
                                     label="Website"
                                     value={cardData.website}
                                     onChange={(e) => setCardData(prev => ({ ...prev, website: e.target.value }))}
+                                    variant="outlined"
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 2,
+                                            backgroundColor: 'white',
+                                            '& fieldset': {
+                                                borderColor: '#d0d0d0',
+                                                borderWidth: 2,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            fontWeight: 500,
+                                        },
+                                    }}
                                 />
                             </Grid>
                             <Grid item xs={12}>
@@ -599,6 +953,28 @@ export default function CardWizard() {
                                     label="Adres"
                                     value={cardData.address}
                                     onChange={(e) => setCardData(prev => ({ ...prev, address: e.target.value }))}
+                                    variant="outlined"
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 2,
+                                            backgroundColor: 'white',
+                                            '& fieldset': {
+                                                borderColor: '#d0d0d0',
+                                                borderWidth: 2,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            fontWeight: 500,
+                                        },
+                                    }}
                                 />
                             </Grid>
                         </Grid>
@@ -608,8 +984,28 @@ export default function CardWizard() {
             case 3:
                 return (
                     <Box>
-                        <Typography variant="h6" gutterBottom>
-                            Sosyal Medya ve Pazaryeri Linkleri
+                        <Typography 
+                            variant="h5" 
+                            gutterBottom 
+                            sx={{ 
+                                fontWeight: 700, 
+                                color: '#1a1a1a',
+                                mb: 2,
+                                textAlign: 'center'
+                            }}
+                        >
+                            Sosyal Medya
+                        </Typography>
+                        <Typography 
+                            variant="body1" 
+                            sx={{ 
+                                color: '#666',
+                                mb: 4,
+                                textAlign: 'center',
+                                fontSize: '0.95rem'
+                            }}
+                        >
+                            Sosyal medya hesaplarınızı ve pazaryeri linklerinizi ekleyin
                         </Typography>
                         <Grid container spacing={3}>
                             <Grid item xs={12}>
@@ -618,8 +1014,30 @@ export default function CardWizard() {
                                     label="LinkedIn URL"
                                     value={cardData.linkedinUrl}
                                     onChange={(e) => setCardData(prev => ({ ...prev, linkedinUrl: e.target.value }))}
+                                    variant="outlined"
                                     InputProps={{
-                                        startAdornment: <InputAdornment position="start"><LinkedInIcon /></InputAdornment>
+                                        startAdornment: <InputAdornment position="start"><LinkedInIcon color="primary" /></InputAdornment>
+                                    }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 2,
+                                            backgroundColor: 'white',
+                                            '& fieldset': {
+                                                borderColor: '#d0d0d0',
+                                                borderWidth: 2,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            fontWeight: 500,
+                                        },
                                     }}
                                 />
                             </Grid>
@@ -629,8 +1047,30 @@ export default function CardWizard() {
                                     label="Twitter URL"
                                     value={cardData.twitterUrl}
                                     onChange={(e) => setCardData(prev => ({ ...prev, twitterUrl: e.target.value }))}
+                                    variant="outlined"
                                     InputProps={{
-                                        startAdornment: <InputAdornment position="start"><TwitterIcon /></InputAdornment>
+                                        startAdornment: <InputAdornment position="start"><TwitterIcon color="primary" /></InputAdornment>
+                                    }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 2,
+                                            backgroundColor: 'white',
+                                            '& fieldset': {
+                                                borderColor: '#d0d0d0',
+                                                borderWidth: 2,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            fontWeight: 500,
+                                        },
                                     }}
                                 />
                             </Grid>
@@ -640,8 +1080,30 @@ export default function CardWizard() {
                                     label="Instagram URL"
                                     value={cardData.instagramUrl}
                                     onChange={(e) => setCardData(prev => ({ ...prev, instagramUrl: e.target.value }))}
+                                    variant="outlined"
                                     InputProps={{
-                                        startAdornment: <InputAdornment position="start"><InstagramIcon /></InputAdornment>
+                                        startAdornment: <InputAdornment position="start"><InstagramIcon color="primary" /></InputAdornment>
+                                    }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 2,
+                                            backgroundColor: 'white',
+                                            '& fieldset': {
+                                                borderColor: '#d0d0d0',
+                                                borderWidth: 2,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            fontWeight: 500,
+                                        },
                                     }}
                                 />
                             </Grid>
@@ -651,8 +1113,30 @@ export default function CardWizard() {
                                     label="Trendyol URL"
                                     value={cardData.trendyolUrl}
                                     onChange={(e) => setCardData(prev => ({ ...prev, trendyolUrl: e.target.value }))}
+                                    variant="outlined"
                                     InputProps={{
-                                        startAdornment: <InputAdornment position="start"><StorefrontIcon /></InputAdornment>
+                                        startAdornment: <InputAdornment position="start"><StorefrontIcon color="primary" /></InputAdornment>
+                                    }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 2,
+                                            backgroundColor: 'white',
+                                            '& fieldset': {
+                                                borderColor: '#d0d0d0',
+                                                borderWidth: 2,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            fontWeight: 500,
+                                        },
                                     }}
                                 />
                             </Grid>
@@ -663,44 +1147,112 @@ export default function CardWizard() {
             case 4:
                 return (
                     <Box>
-                        <Typography variant="h6" gutterBottom>
-                            Banka Hesap Bilgileri
+                        <Typography 
+                            variant="h5" 
+                            gutterBottom 
+                            sx={{ 
+                                fontWeight: 700, 
+                                color: '#1a1a1a',
+                                mb: 2,
+                                textAlign: 'center'
+                            }}
+                        >
+                            Banka Hesapları
+                        </Typography>
+                        <Typography 
+                            variant="body1" 
+                            sx={{ 
+                                color: '#666',
+                                mb: 4,
+                                textAlign: 'center',
+                                fontSize: '0.95rem'
+                            }}
+                        >
+                            Banka hesap bilgilerinizi ekleyin (opsiyonel)
                         </Typography>
                         
-                        <Box sx={{ mb: 3 }}>
+                        <Box sx={{ mb: 4, textAlign: 'center' }}>
                             <Button
-                                variant="outlined"
-                                startIcon={<AddIcon />}
+                                variant="contained"
+                                startIcon={<AddIcon sx={{ fontSize: '1.5rem' }} />}
                                 onClick={() => handleBankDialogOpen()}
+                                size="large"
+                                sx={{
+                                    px: { xs: 4, sm: 6 },
+                                    py: 2,
+                                    borderRadius: 3,
+                                    textTransform: 'none',
+                                    fontSize: { xs: '1rem', sm: '1.1rem' },
+                                    fontWeight: 600,
+                                    minWidth: { xs: '100%', sm: '300px' },
+                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                    color: 'white',
+                                    boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+                                    '&:hover': {
+                                        background: 'linear-gradient(135deg, #5568d3 0%, #6a4190 100%)',
+                                        boxShadow: '0 6px 20px rgba(102, 126, 234, 0.6)',
+                                        transform: 'translateY(-2px)'
+                                    },
+                                    transition: 'all 0.3s ease'
+                                }}
                             >
                                 Banka Hesabı Ekle
                             </Button>
                         </Box>
 
-                        <List>
-                            {bankAccounts.map((account, index) => (
-                                <ListItem key={index}>
-                                    <Avatar sx={{ mr: 2 }}>
-                                        <AccountBalanceIcon />
-                                    </Avatar>
-                                    <ListItemText
-                                        primary={account.bankName}
-                                        secondary={`${account.accountName} - ${account.iban}`}
-                                    />
-                                    <ListItemSecondaryAction>
-                                        <IconButton onClick={() => handleBankDialogOpen(account)}>
-                                            <EditIcon />
-                                        </IconButton>
-                                        <IconButton onClick={() => {
-                                            const newAccounts = bankAccounts.filter((_, i) => i !== index);
-                                            setBankAccounts(newAccounts);
-                                            setCardData(prev => ({ ...prev, bankAccounts: newAccounts }));
-                                        }}>
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </ListItemSecondaryAction>
-                                </ListItem>
-                            ))}
+                        <List sx={{ 
+                            backgroundColor: 'grey.50',
+                            borderRadius: 2,
+                            p: bankAccounts.length > 0 ? 2 : 0
+                        }}>
+                            {bankAccounts.length === 0 ? (
+                                <Box sx={{ textAlign: 'center', py: 4 }}>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Henüz banka hesabı eklenmedi
+                                    </Typography>
+                                </Box>
+                            ) : (
+                                bankAccounts.map((account, index) => (
+                                    <ListItem 
+                                        key={index}
+                                        sx={{
+                                            backgroundColor: 'white',
+                                            borderRadius: 2,
+                                            mb: 1,
+                                            '&:last-child': { mb: 0 }
+                                        }}
+                                    >
+                                        <Avatar sx={{ mr: 2, bgcolor: 'primary.main' }}>
+                                            <AccountBalanceIcon />
+                                        </Avatar>
+                                        <ListItemText
+                                            primary={account.bankName}
+                                            secondary={`${account.accountName} - ${account.iban}`}
+                                            primaryTypographyProps={{
+                                                fontWeight: 600
+                                            }}
+                                        />
+                                        <ListItemSecondaryAction>
+                                            <IconButton 
+                                                onClick={() => handleBankDialogOpen(account)}
+                                                sx={{ color: 'primary.main' }}
+                                            >
+                                                <EditIcon />
+                                            </IconButton>
+                                            <IconButton 
+                                                onClick={() => {
+                                                    const newAccounts = bankAccounts.filter((_, i) => i !== index);
+                                                    setBankAccounts(newAccounts);
+                                                    setCardData(prev => ({ ...prev, bankAccounts: newAccounts }));
+                                                }}
+                                                sx={{ color: 'error.main' }}
+                                            >
+                                                <DeleteIcon />
+                                            </IconButton>
+                                        </ListItemSecondaryAction>
+                                    </ListItem>
+                                ))
+                            )}
                         </List>
                     </Box>
                 );
@@ -708,15 +1260,60 @@ export default function CardWizard() {
             case 5:
                 return (
                     <Box>
-                        <Typography variant="h6" gutterBottom>
+                        <Typography 
+                            variant="h5" 
+                            gutterBottom 
+                            sx={{ 
+                                fontWeight: 700, 
+                                color: '#1a1a1a',
+                                mb: 2,
+                                textAlign: 'center'
+                            }}
+                        >
                             Tema Seçimi
                         </Typography>
+                        <Typography 
+                            variant="body1" 
+                            sx={{ 
+                                color: '#666',
+                                mb: 4,
+                                textAlign: 'center',
+                                fontSize: '0.95rem'
+                            }}
+                        >
+                            Kartvizitiniz için bir tema seçin
+                        </Typography>
                         
-                        <FormControl fullWidth sx={{ mb: 3 }}>
+                        <FormControl 
+                            fullWidth 
+                            sx={{ 
+                                mb: 4,
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: 2,
+                                    backgroundColor: 'white',
+                                    '& fieldset': {
+                                        borderColor: '#d0d0d0',
+                                        borderWidth: 2,
+                                    },
+                                    '&:hover fieldset': {
+                                        borderColor: '#667eea',
+                                        borderWidth: 2,
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: '#667eea',
+                                        borderWidth: 2,
+                                    },
+                                },
+                                '& .MuiInputLabel-root': {
+                                    fontWeight: 500,
+                                },
+                            }}
+                        >
                             <InputLabel>Tema</InputLabel>
                             <Select
                                 value={cardData.theme}
                                 onChange={(e) => setCardData(prev => ({ ...prev, theme: e.target.value }))}
+                                label="Tema"
                             >
                                 <MenuItem value="light">Açık Tema</MenuItem>
                                 <MenuItem value="dark">Koyu Tema</MenuItem>
@@ -725,14 +1322,34 @@ export default function CardWizard() {
                             </Select>
                         </FormControl>
 
-                        <Box sx={{ mt: 3 }}>
-                            <Typography variant="h6" gutterBottom>
-                                Tema Önizlemesi
+                        <Box 
+                            sx={{ 
+                                mt: 3,
+                                p: 3,
+                                backgroundColor: 'grey.50',
+                                borderRadius: 3,
+                            }}
+                        >
+                            <Typography 
+                                variant="h6" 
+                                gutterBottom
+                                sx={{
+                                    fontWeight: 600,
+                                    mb: 3,
+                                    textAlign: 'center'
+                                }}
+                            >
+                                Önizleme
                             </Typography>
-                            <ThemePreview 
-                                formData={cardData}
-                                theme={cardData.theme}
-                            />
+                            <Box sx={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                            }}>
+                                <ThemePreview 
+                                    formData={cardData}
+                                    theme={cardData.theme}
+                                />
+                            </Box>
                         </Box>
                     </Box>
                 );
@@ -776,57 +1393,288 @@ export default function CardWizard() {
     }
 
     return (
-        <Container maxWidth="md" sx={{ py: 4 }}>
-            <Paper sx={{ p: 4 }}>
-                <Typography variant="h4" component="h1" gutterBottom align="center">
-                    Kartvizit Sihirbazı
-                    <Chip 
-                        label={tokenData?.type === 'corporate' ? 'Kurumsal' : tokenData?.type === 'admin' ? 'Admin' : 'Bireysel'}
-                        color="primary"
-                        sx={{ ml: 2 }}
-                    />
-                </Typography>
-
-                <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-                    {steps.map((label) => (
-                        <Step key={label}>
-                            <StepLabel>{label}</StepLabel>
-                        </Step>
-                    ))}
-                </Stepper>
-
-                {renderStepContent(activeStep)}
-
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-                    <Button
-                        disabled={activeStep === 0}
-                        onClick={handleBack}
+        <Box 
+            sx={{ 
+                minHeight: '100vh',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                py: { xs: 2, md: 4 },
+                px: 2
+            }}
+        >
+            <Container maxWidth="xl" sx={{ maxWidth: '1400px !important' }}>
+                <Paper 
+                    elevation={8}
+                    sx={{ 
+                        borderRadius: 4,
+                        overflow: 'hidden',
+                        background: 'white',
+                        mx: 'auto'
+                    }}
+                >
+                    {/* Başlık Bölümü */}
+                    <Box 
+                        sx={{ 
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            p: { xs: 3, md: 5 },
+                            textAlign: 'center',
+                            color: 'white'
+                        }}
                     >
-                        Geri
-                    </Button>
-                    <Button
-                        variant="contained"
-                        onClick={handleNext}
-                        disabled={loading}
-                    >
-                        {loading && <CircularProgress size={20} sx={{ mr: 1 }} />}
-                        {activeStep === steps.length - 1 ? 'Kartı Oluştur' : 'İleri'}
-                    </Button>
-                </Box>
+                        <Typography 
+                            variant="h3" 
+                            component="h1" 
+                            sx={{ 
+                                fontWeight: 700,
+                                mb: 2,
+                                fontSize: { xs: '1.75rem', md: '2.5rem' }
+                            }}
+                        >
+                            Kartvizit Sihirbazı
+                        </Typography>
+                        <Chip 
+                            label={tokenData?.type === 'corporate' ? 'Kurumsal' : tokenData?.type === 'admin' ? 'Admin' : 'Bireysel'}
+                            sx={{ 
+                                fontWeight: 600,
+                                fontSize: '0.9rem',
+                                px: 3,
+                                py: 2.5,
+                                backgroundColor: 'rgba(255,255,255,0.2)',
+                                color: 'white',
+                                backdropFilter: 'blur(10px)',
+                                border: '1px solid rgba(255,255,255,0.3)'
+                            }}
+                        />
+                    </Box>
+
+                    {/* Ana İçerik */}
+                    <Box sx={{ p: { xs: 3, md: 6 } }}>
+                        {/* Progress Bar */}
+                        <Box sx={{ mb: 4 }}>
+                            <Box sx={{ 
+                                display: 'flex', 
+                                justifyContent: 'space-between',
+                                mb: 2,
+                                flexWrap: 'wrap',
+                                gap: 1
+                            }}>
+                                {steps.map((label, index) => (
+                                    <Box 
+                                        key={label}
+                                        sx={{ 
+                                            flex: 1,
+                                            minWidth: { xs: 'calc(50% - 8px)', sm: 'auto' },
+                                            textAlign: 'center',
+                                            position: 'relative'
+                                        }}
+                                    >
+                                        <Box
+                                            sx={{
+                                                width: 40,
+                                                height: 40,
+                                                borderRadius: '50%',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                margin: '0 auto',
+                                                mb: 1,
+                                                background: index <= activeStep 
+                                                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                                                    : '#e0e0e0',
+                                                color: index <= activeStep ? 'white' : '#999',
+                                                fontWeight: 600,
+                                                fontSize: '1rem',
+                                                boxShadow: index === activeStep 
+                                                    ? '0 4px 12px rgba(102, 126, 234, 0.4)'
+                                                    : 'none',
+                                                transition: 'all 0.3s ease'
+                                            }}
+                                        >
+                                            {index + 1}
+                                        </Box>
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                fontSize: { xs: '0.7rem', sm: '0.8rem' },
+                                                fontWeight: index === activeStep ? 700 : 500,
+                                                color: index === activeStep ? '#667eea' : '#666',
+                                                display: 'block',
+                                                lineHeight: 1.3
+                                            }}
+                                        >
+                                            {label}
+                                        </Typography>
+                                    </Box>
+                                ))}
+                            </Box>
+                            <Box 
+                                sx={{ 
+                                    height: 8, 
+                                    backgroundColor: '#e0e0e0',
+                                    borderRadius: 4,
+                                    overflow: 'hidden',
+                                    position: 'relative'
+                                }}
+                            >
+                                <Box 
+                                    sx={{ 
+                                        height: '100%',
+                                        width: `${((activeStep + 1) / steps.length) * 100}%`,
+                                        background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
+                                        transition: 'width 0.3s ease',
+                                        borderRadius: 4
+                                    }}
+                                />
+                            </Box>
+                        </Box>
+
+                        {/* Form İçeriği */}
+                        <Box 
+                            sx={{ 
+                                minHeight: 450,
+                                backgroundColor: 'white',
+                                borderRadius: 3,
+                                p: { xs: 3, md: 6 },
+                                mb: 4,
+                                border: '1px solid #e0e0e0',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                            }}
+                        >
+                            {renderStepContent(activeStep)}
+                        </Box>
+
+                        {/* Navigasyon Butonları */}
+                        <Box sx={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between', 
+                            gap: 3,
+                            flexDirection: { xs: 'column', sm: 'row' },
+                            width: '100%'
+                        }}>
+                            <Button
+                                disabled={activeStep === 0}
+                                onClick={handleBack}
+                                variant="outlined"
+                                size="large"
+                                sx={{
+                                    flex: { xs: 1, sm: '0 1 35%' },
+                                    minWidth: { xs: '100%', sm: '200px' },
+                                    px: { xs: 4, sm: 5 },
+                                    py: 2,
+                                    borderRadius: 3,
+                                    textTransform: 'none',
+                                    fontSize: { xs: '1rem', sm: '1.1rem' },
+                                    fontWeight: 600,
+                                    borderWidth: 2,
+                                    borderColor: '#667eea',
+                                    color: '#667eea',
+                                    backgroundColor: 'white',
+                                    '&:hover': {
+                                        borderWidth: 2,
+                                        backgroundColor: '#f5f7ff',
+                                        borderColor: '#5568d3',
+                                        color: '#5568d3',
+                                    },
+                                    '&:disabled': {
+                                        borderColor: '#e0e0e0',
+                                        color: '#999',
+                                        backgroundColor: '#f5f5f5',
+                                    }
+                                }}
+                            >
+                                ← Geri
+                            </Button>
+                            <Button
+                                variant="contained"
+                                onClick={handleNext}
+                                disabled={loading}
+                                size="large"
+                                sx={{
+                                    flex: { xs: 1, sm: '0 1 35%' },
+                                    minWidth: { xs: '100%', sm: '200px' },
+                                    px: { xs: 4, sm: 5 },
+                                    py: 2,
+                                    borderRadius: 3,
+                                    textTransform: 'none',
+                                    fontSize: { xs: '1rem', sm: '1.1rem' },
+                                    fontWeight: 600,
+                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                    color: 'white',
+                                    boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+                                    '&:hover': {
+                                        background: 'linear-gradient(135deg, #5568d3 0%, #6a4190 100%)',
+                                        boxShadow: '0 6px 20px rgba(102, 126, 234, 0.6)',
+                                        transform: 'translateY(-2px)'
+                                    },
+                                    '&:disabled': {
+                                        background: '#cccccc',
+                                        color: '#666',
+                                    },
+                                    transition: 'all 0.3s ease'
+                                }}
+                            >
+                                {loading && <CircularProgress size={20} sx={{ mr: 1, color: 'white' }} />}
+                                {activeStep === steps.length - 1 ? '✓ Kartı Oluştur' : 'İleri →'}
+                            </Button>
+                        </Box>
+                    </Box>
 
                 {/* Banka Hesabı Dialog */}
-                <Dialog open={bankDialogOpen} onClose={() => setBankDialogOpen(false)} maxWidth="sm" fullWidth>
-                    <DialogTitle>
+                <Dialog 
+                    open={bankDialogOpen} 
+                    onClose={() => setBankDialogOpen(false)} 
+                    maxWidth="sm" 
+                    fullWidth
+                    PaperProps={{
+                        sx: {
+                            borderRadius: 3,
+                            boxShadow: '0 8px 32px rgba(0,0,0,0.12)'
+                        }
+                    }}
+                >
+                    <DialogTitle 
+                        sx={{ 
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            color: 'white',
+                            py: 3,
+                            fontWeight: 600
+                        }}
+                    >
                         {editingBankAccount ? 'Banka Hesabını Düzenle' : 'Banka Hesabı Ekle'}
                     </DialogTitle>
-                    <DialogContent>
-                        <Grid container spacing={2} sx={{ mt: 1 }}>
+                    <DialogContent sx={{ mt: 3 }}>
+                        <Grid container spacing={3}>
                             <Grid item xs={12}>
-                                <FormControl fullWidth>
+                                <FormControl 
+                                    fullWidth
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 2,
+                                            backgroundColor: 'white',
+                                            '& fieldset': {
+                                                borderColor: '#d0d0d0',
+                                                borderWidth: 2,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            fontWeight: 500,
+                                        },
+                                    }}
+                                >
                                     <InputLabel>Banka</InputLabel>
                                     <Select
                                         value={bankFormData.bankName}
                                         onChange={(e) => setBankFormData(prev => ({ ...prev, bankName: e.target.value }))}
+                                        label="Banka"
                                     >
                                         {TURKISH_BANKS.map((bank) => (
                                             <MenuItem key={bank.name} value={bank.name}>
@@ -842,6 +1690,27 @@ export default function CardWizard() {
                                     label="Hesap Sahibi"
                                     value={bankFormData.accountName}
                                     onChange={(e) => setBankFormData(prev => ({ ...prev, accountName: e.target.value }))}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 2,
+                                            backgroundColor: 'white',
+                                            '& fieldset': {
+                                                borderColor: '#d0d0d0',
+                                                borderWidth: 2,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            fontWeight: 500,
+                                        },
+                                    }}
                                 />
                             </Grid>
                             <Grid item xs={12}>
@@ -854,18 +1723,82 @@ export default function CardWizard() {
                                         iban: formatIban(e.target.value) 
                                     }))}
                                     placeholder="TR00 0000 0000 0000 0000 0000 00"
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 2,
+                                            backgroundColor: 'white',
+                                            '& fieldset': {
+                                                borderColor: '#d0d0d0',
+                                                borderWidth: 2,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#667eea',
+                                                borderWidth: 2,
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            fontWeight: 500,
+                                        },
+                                    }}
                                 />
                             </Grid>
                         </Grid>
                     </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setBankDialogOpen(false)}>İptal</Button>
-                        <Button variant="contained" onClick={handleBankFormSubmit}>
+                    <DialogActions sx={{ p: 3, gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
+                        <Button 
+                            onClick={() => setBankDialogOpen(false)}
+                            variant="outlined"
+                            size="large"
+                            sx={{
+                                borderRadius: 3,
+                                px: 5,
+                                py: 1.5,
+                                textTransform: 'none',
+                                fontWeight: 600,
+                                fontSize: '1rem',
+                                borderWidth: 2,
+                                borderColor: '#667eea',
+                                color: '#667eea',
+                                minWidth: { xs: '100%', sm: '140px' },
+                                '&:hover': {
+                                    borderWidth: 2,
+                                    backgroundColor: '#f5f7ff',
+                                }
+                            }}
+                        >
+                            İptal
+                        </Button>
+                        <Button 
+                            variant="contained"
+                            size="large"
+                            onClick={handleBankFormSubmit}
+                            sx={{
+                                borderRadius: 3,
+                                px: 5,
+                                py: 1.5,
+                                textTransform: 'none',
+                                fontWeight: 600,
+                                fontSize: '1rem',
+                                minWidth: { xs: '100%', sm: '140px' },
+                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                color: 'white',
+                                boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)',
+                                '&:hover': {
+                                    background: 'linear-gradient(135deg, #5568d3 0%, #6a4190 100%)',
+                                    boxShadow: '0 6px 16px rgba(102, 126, 234, 0.6)',
+                                }
+                            }}
+                        >
                             {editingBankAccount ? 'Güncelle' : 'Ekle'}
                         </Button>
                     </DialogActions>
                 </Dialog>
             </Paper>
         </Container>
+        </Box>
     );
 } 

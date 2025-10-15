@@ -4,6 +4,7 @@ const cors = require('cors');
 const path = require('path'); // Path modülünü import et
 const fs = require('fs'); // File system modülünü import et
 const { getPool } = require('./config/db'); // db.js'den fonksiyonu import et
+const { runMigrations } = require('./database/runMigrations'); // Migration fonksiyonunu import et
 const authRoutes = require('./api/auth/auth.routes'); // Auth rotalarını import et
 const publicCardRoutes = require('./api/cards/public.routes.js'); // Yeni public card rotaları
 const cardRoutes = require('./api/cards/card.routes'); // Korumalı card rotaları
@@ -102,6 +103,7 @@ app.use('/api/upload', uploadRoutes); // Upload rotalarını kullan
 const startServer = async () => {
     try {
         await getPool(); // Veritabanı bağlantısını başlat/kontrol et
+        await runMigrations(); // Migration işlemlerini çalıştır
         app.listen(port, () => {
             console.log(`Sunucu http://localhost:${port} adresinde çalışıyor`);
             console.log(`Yüklenen dosyalar ${uploadsDir} klasöründe saklanacak ve /uploads altında sunulacak.`);

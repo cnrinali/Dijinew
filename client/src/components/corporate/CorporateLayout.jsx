@@ -47,13 +47,6 @@ const menuItems = [
     description: 'Şirket çalışanlarını yönet'
   },
   {
-    id: 'create-card',
-    label: 'Yeni Kartvizit',
-    icon: <AddIcon />,
-    path: '/cards/new',
-    description: 'Yeni kartvizit oluştur'
-  },
-  {
     id: 'analytics',
     label: 'İstatistikler',
     icon: <BarChartIcon />,
@@ -94,7 +87,6 @@ function CorporateLayout({ children }) {
     if (currentPath === '/corporate/dashboard') return 'dashboard';
     if (currentPath.includes('/corporate/cards')) return 'cards';
     if (currentPath.includes('/corporate/users')) return 'users';
-    if (currentPath === '/cards/new') return 'create-card';
     if (currentPath === '/analytics') return 'analytics';
     if (currentPath.includes('/corporate/activities')) return 'activities';
     return 'home';

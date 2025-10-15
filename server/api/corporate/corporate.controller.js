@@ -1,6 +1,7 @@
 const { getPool, sql } = require('../../config/db');
 const bcrypt = require('bcryptjs');
 const { generateQRCodeDataURL, checkSlugUniqueness } = require('../admin/cards/card.controller');
+const { sendCorporateUserCredentials } = require('../../services/emailService');
 
 // @desc    Get cards for the logged-in corporate user's company
 // @route   GET /api/corporate/cards
@@ -291,9 +292,9 @@ const createCompanyUser = async (req, res) => {
         return res.status(400).json({ message: 'İsim, e-posta, şifre ve rol zorunludur.' });
     }
 
-    // Kurumsal kullanıcı sadece 'user' rolünde kullanıcı ekleyebilir
-    if (role !== 'user') {
-        return res.status(400).json({ message: 'Bu işlemle sadece \'user\' rolünde kullanıcı oluşturabilirsiniz.' });
+    // Kurumsal kullanıcı 'user' ve 'corporate' rolünde kullanıcı ekleyebilir
+    if (role !== 'user' && role !== 'corporate') {
+        return res.status(400).json({ message: 'Sadece \'user\' veya \'corporate\' rolünde kullanıcı oluşturabilirsiniz.' });
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -366,9 +367,29 @@ const createCompanyUser = async (req, res) => {
             newUser.companyName = companyNameResult.recordset[0]?.name;
 
             await transaction.commit();
+            
+            // Kullanıcıya email gönder
+            const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login`;
+            const emailResult = await sendCorporateUserCredentials(
+                email, 
+                name, 
+                email, 
+                password, // Orijinal şifre (henüz hashlenmemiş hali kaydetmiyoruz, sadece emailde gösteriyoruz)
+                newUser.companyName,
+                loginUrl
+            );
+            
+            if (emailResult.success) {
+                console.log('Kurumsal kullanıcı emaili başarıyla gönderildi:', emailResult.messageId);
+            } else {
+                console.warn('Kurumsal kullanıcı emaili gönderilemedi:', emailResult.message);
+                // Email gönderilemese bile kullanıcı oluşturuldu, hata döndürmeyelim
+            }
+            
             res.status(201).json({
                 success: true,
-                data: newUser
+                data: newUser,
+                emailSent: emailResult.success
             }); // Şifre olmadan kullanıcı bilgisi döner
 
         } catch (error) {

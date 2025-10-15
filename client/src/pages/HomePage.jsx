@@ -7,7 +7,6 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
-import Stack from '@mui/material/Stack';
 
 function HomePage() {
     const { isLoggedIn, user } = useAuth();
@@ -53,14 +52,11 @@ function HomePage() {
                     <Typography variant="body1" sx={{ mb: 2 }}>
                         Başlamak için giriş yapın veya yeni bir hesap oluşturun.
                     </Typography>
-                    <Stack direction="row" spacing={2} justifyContent="center">
+                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                         <Button variant="contained" component={RouterLink} to="/login">
                             Giriş Yap
                         </Button>
-                        <Button variant="outlined" component={RouterLink} to="/register">
-                            Kayıt Ol
-                        </Button>
-                    </Stack>
+                    </Box>
                 </Box>
             )}
 

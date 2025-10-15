@@ -1,5 +1,6 @@
 const { getPool, sql } = require('../../config/db');
 const bcrypt = require('bcryptjs');
+const { sendCorporateUserCredentials } = require('../../services/emailService');
 
 // @desc    Get all users (Admin view)
 // @route   GET /api/admin/users
@@ -267,8 +268,29 @@ const createUserAdmin = async (req, res) => {
 
             await transaction.commit();
             
+            // Kullanıcıya email gönder
+            const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login`;
+            const companyName = newUser.companyName || 'Sistem';
+            const emailResult = await sendCorporateUserCredentials(
+                email,
+                name,
+                email,
+                password, // Orijinal şifre (hash'lenmemiş)
+                companyName,
+                loginUrl
+            );
+            
+            if (emailResult.success) {
+                console.log('Kullanıcı oluşturma emaili başarıyla gönderildi:', emailResult.messageId);
+            } else {
+                console.warn('Kullanıcı oluşturma emaili gönderilemedi:', emailResult.message);
+            }
+            
             // Başarılı yanıt (şifre olmadan)
-            res.status(201).json(newUser);
+            res.status(201).json({
+                ...newUser,
+                emailSent: emailResult.success
+            });
 
         } catch (error) {
             await transaction.rollback();

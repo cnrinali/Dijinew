@@ -22,6 +22,7 @@ import AdminCardCreatePage from './pages/admin/AdminCardCreatePage';
 import AdminActivitiesPage from './components/admin/AdminActivitiesPage';
 import AdminLayout from './components/admin/AdminLayout';
 import CorporateLayout from './components/corporate/CorporateLayout';
+import UserLayout from './components/user/UserLayout';
 import CorporateActivitiesPage from './components/corporate/CorporateActivitiesPage';
 import UserProfilePage from './pages/ProfilePage';
 import CorporateDashboardPage from './pages/corporate/CorporateDashboardPage';
@@ -45,10 +46,7 @@ import MyDigitalCardPage from './pages/MyDigitalCardPage';
 const navItems = [
   { label: 'Ana Sayfa', path: '/home', public: true },
   { label: 'Giriş Yap', path: '/login', public: true, hideWhenLoggedIn: true },
-  { label: 'Profilim', path: '/profile', roles: ['user', 'admin', 'corporate'] },
   { label: 'Dijital Kartım', path: '/cards', roles: ['user'] },
-  { label: 'İstatistikler', path: '/analytics', roles: ['user', 'admin', 'corporate'] },
-  { label: 'Admin Panel', path: '/admin/dashboard', roles: ['admin'] },
   { label: 'Kurumsal Panel', path: '/corporate/dashboard', roles: ['corporate'] },
 ];
 
@@ -117,11 +115,12 @@ function AppContent() {
         {/* All other routes with navbar */}
         <Route path="*" element={
           <>
-            {!location.pathname.startsWith('/admin') && (
-              <AppBar position="static" sx={{ boxShadow: 2 }}>
+                    {!location.pathname.startsWith('/admin') && !location.pathname.startsWith('/cards') && !(user?.role === 'user' && (location.pathname === '/profile' || location.pathname === '/analytics')) && (
+                      <AppBar position="static" sx={{ boxShadow: 2 }}>
               <Container maxWidth="xl">
                 <Toolbar disableGutters sx={{ minHeight: { xs: 56, sm: 64 } }}>
-                  {!location.pathname.startsWith('/corporate') && (
+                  {!location.pathname.startsWith('/corporate') && 
+                   !(user?.role === 'corporate' && location.pathname === '/analytics') && (
                     <Box
                       component={RouterLink}
                       to="/"
@@ -206,7 +205,8 @@ function AppContent() {
                         },
                       }}
                     >
-                      {filteredNavItems.map((item) => (
+                      {!(user?.role === 'corporate' && location.pathname === '/analytics') && 
+                       filteredNavItems.map((item) => (
                         <MenuItem key={item.label} onClick={handleCloseNavMenu} component={RouterLink} to={item.path}>
                           <Typography textAlign="center">{item.label}</Typography>
                         </MenuItem>
@@ -221,35 +221,38 @@ function AppContent() {
                        )}
                     </Menu>
                   </Box>
-                  <Box
-                    component={RouterLink}
-                    to="/"
-                    sx={{
-                      mr: 2,
-                      display: { xs: 'flex', md: 'none' },
-                      flexGrow: 1,
-                      alignItems: 'center',
-                      textDecoration: 'none',
-                      gap: 1,
-                    }}
-                  >
-                    <BusinessIcon sx={{ color: 'primary.main', fontSize: 28 }} />
-                    <Typography
-                      variant="h6"
+                  {!(user?.role === 'corporate' && location.pathname === '/analytics') && (
+                    <Box
+                      component={RouterLink}
+                      to="/"
                       sx={{
-                        fontWeight: 600,
-                        color: 'text.primary',
-                        fontFamily: 'Inter, sans-serif',
-                        background: 'linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%)',
-                        backgroundClip: 'text',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
+                        mr: 2,
+                        display: { xs: 'flex', md: 'none' },
+                        flexGrow: 1,
+                        alignItems: 'center',
+                        textDecoration: 'none',
+                        gap: 1,
                       }}
                     >
-                      DijiCard
-                    </Typography>
-                  </Box>
-                  {!location.pathname.startsWith('/corporate') && (
+                      <BusinessIcon sx={{ color: 'primary.main', fontSize: 28 }} />
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontWeight: 600,
+                          color: 'text.primary',
+                          fontFamily: 'Inter, sans-serif',
+                          background: 'linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%)',
+                          backgroundClip: 'text',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                        }}
+                      >
+                        DijiCard
+                      </Typography>
+                    </Box>
+                  )}
+                  {!location.pathname.startsWith('/corporate') && 
+                   !(user?.role === 'corporate' && location.pathname === '/analytics') && (
                     <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, gap: 0.5 }}>
                       {filteredNavItems.map((item) => (
                         <Button
@@ -282,11 +285,11 @@ function AppContent() {
 
                   {user && (
                     <Box sx={{ 
-                      flexGrow: location.pathname.startsWith('/corporate') ? 1 : 0, 
+                      flexGrow: location.pathname.startsWith('/corporate') || (user?.role === 'corporate' && location.pathname === '/analytics') ? 1 : 0, 
                       display: { xs: 'none', md: 'flex' }, 
                       alignItems: 'center', 
                       gap: 1,
-                      justifyContent: location.pathname.startsWith('/corporate') ? 'flex-end' : 'flex-start'
+                      justifyContent: location.pathname.startsWith('/corporate') || (user?.role === 'corporate' && location.pathname === '/analytics') ? 'flex-end' : 'flex-start'
                     }}>
                       <ThemeToggle />
                       
@@ -374,11 +377,11 @@ function AppContent() {
                   {/* Mobile User Profile */}
                   {user && (
                     <Box sx={{ 
-                      flexGrow: location.pathname.startsWith('/corporate') ? 1 : 0, 
+                      flexGrow: location.pathname.startsWith('/corporate') || (user?.role === 'corporate' && location.pathname === '/analytics') ? 1 : 0, 
                       display: { xs: 'flex', md: 'none' }, 
                       alignItems: 'center', 
                       gap: 1,
-                      justifyContent: location.pathname.startsWith('/corporate') ? 'flex-end' : 'flex-start'
+                      justifyContent: location.pathname.startsWith('/corporate') || (user?.role === 'corporate' && location.pathname === '/analytics') ? 'flex-end' : 'flex-start'
                     }}>
                       <ThemeToggle />
                       
@@ -444,8 +447,10 @@ function AppContent() {
                   user ? (
                     user.role === 'admin' ? (
                       <AdminLayout><UserProfilePage /></AdminLayout>
+                    ) : user.role === 'corporate' ? (
+                      <CorporateLayout><UserProfilePage /></CorporateLayout>
                     ) : (
-                      <UserProfilePage />
+                      <UserLayout><UserProfilePage /></UserLayout>
                     )
                   ) : (
                     <Navigate to="/login" />
@@ -469,7 +474,7 @@ function AppContent() {
                 <Route path="/corporate/activities" element={user && user.role === 'corporate' && user.companyId ? <CorporateLayout><CorporateActivitiesPage /></CorporateLayout> : <Navigate to="/login" />} />
 
                 {/* User Routes */}
-                <Route path="/cards" element={user && user.role === 'user' ? <CardListPage /> : <Navigate to="/login" />} />
+                <Route path="/cards" element={user && user.role === 'user' ? <UserLayout><CardListPage /></UserLayout> : <Navigate to="/login" />} />
                 <Route path="/analytics" element={
                   user && (user.role === 'user' || user.role === 'corporate' || user.role === 'admin') ? (
                     user.role === 'corporate' ? (
@@ -477,7 +482,7 @@ function AppContent() {
                     ) : user.role === 'admin' ? (
                       <AdminLayout><AnalyticsPage /></AdminLayout>
                     ) : (
-                      <AnalyticsPage />
+                      <UserLayout><AnalyticsPage /></UserLayout>
                     )
                   ) : (
                     <Navigate to="/login" />
@@ -516,7 +521,7 @@ function AppContent() {
                     ) : user.role === 'admin' ? (
                       <AdminLayout><EditCardPage /></AdminLayout>
                     ) : (
-                      <EditCardPage />
+                      <UserLayout><EditCardPage /></UserLayout>
                     )
                   ) : (
                     <Navigate to="/login" />

@@ -203,50 +203,6 @@ function CorporateCardsPage() {
                                     <RefreshIcon />
                                 </IconButton>
                             </Tooltip>
-                            <Button
-                                variant="contained"
-                                startIcon={<AddIcon />}
-                                onClick={() => navigate('/cards/new')}
-                                disabled={loading || loadingUsers}
-                                sx={{
-                                    borderRadius: 2,
-                                    textTransform: 'none',
-                                    fontWeight: 600,
-                                    px: 3,
-                                    py: 1.5,
-                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                                    mr: 1,
-                                }}
-                            >
-                                Manuel Kurulum
-                            </Button>
-                                                        <Button
-                                variant="outlined"
-                                startIcon={<ContentCopyIcon />}
-                                onClick={() => setEmailWizardOpen(true)}
-                                disabled={loading || loadingUsers}
-                                sx={{
-                                    borderRadius: 2,
-                                    textTransform: 'none',
-                                    fontWeight: 600,
-                                    px: 3,
-                                    py: 1.5,
-                                    borderColor: 'primary.main',
-                                    color: 'primary.main',
-                                    backgroundColor: 'background.paper',
-                                    '&:hover': {
-                                        borderColor: 'primary.dark',
-                                        backgroundColor: 'primary.50',
-                                    },
-                                    '&:disabled': {
-                                        borderColor: 'action.disabled',
-                                        color: 'action.disabled',
-                                        backgroundColor: 'action.disabledBackground',
-                                    }
-                                }}
-                            >
-                                Sihirbaz Oluştur
-                            </Button>
             </Box>
                     </Box>
                 </Box>

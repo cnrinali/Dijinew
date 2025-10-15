@@ -23,12 +23,12 @@ import {
     DialogContent,
     DialogActions,
     TextField,
+    Grid,
+    Card,
     FormControl,
     InputLabel,
     Select,
     MenuItem,
-    Grid,
-    Card,
     CardContent,
     Tooltip,
     Avatar,
@@ -45,7 +45,8 @@ import {
     Edit as EditIcon,
     Delete as DeleteIcon,
     AdminPanelSettings as AdminIcon,
-    AccountCircle as UserIcon
+    AccountCircle as UserIcon,
+    CorporateFare as CorporateIcon
 } from '@mui/icons-material';
 
 const initialFormData = { 
@@ -120,8 +121,8 @@ function CorporateUserManagementPage() {
             return;
         }
 
-        if (formData.role !== 'user') {
-            setFormError('Sadece \'user\' rolünde kullanıcı oluşturabilirsiniz.');
+        if (formData.role !== 'user' && formData.role !== 'corporate') {
+            setFormError('Sadece \'user\' veya \'corporate\' rolünde kullanıcı oluşturabilirsiniz.');
              setFormLoading(false);
              return;
         }
@@ -129,14 +130,27 @@ function CorporateUserManagementPage() {
         try {
             const response = await createCompanyUser(formData);
             if (response?.data?.success) {
-            showNotification('Kullanıcı başarıyla şirket bünyesine eklendi.', 'success');
+                const emailSent = response?.data?.emailSent;
+                const successMsg = emailSent 
+                    ? 'Kullanıcı başarıyla eklendi ve giriş bilgileri email ile gönderildi.' 
+                    : 'Kullanıcı başarıyla eklendi.';
+                showNotification(successMsg, 'success');
                 fetchUsers(); // Kullanıcıları yeniden yükle
-            handleCloseModal(); 
+                handleCloseModal(); 
             }
         } catch (err) {
             console.error("Şirket kullanıcısı oluşturma hatası:", err);
-            const errorMsg = err.message || 'Kullanıcı oluşturulamadı.';
+            let errorMsg = err.message || 'Kullanıcı oluşturulamadı.';
+            
+            // Kullanıcı dostu hata mesajları
+            if (errorMsg.includes('limitine ulaşıldı')) {
+                errorMsg = '⚠️ ' + errorMsg + '\n\nŞirket kullanıcı limitini artırmak için yöneticinizle iletişime geçin.';
+            } else if (errorMsg.includes('zaten kullanılıyor')) {
+                errorMsg = '⚠️ Bu e-posta adresi sistemde kayıtlı. Lütfen farklı bir e-posta adresi kullanın.';
+            }
+            
             setFormError(errorMsg);
+            showNotification(errorMsg, 'error');
         } finally {
             setFormLoading(false);
         }
@@ -455,24 +469,54 @@ function CorporateUserManagementPage() {
                                 />
                             </Grid>
 
-                            <Grid item xs={12}>
+                            <Box>
                                 <FormControl fullWidth disabled={formLoading}>
-                                    <InputLabel>Rol</InputLabel>
-                        <Select
-                            name="role"
+                                    <InputLabel id="role-select-label">Rol *</InputLabel>
+                                    <Select
+                                        labelId="role-select-label"
+                                        id="role-select"
+                                        name="role"
                                         value={formData.role}
                                         onChange={handleInputChange}
-                            label="Rol"
-                        >
+                                        label="Rol *"
+                                        MenuProps={{
+                                            PaperProps: {
+                                                sx: {
+                                                    maxHeight: 300,
+                                                    mt: 1
+                                                }
+                                            }
+                                        }}
+                                    >
                                         <MenuItem value="user">
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                <UserIcon sx={{ fontSize: 18 }} />
-                                                Kullanıcı
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                                <UserIcon sx={{ fontSize: 20, color: 'primary.main' }} />
+                                                <Box>
+                                                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                                        Kullanıcı
+                                                    </Typography>
+                                                    <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
+                                                        Standart şirket çalışanı
+                                                    </Typography>
+                                                </Box>
                                             </Box>
                                         </MenuItem>
-                        </Select>
-                    </FormControl>
-                            </Grid>
+                                        <MenuItem value="corporate">
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                                <CorporateIcon sx={{ fontSize: 20, color: 'secondary.main' }} />
+                                                <Box>
+                                                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                                        Kurumsal Yönetici
+                                                    </Typography>
+                                                    <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
+                                                        Şirket yönetim yetkisi
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                        </MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Box>
                         </Grid>
 
                         {formError && (
