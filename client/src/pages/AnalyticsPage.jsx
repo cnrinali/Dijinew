@@ -146,9 +146,13 @@ const AnalyticsPage = () => {
                             label="Zaman Aralığı"
                             onChange={(e) => setPeriod(e.target.value)}
                         >
+                            <MenuItem value={1}>Bugün (Son 24 Saat)</MenuItem>
                             <MenuItem value={7}>Son 7 Gün</MenuItem>
+                            <MenuItem value={14}>Son 14 Gün</MenuItem>
                             <MenuItem value={30}>Son 30 Gün</MenuItem>
+                            <MenuItem value={60}>Son 2 Ay</MenuItem>
                             <MenuItem value={90}>Son 3 Ay</MenuItem>
+                            <MenuItem value={180}>Son 6 Ay</MenuItem>
                             <MenuItem value={365}>Son 1 Yıl</MenuItem>
                         </Select>
                     </FormControl>
