@@ -72,6 +72,9 @@ export default function CardWizard() {
     const [tokenValidating, setTokenValidating] = useState(true);
     const [tokenValid, setTokenValid] = useState(false);
     const [tokenData, setTokenData] = useState(null);
+    
+    // Kullanıcı kayıt durumu kontrolü
+    const [userRegistered, setUserRegistered] = useState(false);
 
     // Sihirbazın hangi tipte olduğunu belirle (admin, corporate, user)
     const wizardType = searchParams.get('type') || 'user';
@@ -316,6 +319,9 @@ export default function CardWizard() {
                             company: userData.companyName || prev.company
                         }));
                         
+                        // Kullanıcı başarıyla kaydoldu olarak işaretle
+                        setUserRegistered(true);
+                        
                         showNotification('Üyelik başarıyla oluşturuldu ve giriş yapıldı!', 'success');
                         return true;
                         
@@ -371,6 +377,9 @@ export default function CardWizard() {
                                     email: userData.email,
                                     company: userData.companyName || prev.company
                                 }));
+                                
+                                // Kullanıcı başarıyla giriş yaptı olarak işaretle
+                                setUserRegistered(true);
                                 
                                 showNotification('Giriş başarılı! Kart bilgilerinizi düzenleyebilirsiniz.', 'success');
                                 return true;
@@ -449,20 +458,20 @@ export default function CardWizard() {
     // Step ilerletme
     const handleNext = async () => {
         if (activeStep === 0) {
-            // KVKK onayları kontrolü
-            if (!kvkkConsents.privacyPolicy || !kvkkConsents.dataProcessing) {
-                showNotification('Devam etmek için zorunlu onayları kabul etmelisiniz.', 'error');
-                return;
-            }
-            
-            // Eğer kullanıcı zaten giriş yapmışsa kayıt işlemini atla
-            if (!isAuthenticated) {
+            // Eğer kullanıcı zaten kayıt olmuşsa veya giriş yapmışsa kayıt işlemini atla
+            if (userRegistered || isAuthenticated) {
+                // Kullanıcı zaten kayıt olmuş veya giriş yapmış, bir sonraki adıma geç
+                console.log('Kullanıcı zaten kayıt olmuş/giriş yapmış, kayıt atlanıyor');
+            } else {
+                // KVKK onayları kontrolü
+                if (!kvkkConsents.privacyPolicy || !kvkkConsents.dataProcessing) {
+                    showNotification('Devam etmek için zorunlu onayları kabul etmelisiniz.', 'error');
+                    return;
+                }
+                
                 // İlk adımda kullanıcı kaydı yap
                 const success = await handleUserRegistration();
                 if (!success) return;
-            } else {
-                // Kullanıcı zaten giriş yapmış, bir sonraki adıma geç
-                console.log('Kullanıcı zaten giriş yapmış, kayıt atlanıyor');
             }
         }
 
@@ -538,7 +547,7 @@ export default function CardWizard() {
                                 textAlign: 'center'
                             }}
                         >
-                            Hoş Geldiniz! Önce üyelik oluşturalım
+                            {userRegistered ? '✅ Kayıt Tamamlandı!' : 'Hoş Geldiniz! Önce üyelik oluşturalım'}
                         </Typography>
                         <Typography 
                             variant="body1" 
@@ -549,7 +558,10 @@ export default function CardWizard() {
                                 fontSize: '0.95rem'
                             }}
                         >
-                            Dijital kartvizitinizi oluşturmak için birkaç bilgiye ihtiyacımız var
+                            {userRegistered 
+                                ? 'Kayıt işleminiz başarıyla tamamlandı. Devam etmek için İleri butonuna tıklayın.' 
+                                : 'Dijital kartvizitinizi oluşturmak için birkaç bilgiye ihtiyacımız var'
+                            }
                         </Typography>
                         <Grid container spacing={2}>
                             <Grid item xs={12}>
@@ -559,6 +571,7 @@ export default function CardWizard() {
                                     value={userData.name}
                                     onChange={(e) => setUserData(prev => ({ ...prev, name: e.target.value }))}
                                     required
+                                    disabled={userRegistered}
                                     variant="outlined"
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
@@ -601,6 +614,7 @@ export default function CardWizard() {
                                     value={userData.email}
                                     onChange={(e) => setUserData(prev => ({ ...prev, email: e.target.value }))}
                                     required
+                                    disabled={userRegistered}
                                     variant="outlined"
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
@@ -643,6 +657,7 @@ export default function CardWizard() {
                                         value={userData.companyName}
                                         onChange={(e) => setUserData(prev => ({ ...prev, companyName: e.target.value }))}
                                         required
+                                        disabled={userRegistered}
                                         variant="outlined"
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
@@ -663,6 +678,7 @@ export default function CardWizard() {
                                     value={userData.password}
                                     onChange={(e) => setUserData(prev => ({ ...prev, password: e.target.value }))}
                                     required
+                                    disabled={userRegistered}
                                     variant="outlined"
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
@@ -705,6 +721,7 @@ export default function CardWizard() {
                                     value={userData.confirmPassword}
                                     onChange={(e) => setUserData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                                     required
+                                    disabled={userRegistered}
                                     variant="outlined"
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
@@ -768,6 +785,7 @@ export default function CardWizard() {
                                             <Checkbox
                                                 checked={kvkkConsents.privacyPolicy}
                                                 onChange={() => handleKvkkClick('privacyPolicy')}
+                                                disabled={userRegistered}
                                                 sx={{
                                                     color: '#1976d2',
                                                     '&.Mui-checked': {
@@ -790,6 +808,7 @@ export default function CardWizard() {
                                             <Checkbox
                                                 checked={kvkkConsents.dataProcessing}
                                                 onChange={() => handleKvkkClick('dataProcessing')}
+                                                disabled={userRegistered}
                                                 sx={{
                                                     color: '#1976d2',
                                                     '&.Mui-checked': {
@@ -815,6 +834,7 @@ export default function CardWizard() {
                                                     ...prev, 
                                                     marketingConsent: e.target.checked 
                                                 }))}
+                                                disabled={userRegistered}
                                                 sx={{
                                                     color: '#1976d2',
                                                     '&.Mui-checked': {
@@ -1643,10 +1663,16 @@ export default function CardWizard() {
                                 onChange={(e) => setCardData(prev => ({ ...prev, theme: e.target.value }))}
                                 label="Tema"
                             >
-                                <MenuItem value="light">Açık Tema</MenuItem>
+                                <MenuItem value="light">Klasik Tema</MenuItem>
+                                <MenuItem value="modern">Modern Tema</MenuItem>
+                                <MenuItem value="minimalist">Minimalist Tema</MenuItem>
+                                <MenuItem value="icongrid">İkon Grid Tema</MenuItem>
+                                <MenuItem value="business">İş Teması</MenuItem>
+                                <MenuItem value="creative">Yaratıcı Tema</MenuItem>
+                                <MenuItem value="carousel">🎡 3D Carousel Tema</MenuItem>
                                 <MenuItem value="dark">Koyu Tema</MenuItem>
-                                <MenuItem value="gradient">Gradyan Tema</MenuItem>
-                                <MenuItem value="minimal">Minimal Tema</MenuItem>
+                                <MenuItem value="blue">Mavi Tema</MenuItem>
+                                <MenuItem value="darkmodern">Koyu Modern Tema</MenuItem>
                             </Select>
                         </FormControl>
 

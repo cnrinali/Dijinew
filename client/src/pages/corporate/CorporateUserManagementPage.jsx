@@ -398,139 +398,98 @@ function CorporateUserManagementPage() {
                     fullWidth
                     PaperProps={{
                         sx: {
-                            borderRadius: 3,
-                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+                            borderRadius: 3
                         }
                     }}
                 >
-                    <DialogTitle sx={{ pb: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Box
-                                sx={{
-                                    p: 1,
-                                    borderRadius: 2,
-                                    backgroundColor: 'secondary.50',
-                                    color: 'secondary.main'
-                                }}
-                            >
-                                <AddIcon />
-                            </Box>
-                            <Box>
-                                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                                    Yeni Kullanıcı Oluştur
-                                </Typography>
-                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                    Şirketinize yeni çalışan ekleyin
-                                </Typography>
-                            </Box>
-                        </Box>
+                    <DialogTitle>
+                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            Yeni Kullanıcı Oluştur
+                        </Typography>
                     </DialogTitle>
                     
                     <Divider />
                     
                     <DialogContent sx={{ pt: 3 }}>
-                        <Grid container spacing={3}>
-                            <Grid item xs={12}>
-                                <TextField
-                                    fullWidth
-                                    label="İsim Soyisim *"
-                                    name="name"
-                                    value={formData.name}
-                                    onChange={handleInputChange}
-                                    required
-                                    disabled={formLoading}
-                                />
-                            </Grid>
+                        <Stack spacing={3}>
+                            <TextField
+                                fullWidth
+                                label="İsim Soyisim"
+                                name="name"
+                                value={formData.name}
+                                onChange={handleInputChange}
+                                required
+                                disabled={formLoading}
+                            />
 
-                            <Grid item xs={12}>
-                                <TextField
-                                    fullWidth
-                                    label="E-posta Adresi *"
-                                    name="email"
-                                    type="email"
-                                    value={formData.email}
-                                    onChange={handleInputChange}
-                                    required
-                                    disabled={formLoading}
-                                />
-                            </Grid>
+                            <TextField
+                                fullWidth
+                                label="E-posta Adresi"
+                                name="email"
+                                type="email"
+                                value={formData.email}
+                                onChange={handleInputChange}
+                                required
+                                disabled={formLoading}
+                            />
 
-                            <Grid item xs={12}>
-                                <TextField
-                                    fullWidth
-                                    label="Şifre *"
-                                    name="password"
-                                    type="password"
-                                    value={formData.password}
-                                    onChange={handleInputChange}
-                                    required
-                                    disabled={formLoading}
-                                    helperText="En az 6 karakter olmalıdır"
-                                />
-                            </Grid>
+                            <TextField
+                                fullWidth
+                                label="Şifre"
+                                name="password"
+                                type="password"
+                                value={formData.password}
+                                onChange={handleInputChange}
+                                required
+                                disabled={formLoading}
+                                helperText="En az 6 karakter olmalıdır"
+                            />
 
-                            <Box>
-                                <FormControl fullWidth disabled={formLoading}>
-                                    <InputLabel id="role-select-label">Rol *</InputLabel>
-                                    <Select
-                                        labelId="role-select-label"
-                                        id="role-select"
-                                        name="role"
-                                        value={formData.role}
-                                        onChange={handleInputChange}
-                                        label="Rol *"
-                                        MenuProps={{
-                                            PaperProps: {
-                                                sx: {
-                                                    maxHeight: 300,
-                                                    mt: 1
-                                                }
-                                            }
-                                        }}
-                                    >
-                                        <MenuItem value="user">
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                                <UserIcon sx={{ fontSize: 20, color: 'primary.main' }} />
-                                                <Box>
-                                                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                                        Kullanıcı
-                                                    </Typography>
-                                                    <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
-                                                        Standart şirket çalışanı
-                                                    </Typography>
-                                                </Box>
+                            <FormControl fullWidth disabled={formLoading}>
+                                <InputLabel>Rol</InputLabel>
+                                <Select
+                                    name="role"
+                                    value={formData.role}
+                                    onChange={handleInputChange}
+                                    label="Rol"
+                                >
+                                    <MenuItem value="user">
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <UserIcon fontSize="small" color="primary" />
+                                            <Box>
+                                                <Typography variant="body2">Kullanıcı</Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    Standart şirket çalışanı
+                                                </Typography>
                                             </Box>
-                                        </MenuItem>
-                                        <MenuItem value="corporate">
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                                <CorporateIcon sx={{ fontSize: 20, color: 'secondary.main' }} />
-                                                <Box>
-                                                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                                        Kurumsal Yönetici
-                                                    </Typography>
-                                                    <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
-                                                        Şirket yönetim yetkisi
-                                                    </Typography>
-                                                </Box>
+                                        </Box>
+                                    </MenuItem>
+                                    <MenuItem value="corporate">
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <CorporateIcon fontSize="small" color="secondary" />
+                                            <Box>
+                                                <Typography variant="body2">Kurumsal Yönetici</Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    Şirket yönetim yetkisi
+                                                </Typography>
                                             </Box>
-                                        </MenuItem>
-                                    </Select>
-                                </FormControl>
-                            </Box>
-                        </Grid>
+                                        </Box>
+                                    </MenuItem>
+                                </Select>
+                            </FormControl>
 
-                        {formError && (
-                            <Typography color="error" variant="body2" sx={{ mt: 2 }}>
-                                {formError}
-                            </Typography>
-                        )}
-                </DialogContent>
+                            {formError && (
+                                <Typography color="error" variant="body2">
+                                    {formError}
+                                </Typography>
+                            )}
+                        </Stack>
+                    </DialogContent>
 
                     <DialogActions sx={{ p: 3, pt: 2 }}>
                         <Button
                             onClick={handleCloseModal}
-                            variant="outlined"
-                            sx={{ borderRadius: 2, textTransform: 'none' }}
+                            disabled={formLoading}
                         >
                             İptal
                         </Button>
@@ -538,17 +497,11 @@ function CorporateUserManagementPage() {
                             onClick={handleFormSubmit}
                             variant="contained"
                             disabled={formLoading}
-                            sx={{ 
-                                borderRadius: 2, 
-                                textTransform: 'none', 
-                                fontWeight: 600,
-                                background: 'linear-gradient(135deg, #37474F 0%, #62727B 100%)',
-                            }}
                         >
-                            {formLoading ? 'Oluşturuluyor...' : 'Kullanıcı Oluştur'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                            {formLoading ? 'Oluşturuluyor...' : 'Oluştur'}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
             </Container>
         </Box>
     );

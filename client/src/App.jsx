@@ -416,10 +416,11 @@ function AppContent() {
             <Container 
               component="main" 
               maxWidth={false} 
+              disableGutters
               sx={{ 
                 py: 0, 
-                px: { xs: 1, sm: 2, md: isAdminRoute ? 0 : 3 }, 
-                minHeight: isAdminRoute ? '100vh' : 'calc(100vh - 64px)' 
+                px: 0,
+                minHeight: isAdminRoute ? '100vh' : 'auto'
               }}
             >
               <Routes>

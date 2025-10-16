@@ -4,16 +4,21 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useNotification } from '../context/NotificationContext.jsx';
 
 // MUI Imports
-import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import Link from '@mui/material/Link';
-import Grid from '@mui/material/Grid';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Container from '@mui/material/Container';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import CircularProgress from '@mui/material/CircularProgress';
+import {
+    Box,
+    Button,
+    TextField,
+    Typography,
+    Container,
+    Paper,
+    Stack,
+    CircularProgress,
+    Link
+} from '@mui/material';
+import {
+    Login as LoginIcon,
+    CreditCard as CardIcon
+} from '@mui/icons-material';
 
 function LoginPage() {
     const [formData, setFormData] = useState({
@@ -45,12 +50,10 @@ function LoginPage() {
     const onSubmit = async (e) => {
         e.preventDefault();
 
-        // Basit Client-Side Email Format Kontrolü
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             showNotification('Lütfen geçerli bir e-posta adresi girin.', 'error');
             return;
         }
-        // Şifre boş mu kontrolü (opsiyonel, required zaten var)
         if (!password) {
             showNotification('Lütfen şifrenizi girin.', 'error');
             return;
@@ -63,7 +66,6 @@ function LoginPage() {
             navigate('/');
         } catch (error) {
             const errorMsg = error.response?.data?.message || error.message || 'Bir hata oluştu';
-            // Backend "Invalid credentials" gibi bir mesaj dönerse onu gösterelim
             if (errorMsg.toLowerCase().includes('invalid credentials') || errorMsg.toLowerCase().includes('geçersiz')) {
                 showNotification('E-posta veya şifre hatalı.', 'error');
             } else {
@@ -76,67 +78,87 @@ function LoginPage() {
     };
 
     return (
-        <Container component="main" maxWidth="xs">
-            <Box
-                sx={{
-                    marginTop: 8,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                }}
-            >
-                <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
-                    <LockOutlinedIcon />
-                </Avatar>
-                <Typography component="h1" variant="h5">
-                    Giriş Yap
-                </Typography>
-                <Box component="form" onSubmit={onSubmit} noValidate sx={{ mt: 1 }}>
-                    <TextField
-                        margin="normal"
-                        required
-                        fullWidth
-                        id="email"
-                        label="Email Adresi"
-                        name="email"
-                        autoComplete="email"
-                        autoFocus
-                        value={email}
-                        onChange={onChange}
-                        disabled={loading}
-                    />
-                    <TextField
-                        margin="normal"
-                        required
-                        fullWidth
-                        name="password"
-                        label="Şifre"
-                        type="password"
-                        id="password"
-                        autoComplete="current-password"
-                        value={password}
-                        onChange={onChange}
-                        disabled={loading}
-                    />
-                    <Button
-                        type="submit"
-                        fullWidth
-                        variant="contained"
-                        sx={{ mt: 3, mb: 2 }}
-                        disabled={loading}
-                    >
-                        {loading ? <CircularProgress size={24} /> : 'Giriş Yap'}
-                    </Button>
-                    <Grid container justifyContent="center">
-                        <Grid item>
-                            <Link component={RouterLink} to="/forgot-password" variant="body2">
-                                Şifremi Unuttum
-                            </Link>
-                        </Grid>
-                    </Grid>
-                </Box>
-            </Box>
-        </Container>
+        <Box
+            sx={{
+                minHeight: '100vh',
+                display: 'flex',
+                alignItems: 'center',
+                bgcolor: '#f5f5f5'
+            }}
+        >
+            <Container maxWidth="xs">
+                <Paper
+                    elevation={3}
+                    sx={{
+                        p: 4,
+                        borderRadius: 2
+                    }}
+                >
+                    {/* Header */}
+                    <Box sx={{ textAlign: 'center', mb: 4 }}>
+                        <CardIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
+                        <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+                            Dijinew
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            Dijital Kartvizit Platformu
+                        </Typography>
+                    </Box>
+
+                    {/* Form */}
+                    <Box component="form" onSubmit={onSubmit} noValidate>
+                        <Stack spacing={2}>
+                            <TextField
+                                required
+                                fullWidth
+                                id="email"
+                                label="E-posta Adresi"
+                                name="email"
+                                autoComplete="email"
+                                autoFocus
+                                value={email}
+                                onChange={onChange}
+                                disabled={loading}
+                            />
+                            <TextField
+                                required
+                                fullWidth
+                                name="password"
+                                label="Şifre"
+                                type="password"
+                                id="password"
+                                autoComplete="current-password"
+                                value={password}
+                                onChange={onChange}
+                                disabled={loading}
+                            />
+                            
+                            <Button
+                                type="submit"
+                                fullWidth
+                                variant="contained"
+                                size="large"
+                                disabled={loading}
+                                startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <LoginIcon />}
+                                sx={{ mt: 2, py: 1.5 }}
+                            >
+                                {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
+                            </Button>
+
+                            <Box sx={{ textAlign: 'center' }}>
+                                <Link
+                                    component={RouterLink}
+                                    to="/forgot-password"
+                                    variant="body2"
+                                >
+                                    Şifremi Unuttum
+                                </Link>
+                            </Box>
+                        </Stack>
+                    </Box>
+                </Paper>
+            </Container>
+        </Box>
     );
 }
 
