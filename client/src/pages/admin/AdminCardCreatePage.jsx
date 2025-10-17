@@ -918,14 +918,12 @@ function AdminCardCreatePage() {
                                         >
                                             <MenuItem value="light">Varsayılan (Açık)</MenuItem>
                                             <MenuItem value="modern">Modern</MenuItem>
-                                            <MenuItem value="minimalist">Minimalist</MenuItem>
                                             <MenuItem value="icongrid">İkon Grid</MenuItem>
                                             <MenuItem value="business">İş</MenuItem>
                                             <MenuItem value="creative">Yaratıcı</MenuItem>
-                                            <MenuItem value="carousel">🎡 3D Carousel (Dönen İkonlar)</MenuItem>
+                                            <MenuItem value="carousel">3D Carousel (Dönen İkonlar)</MenuItem>
+                                            <MenuItem value="ovalcarousel">Oval Carousel</MenuItem>
                                             <MenuItem value="dark">Koyu</MenuItem>
-                                            <MenuItem value="darkmodern">Koyu Modern</MenuItem>
-                                            <MenuItem value="blue">Mavi</MenuItem>
                                         </Select>
                                     </FormControl>
                                 </Grid>

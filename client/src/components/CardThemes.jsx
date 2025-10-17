@@ -719,146 +719,6 @@ export const ModernTheme = ({ cardData }) => {
     );
 };
 
-// Minimalist Tema
-export const MinimalistTheme = ({ cardData }) => {
-    return (
-        <Box sx={{ maxWidth: 400, width: '100%', mt: 2, p: 4, border: '1px solid', borderColor: 'grey.200', borderRadius: 2 }}>
-            <Box sx={{ textAlign: 'center', mb: 4 }}>
-                {cardData.profileImageUrl && (
-                    <Avatar
-                        alt={cardData.name || 'Profil'}
-                        src={cardData.profileImageUrl}
-                        sx={{
-                            width: 80,
-                            height: 80,
-                            mx: 'auto',
-                            mb: 2
-                        }}
-                    />
-                )}
-                <Typography variant="h6" component="div" sx={{ fontWeight: 400, mb: 0.5 }}>
-                    {cardData.name || 'İsim Belirtilmemiş'}
-                </Typography>
-                {cardData.title && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                        {cardData.title}
-                    </Typography>
-                )}
-                {cardData.company && (
-                    <Typography variant="body2" color="text.secondary">
-                        {cardData.company}
-                    </Typography>
-                )}
-            </Box>
-
-            {cardData.bio && (
-                <Box sx={{ mb: 3, p: 2, backgroundColor: 'grey.50', borderRadius: 1 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                        {cardData.bio}
-                    </Typography>
-                </Box>
-            )}
-
-            <Stack spacing={1.5}>
-                {cardData.phone && (
-                    <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
-                        <PhoneIcon sx={{ mr: 1, fontSize: '1rem', color: 'text.secondary' }} />
-                        {cardData.phone}
-                    </Typography>
-                )}
-                {cardData.email && (
-                    <Link href={`mailto:${cardData.email}`} sx={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-                        <EmailIcon sx={{ mr: 1, fontSize: '1rem', color: 'text.secondary' }} />
-                        <Typography variant="body2">{cardData.email}</Typography>
-                    </Link>
-                )}
-                {cardData.website && (
-                    <Link href={cardData.website} target="_blank" rel="noopener noreferrer" sx={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-                        <LanguageIcon sx={{ mr: 1, fontSize: '1rem', color: 'text.secondary' }} />
-                        <Typography variant="body2">{cardData.website}</Typography>
-                    </Link>
-                )}
-                {cardData.address && (
-                    <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
-                        <LocationOnIcon sx={{ mr: 1, fontSize: '1rem', color: 'text.secondary' }} />
-                        {cardData.address}
-                    </Typography>
-                )}
-            </Stack>
-
-            {/* Banka Hesapları */}
-            {cardData.bankAccounts && cardData.bankAccounts.length > 0 && (
-                <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid', borderColor: 'grey.200' }}>
-                    <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        <AccountBalanceIcon sx={{ mr: 1, fontSize: '1rem' }} /> Banka Hesapları
-                    </Typography>
-                    <Stack spacing={1.5}>
-                        {cardData.bankAccounts.map((account, index) => {
-                            const bankLogo = getBankLogo(account.bankName);
-                            return (
-                                <Box key={index}>
-                                    <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', fontWeight: 'medium', mb: 0.5 }}>
-                                        {bankLogo ? (
-                                            <Box
-                                                component="img"
-                                                src={bankLogo}
-                                                alt={account.bankName}
-                                                sx={{
-                                                    width: 20,
-                                                    height: 20,
-                                                    objectFit: 'contain',
-                                                    mr: 1
-                                                }}
-                                            />
-                                        ) : (
-                                            <AccountBalanceIcon sx={{ mr: 1, fontSize: '1rem', color: 'text.secondary' }} />
-                                        )}
-                                        {account.bankName}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary" sx={{ ml: 3, fontSize: '0.875rem' }}>
-                                        {formatIban(account.iban)}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary" sx={{ ml: 3, fontSize: '0.875rem' }}>
-                                        {account.accountName}
-                                    </Typography>
-                                </Box>
-                            );
-                        })}
-                    </Stack>
-                </Box>
-            )}
-
-            {(cardData.linkedinUrl || cardData.twitterUrl || cardData.instagramUrl) && (
-                <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid', borderColor: 'grey.200' }}>
-                    <Stack direction="row" spacing={1} justifyContent="center">
-                        {cardData.linkedinUrl && (
-                            <IconButton component="a" href={cardData.linkedinUrl} target="_blank" rel="noopener noreferrer" size="small">
-                                <LinkedInIcon />
-                            </IconButton>
-                        )}
-                        {cardData.twitterUrl && (
-                            <IconButton component="a" href={cardData.twitterUrl} target="_blank" rel="noopener noreferrer" size="small">
-                                <TwitterIcon />
-                            </IconButton>
-                        )}
-                        {cardData.instagramUrl && (
-                            <IconButton component="a" href={cardData.instagramUrl} target="_blank" rel="noopener noreferrer" size="small">
-                                <InstagramIcon />
-                            </IconButton>
-                        )}
-                    </Stack>
-                </Box>
-            )}
-
-            <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid', borderColor: 'grey.200', textAlign: 'center' }}>
-                <Typography variant="caption" color="text.secondary">
-                    {cardData.cardName}
-                </Typography>
-            </Box>
-        </Box>
-    );
-};
-
 // İkon Grid Tema (ekran görüntüsündeki gibi)
 export const IconGridTheme = ({ cardData }) => {
     const { handleQrClick, handleShareClick, QrModal, ShareSnackbar } = useCardActions(cardData);
@@ -1626,335 +1486,7 @@ export const DarkTheme = ({ cardData }) => {
     );
 };
 
-// Mavi Tema
-export const BlueTheme = ({ cardData }) => {
-    return (
-        <Card sx={{ maxWidth: 500, width: '100%', mt: 2, backgroundColor: '#f0f8ff', border: '2px solid #2196F3' }}>
-            {cardData.coverImageUrl && (
-                <CardMedia
-                    component="img"
-                    height="160"
-                    image={cardData.coverImageUrl}
-                    alt="Kapak Fotoğrafı"
-                    sx={{ objectFit: 'cover', filter: 'hue-rotate(220deg) saturate(1.2)' }}
-                />
-            )}
-            <CardContent sx={{ textAlign: 'center', position: 'relative', pt: cardData.profileImageUrl ? 6 : 2, backgroundColor: '#f0f8ff' }}>
-                {cardData.profileImageUrl && (
-                    <Avatar
-                        alt={cardData.name || 'Profil'}
-                        src={cardData.profileImageUrl}
-                        sx={{
-                            width: 100,
-                            height: 100,
-                            position: 'absolute',
-                            top: -50,
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            border: '3px solid #2196F3',
-                            bgcolor: 'blue.100'
-                        }}
-                    />
-                )}
-                <Typography gutterBottom variant="h5" component="div" sx={{ mt: cardData.profileImageUrl ? 2 : 0, color: '#1976D2' }}>
-                    {cardData.name || 'İsim Belirtilmemiş'}
-                </Typography>
-                {cardData.title && (
-                    <Typography variant="body1" sx={{ color: '#1565C0' }}>
-                        {cardData.title}
-                    </Typography>
-                )}
-                {cardData.company && (
-                    <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 0.5, color: '#1976D2' }}>
-                        <BusinessIcon sx={{ mr: 0.5, fontSize: '1rem' }} />
-                        {cardData.company}
-                    </Typography>
-                )}
-            </CardContent>
 
-            {cardData.bio && (
-                <>
-                    <Divider sx={{ backgroundColor: '#2196F3' }} />
-                    <CardContent sx={{ textAlign: 'left', backgroundColor: '#f0f8ff' }}>
-                        <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', color: '#1976D2' }}>
-                            <InfoIcon sx={{ mr: 1 }} /> Hakkında
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: '#1565C0' }}>
-                            {cardData.bio}
-                        </Typography>
-                    </CardContent>
-                </>
-            )}
-
-            <Divider sx={{ backgroundColor: '#2196F3' }} />
-
-            <CardContent sx={{ pt: 1, pb: 1, backgroundColor: '#f0f8ff' }}>
-                <List dense>
-                    {cardData.phone && (
-                        <ListItem>
-                            <ListItemIcon><PhoneIcon sx={{ color: '#2196F3' }} /></ListItemIcon>
-                            <ListItemText primary={cardData.phone} sx={{ color: '#1976D2' }} />
-                        </ListItem>
-                    )}
-                    {cardData.email && (
-                        <ListItem component={Link} href={`mailto:${cardData.email}`} sx={{ textDecoration: 'none' }}>
-                            <ListItemIcon><EmailIcon sx={{ color: '#2196F3' }} /></ListItemIcon>
-                            <ListItemText primary={cardData.email} sx={{ color: '#1976D2' }} />
-                        </ListItem>
-                    )}
-                    {cardData.website && (
-                        <ListItem component={Link} href={cardData.website} target="_blank" rel="noopener noreferrer" sx={{ textDecoration: 'none' }}>
-                            <ListItemIcon><LanguageIcon sx={{ color: '#2196F3' }} /></ListItemIcon>
-                            <ListItemText primary={cardData.website} sx={{ color: '#1976D2' }} />
-                        </ListItem>
-                    )}
-                    {cardData.address && (
-                        <ListItem>
-                            <ListItemIcon><LocationOnIcon sx={{ color: '#2196F3' }} /></ListItemIcon>
-                            <ListItemText primary={cardData.address} sx={{ color: '#1976D2' }} />
-                        </ListItem>
-                    )}
-                </List>
-            </CardContent>
-
-            {cardData.bankAccounts && cardData.bankAccounts.length > 0 && (
-                <>
-                    <Divider sx={{ backgroundColor: '#2196F3' }} />
-                    <CardContent sx={{ pt: 1, pb: 1, backgroundColor: '#f0f8ff' }}>
-                        <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', color: '#1976D2', mb: 1 }}>
-                            <AccountBalanceIcon sx={{ mr: 1 }} /> Banka Hesapları
-                        </Typography>
-                        <List dense>
-                            {cardData.bankAccounts.map((account, index) => {
-                                const bankLogo = getBankLogo(account.bankName);
-                                return (
-                                    <ListItem key={index} sx={{ py: 0.5 }}>
-                                        <ListItemIcon>
-                                            {bankLogo ? (
-                                                <Box
-                                                    component="img"
-                                                    src={bankLogo}
-                                                    alt={account.bankName}
-                                                    sx={{
-                                                        width: 24,
-                                                        height: 24,
-                                                        objectFit: 'contain'
-                                                    }}
-                                                />
-                                            ) : (
-                                                <AccountBalanceIcon sx={{ color: '#2196F3' }} fontSize="small" />
-                                            )}
-                                        </ListItemIcon>
-                                        <ListItemText 
-                                            primary={account.bankName}
-                                        secondary={
-                                            <Box>
-                                                <Typography variant="body2" sx={{ color: '#1565C0' }}>
-                                                    {formatIban(account.iban)}
-                                                </Typography>
-                                                <Typography variant="body2" sx={{ color: '#1565C0' }}>
-                                                    {account.accountName}
-                                                </Typography>
-                                            </Box>
-                                        }
-                                        sx={{ color: '#1976D2' }}
-                                    />
-                                </ListItem>
-                                );
-                            })}
-                        </List>
-                    </CardContent>
-                </>
-            )}
-
-            {(cardData.linkedinUrl || cardData.twitterUrl || cardData.instagramUrl) && (
-                <>
-                    <Divider variant="middle" sx={{ backgroundColor: '#2196F3' }} />
-                    <CardContent sx={{ py: 1, textAlign: 'center', backgroundColor: '#f0f8ff' }}>
-                        <Stack direction="row" spacing={1} justifyContent="center">
-                            {cardData.linkedinUrl && (
-                                <IconButton component="a" href={cardData.linkedinUrl} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" sx={{ color: '#0077B5', backgroundColor: 'white', '&:hover': { backgroundColor: '#e3f2fd' } }}>
-                                    <LinkedInIcon />
-                                </IconButton>
-                            )}
-                            {cardData.twitterUrl && (
-                                <IconButton component="a" href={cardData.twitterUrl} target="_blank" rel="noopener noreferrer" aria-label="Twitter" sx={{ color: '#1DA1F2', backgroundColor: 'white', '&:hover': { backgroundColor: '#e3f2fd' } }}>
-                                    <TwitterIcon />
-                                </IconButton>
-                            )}
-                            {cardData.instagramUrl && (
-                                <IconButton component="a" href={cardData.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Instagram" sx={{ color: '#E1306C', backgroundColor: 'white', '&:hover': { backgroundColor: '#e3f2fd' } }}>
-                                    <InstagramIcon />
-                                </IconButton>
-                            )}
-                        </Stack>
-                    </CardContent>
-                </>
-            )}
-
-            <Divider sx={{ backgroundColor: '#2196F3' }} />
-            <CardContent sx={{ py: '8px !important', textAlign: 'center', backgroundColor: '#f0f8ff' }}>
-                <Typography variant="caption" sx={{ color: '#1565C0' }}>
-                    {cardData.cardName}
-                </Typography>
-            </CardContent>
-        </Card>
-    );
-};
-
-// Dark Modern Tema
-export const DarkModernTheme = ({ cardData }) => {
-    return (
-        <Box sx={{ maxWidth: 500, width: '100%', mt: 2 }}>
-            {/* Üst Bölüm - Profil Fotoğrafı ve Temel Bilgiler */}
-            <Paper 
-                sx={{ 
-                    p: 3, 
-                    textAlign: 'center',
-                    background: 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)',
-                    color: 'white',
-                    borderRadius: '20px 20px 0 0'
-                }}
-            >
-                <Avatar
-                    alt={cardData.name || 'Profil'}
-                    src={cardData.profileImageUrl}
-                    sx={{
-                        width: 100,
-                        height: 100,
-                        mx: 'auto',
-                        mb: 2,
-                        border: '4px solid white'
-                    }}
-                />
-                <Typography variant="h5" component="div" sx={{ fontWeight: 'bold', mb: 1 }}>
-                    {cardData.name || 'İsim Belirtilmemiş'}
-                </Typography>
-                {cardData.title && (
-                    <Typography variant="body1" sx={{ mb: 1, opacity: 0.9 }}>
-                        {cardData.title}
-                    </Typography>
-                )}
-                {cardData.company && (
-                    <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                        {cardData.company}
-                    </Typography>
-                )}
-            </Paper>
-
-            {/* Alt Bölüm - İletişim Bilgileri */}
-            <Paper sx={{ borderRadius: '0 0 20px 20px', overflow: 'hidden', backgroundColor: '#1a1a1a', color: 'white' }}>
-                {cardData.bio && (
-                    <CardContent sx={{ pt: 2, pb: 1, backgroundColor: '#1a1a1a' }}>
-                        <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#b0b0b0', textAlign: 'center' }}>
-                            {cardData.bio}
-                        </Typography>
-                    </CardContent>
-                )}
-
-                <CardContent sx={{ pt: 1, backgroundColor: '#1a1a1a' }}>
-                    <Stack spacing={2}>
-                        {cardData.phone && (
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <PhoneIcon sx={{ color: '#4CAF50' }} />
-                                <Typography variant="body2" sx={{ color: 'white' }}>{cardData.phone}</Typography>
-                            </Box>
-                        )}
-                        {cardData.email && (
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <EmailIcon sx={{ color: '#2196F3' }} />
-                                <Link href={`mailto:${cardData.email}`} sx={{ textDecoration: 'none', color: 'white' }}>
-                                    <Typography variant="body2">{cardData.email}</Typography>
-                                </Link>
-                            </Box>
-                        )}
-                        {cardData.website && (
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <LanguageIcon sx={{ color: '#FF9800' }} />
-                                <Link href={cardData.website} target="_blank" rel="noopener noreferrer" sx={{ textDecoration: 'none', color: 'white' }}>
-                                    <Typography variant="body2">{cardData.website}</Typography>
-                                </Link>
-                            </Box>
-                        )}
-                        {cardData.address && (
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <LocationOnIcon sx={{ color: '#F44336' }} />
-                                <Typography variant="body2" sx={{ color: 'white' }}>{cardData.address}</Typography>
-                            </Box>
-                        )}
-
-                        {/* Banka Hesapları */}
-                        {cardData.bankAccounts && cardData.bankAccounts.length > 0 && (
-                            <>
-                                {cardData.bankAccounts.map((account, index) => {
-                                    const bankLogo = getBankLogo(account.bankName);
-                                    return (
-                                        <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                            {bankLogo ? (
-                                                <Box
-                                                    component="img"
-                                                    src={bankLogo}
-                                                    alt={account.bankName}
-                                                    sx={{
-                                                        width: 24,
-                                                        height: 24,
-                                                        objectFit: 'contain',
-                                                        filter: 'brightness(0) saturate(100%) invert(77%) sepia(98%) saturate(1042%) hue-rotate(4deg) brightness(105%) contrast(104%)' // Altın rengi filtre
-                                                    }}
-                                                />
-                                            ) : (
-                                                <AccountBalanceIcon sx={{ color: '#FFD700' }} />
-                                            )}
-                                            <Box>
-                                                <Typography variant="body2" sx={{ color: 'white', fontWeight: 'medium' }}>
-                                                    {account.bankName}
-                                                </Typography>
-                                                <Typography variant="body2" sx={{ color: '#b0b0b0', fontSize: '0.875rem' }}>
-                                                    {formatIban(account.iban)}
-                                                </Typography>
-                                                <Typography variant="body2" sx={{ color: '#b0b0b0', fontSize: '0.875rem' }}>
-                                                    {account.accountName}
-                                                </Typography>
-                                            </Box>
-                                        </Box>
-                                    );
-                                })}
-                            </>
-                        )}
-                    </Stack>
-                </CardContent>
-
-                {(cardData.linkedinUrl || cardData.twitterUrl || cardData.instagramUrl) && (
-                    <CardContent sx={{ pt: 1, pb: 2, textAlign: 'center', backgroundColor: '#1a1a1a' }}>
-                        <Stack direction="row" spacing={1} justifyContent="center">
-                            {cardData.linkedinUrl && (
-                                <IconButton component="a" href={cardData.linkedinUrl} target="_blank" rel="noopener noreferrer" sx={{ backgroundColor: '#0077B5', color: 'white', '&:hover': { backgroundColor: '#005885' } }}>
-                                    <LinkedInIcon />
-                                </IconButton>
-                            )}
-                            {cardData.twitterUrl && (
-                                <IconButton component="a" href={cardData.twitterUrl} target="_blank" rel="noopener noreferrer" sx={{ backgroundColor: '#1DA1F2', color: 'white', '&:hover': { backgroundColor: '#0d8bd9' } }}>
-                                    <TwitterIcon />
-                                </IconButton>
-                            )}
-                            {cardData.instagramUrl && (
-                                <IconButton component="a" href={cardData.instagramUrl} target="_blank" rel="noopener noreferrer" sx={{ backgroundColor: '#E1306C', color: 'white', '&:hover': { backgroundColor: '#c12958' } }}>
-                                    <InstagramIcon />
-                                </IconButton>
-                            )}
-                        </Stack>
-                    </CardContent>
-                )}
-
-                <Box sx={{ textAlign: 'center', p: 1, backgroundColor: '#1a1a1a', borderTop: '1px solid #333' }}>
-                    <Typography variant="caption" sx={{ color: '#888' }}>
-                        {cardData.cardName}
-                    </Typography>
-                </Box>
-            </Paper>
-        </Box>
-    );
-};
 
 // 3D Carousel Tema - Dönen ikonlar ile interaktif tasarım
 export const CarouselTheme = ({ cardData }) => {
@@ -2345,13 +1877,446 @@ export const CarouselTheme = ({ cardData }) => {
     );
 };
 
+// Oval Carousel Tema - Sola yaslanan oval düzen
+export const OvalCarouselTheme = ({ cardData }) => {
+    const { handleQrClick, handleShareClick, QrModal, ShareSnackbar } = useCardActions(cardData);
+    const [rotation, setRotation] = useState(0);
+    const [isDragging, setIsDragging] = useState(false);
+    const [startY, setStartY] = useState(0);
+    const [currentRotation, setCurrentRotation] = useState(0);
+
+    useEffect(() => {
+        if (cardData?.id) {
+            analyticsService.recordCardView(cardData.id);
+        }
+    }, [cardData?.id]);
+
+    const handleLinkClick = (linkType) => {
+        if (cardData?.id) {
+            trackClick(cardData.id, linkType);
+        }
+    };
+
+    const contactItems = [
+        cardData.phone && {
+            icon: <PhoneIcon sx={{ fontSize: 32 }} />,
+            label: 'Telefon',
+            color: '#10B981',
+            action: () => {
+                handleLinkClick('phone');
+                window.location.href = `tel:${cardData.phone}`;
+            }
+        },
+        cardData.email && {
+            icon: <EmailIcon sx={{ fontSize: 32 }} />,
+            label: 'E-posta',
+            color: '#3B82F6',
+            action: () => {
+                handleLinkClick('email');
+                window.location.href = `mailto:${cardData.email}`;
+            }
+        },
+        cardData.website && {
+            icon: <LanguageIcon sx={{ fontSize: 32 }} />,
+            label: 'Web',
+            color: '#8B5CF6',
+            action: () => {
+                handleLinkClick('website');
+                window.open(cardData.website, '_blank');
+            }
+        },
+        cardData.linkedinUrl && {
+            icon: <LinkedInIcon sx={{ fontSize: 32 }} />,
+            label: 'LinkedIn',
+            color: '#0077B5',
+            action: () => {
+                handleLinkClick('linkedin');
+                window.open(cardData.linkedinUrl, '_blank');
+            }
+        },
+        cardData.instagramUrl && {
+            icon: <InstagramIcon sx={{ fontSize: 32 }} />,
+            label: 'Instagram',
+            color: '#E1306C',
+            action: () => {
+                handleLinkClick('instagram');
+                window.open(cardData.instagramUrl, '_blank');
+            }
+        },
+        cardData.twitterUrl && {
+            icon: <TwitterIcon sx={{ fontSize: 32 }} />,
+            label: 'Twitter',
+            color: '#1DA1F2',
+            action: () => {
+                handleLinkClick('twitter');
+                window.open(cardData.twitterUrl, '_blank');
+            }
+        },
+        cardData.address && {
+            icon: <LocationOnIcon sx={{ fontSize: 32 }} />,
+            label: 'Konum',
+            color: '#EF4444',
+            action: null
+        },
+        {
+            icon: <QrCodeIcon sx={{ fontSize: 32 }} />,
+            label: 'QR Kod',
+            color: '#F59E0B',
+            action: handleQrClick
+        },
+        {
+            icon: <ShareIcon sx={{ fontSize: 32 }} />,
+            label: 'Paylaş',
+            color: '#EC4899',
+            action: handleShareClick
+        }
+    ].filter(Boolean);
+
+    const totalItems = contactItems.length;
+    const radiusX = 60;
+    const radiusY = 125;
+    const leanOffset = -12;
+
+    const positionedItems = totalItems
+        ? contactItems.map((item, index) => {
+            const anglePerItem = 360 / totalItems;
+            const angle = (index * anglePerItem + rotation) % 360;
+            const normalizedAngle = angle < 0 ? angle + 360 : angle;
+            const radians = (normalizedAngle * Math.PI) / 180;
+
+            const x = Math.cos(radians) * radiusX + leanOffset;
+            const y = Math.sin(radians) * radiusY;
+            const depthFactor = (Math.cos(radians) + 1) / 2;
+            const scale = 0.65 + depthFactor * 0.3;
+            const opacity = 0.35 + depthFactor * 0.6;
+            const blur =
+                depthFactor < 0.12 ? 'blur(1px)' :
+                depthFactor < 0.25 ? 'blur(0.6px)' :
+                'none';
+
+            return {
+                item,
+                index,
+                x,
+                y,
+                depthFactor,
+                scale,
+                opacity,
+                blur
+            };
+        })
+        : [];
+
+    const sortedItems = positionedItems.slice().sort((a, b) => a.depthFactor - b.depthFactor);
+
+    const handleStart = (clientY) => {
+        setIsDragging(true);
+        setStartY(clientY);
+        setCurrentRotation(rotation);
+    };
+
+    const handleMove = (clientY) => {
+        if (!isDragging) return;
+        const delta = clientY - startY;
+        const newRotation = currentRotation + (delta * 0.5);
+        setRotation(newRotation);
+    };
+
+    const handleEnd = () => {
+        setIsDragging(false);
+    };
+
+    const handleMouseDown = (e) => handleStart(e.clientY);
+    const handleMouseMove = (e) => handleMove(e.clientY);
+    const handleMouseUp = () => handleEnd();
+    const handleTouchStart = (e) => handleStart(e.touches[0].clientY);
+    const handleTouchMove = (e) => handleMove(e.touches[0].clientY);
+    const handleTouchEnd = () => handleEnd();
+
+    return (
+        <Box sx={{ maxWidth: 480, width: '100%', mt: 2, mx: 'auto' }}>
+            <Paper
+                elevation={6}
+                sx={{
+                    borderRadius: 4,
+                    overflow: 'hidden',
+                    background: '#0f172a',
+                    position: 'relative'
+                }}
+            >
+                <Box
+                    sx={{
+                        background: 'linear-gradient(135deg, #1e293b 0%, #1f2937 100%)',
+                        pt: 3,
+                        pb: 2,
+                        textAlign: 'center'
+                    }}
+                >
+                    <Avatar
+                        alt={cardData.name || 'Profil'}
+                        src={cardData.profileImageUrl}
+                        sx={{
+                            width: 90,
+                            height: 90,
+                            mx: 'auto',
+                            mb: 1.5,
+                            border: '3px solid rgba(255,255,255,0.25)',
+                            boxShadow: '0 12px 30px rgba(15,23,42,0.55)'
+                        }}
+                    />
+                    <Typography
+                        variant="h6"
+                        sx={{
+                            fontWeight: 700,
+                            color: 'white',
+                            mb: 0.5,
+                            letterSpacing: 0.4
+                        }}
+                    >
+                        {cardData.name || 'İsim Belirtilmemiş'}
+                    </Typography>
+                    {cardData.title && (
+                        <Chip
+                            label={cardData.title}
+                            size="small"
+                            sx={{
+                                background: 'linear-gradient(90deg, #6366f1, #8b5cf6)',
+                                color: 'white',
+                                fontWeight: 600,
+                                mb: 0.5,
+                                height: 24
+                            }}
+                        />
+                    )}
+                    {cardData.company && (
+                        <Typography variant="caption" sx={{ fontWeight: 500, display: 'block', color: 'rgba(255,255,255,0.7)' }}>
+                            <BusinessIcon sx={{ fontSize: '0.95rem', mr: 0.5, verticalAlign: 'middle' }} />
+                            {cardData.company}
+                        </Typography>
+                    )}
+                </Box>
+
+                {cardData.bio && (
+                    <Box
+                        sx={{
+                            backgroundColor: '#111827',
+                            p: 2,
+                            borderTop: '1px solid rgba(255,255,255,0.06)',
+                            borderBottom: '1px solid rgba(255,255,255,0.06)'
+                        }}
+                    >
+                        <Typography
+                            variant="body2"
+                            sx={{
+                                textAlign: 'center',
+                                fontStyle: 'italic',
+                                color: 'rgba(226,232,240,0.78)',
+                                letterSpacing: 0.2
+                            }}
+                        >
+                            {cardData.bio}
+                        </Typography>
+                    </Box>
+                )}
+
+                <Box
+                    sx={{
+                        backgroundColor: '#ffffff',
+                        py: 4,
+                        px: { xs: 2.5, md: 4 },
+                        position: 'relative',
+                        overflow: 'hidden',
+                        display: 'flex',
+                        justifyContent: 'center'
+                    }}
+                >
+                        <Box
+                            sx={{
+                                position: 'relative',
+                                width: { xs: 240, sm: 270 },
+                                height: { xs: 280, sm: 300 },
+                                transform: { xs: 'skewX(-6deg)', md: 'skewX(-8deg)' },
+                                cursor: isDragging ? 'grabbing' : 'grab',
+                                userSelect: 'none',
+                                touchAction: 'none',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                mx: { xs: 'auto', md: 0 }
+                            }}
+                            onMouseDown={handleMouseDown}
+                            onMouseMove={handleMouseMove}
+                            onMouseUp={handleMouseUp}
+                            onMouseLeave={handleMouseUp}
+                            onTouchStart={handleTouchStart}
+                            onTouchMove={handleTouchMove}
+                            onTouchEnd={handleTouchEnd}
+                        >
+                            <Box
+                                sx={{
+                                    position: 'relative',
+                                    width: '78%',
+                                    height: '78%',
+                                    transform: { xs: 'skewX(6deg)', md: 'skewX(8deg)' }
+                                }}
+                            >
+                                {sortedItems.map((data) => {
+                                    const {
+                                        item,
+                                        index,
+                                        x,
+                                        y,
+                                        depthFactor,
+                                        scale,
+                                        opacity,
+                                        blur
+                                    } = data;
+                                    const offsetY = y * 0.92;
+                                    const isPrimary = depthFactor > 0.8;
+
+                                    return (
+                                        <Box
+                                            key={item.label ?? index}
+                                            onClick={item.action}
+                                            sx={{
+                                                position: 'absolute',
+                                                left: '50%',
+                                                top: '50%',
+                                                transform: `
+                                                    translate(-50%, -50%)
+                                                    translate(${x}px, ${offsetY}px)
+                                                    scale(${scale})
+                                                `,
+                                                transition: isDragging
+                                                    ? 'none'
+                                                    : 'transform 0.35s ease, opacity 0.35s ease, filter 0.35s ease',
+                                                zIndex: Math.round(100 + depthFactor * 130),
+                                                opacity,
+                                                pointerEvents: depthFactor > 0.18 ? 'auto' : 'none',
+                                                cursor: item.action ? 'pointer' : 'default',
+                                                filter: blur
+                                            }}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    width: 90,
+                                                    height: 90,
+                                                    borderRadius: '34px',
+                                                    background: `linear-gradient(140deg, ${item.color}, ${item.color}f0)`,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    color: 'white',
+                                                    boxShadow: isPrimary
+                                                        ? `0 26px 48px ${item.color}66`
+                                                        : `0 14px 28px ${item.color}29`,
+                                                    border: isPrimary
+                                                        ? '3px solid rgba(255,255,255,0.85)'
+                                                        : '2px solid rgba(255,255,255,0.18)',
+                                                    transform: isPrimary ? 'rotate(-2deg)' : 'rotate(-4deg)',
+                                                    transition: 'transform 0.35s ease, box-shadow 0.35s ease, border 0.35s ease',
+                                                    '&:hover': item.action ? {
+                                                        transform: 'rotate(-1deg) scale(1.05)',
+                                                        boxShadow: `0 28px 52px ${item.color}70`
+                                                    } : {}
+                                                }}
+                                            >
+                                                {item.icon}
+                                            </Box>
+                                            <Typography
+                                                variant="caption"
+                                                sx={{
+                                                    mt: 1,
+                                                    color: isPrimary ? 'rgba(26,32,44,0.9)' : 'rgba(26,32,44,0.55)',
+                                                    fontWeight: isPrimary ? 700 : 500,
+                                                    textAlign: 'center',
+                                                    letterSpacing: 0.4
+                                                }}
+                                            >
+                                                {item.label}
+                                            </Typography>
+                                        </Box>
+                                    );
+                                })}
+                            </Box>
+                        </Box>
+                </Box>
+
+                {cardData.bankAccounts && cardData.bankAccounts.length > 0 && (
+                    <Box sx={{ backgroundColor: '#0f172a', p: 2.5 }}>
+                        <Typography
+                            variant="subtitle2"
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'rgba(226,232,240,0.85)',
+                                fontWeight: 700,
+                                mb: 2
+                            }}
+                        >
+                            <AccountBalanceIcon sx={{ mr: 1 }} /> Banka Hesapları
+                        </Typography>
+                        <Stack spacing={1.5}>
+                            {cardData.bankAccounts.map((account, index) => {
+                                const bankLogo = getBankLogo(account.bankName);
+                                return (
+                                    <Box
+                                        key={index}
+                                        sx={{
+                                            background: 'linear-gradient(125deg, rgba(30,64,175,0.25), rgba(15,23,42,0.85))',
+                                            p: 2,
+                                            borderRadius: 2,
+                                            border: '1px solid rgba(148,163,184,0.25)',
+                                            boxShadow: '0 10px 25px rgba(15,23,42,0.4)'
+                                        }}
+                                    >
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                            {bankLogo ? (
+                                                <Box
+                                                    component="img"
+                                                    src={bankLogo}
+                                                    alt={account.bankName}
+                                                    sx={{
+                                                        width: 30,
+                                                        height: 30,
+                                                        objectFit: 'contain',
+                                                        filter: 'drop-shadow(0 4px 8px rgba(15,23,42,0.4))'
+                                                    }}
+                                                />
+                                            ) : (
+                                                <AccountBalanceIcon sx={{ color: '#6366f1', fontSize: '2rem' }} />
+                                            )}
+                                            <Box sx={{ flex: 1 }}>
+                                                <Typography variant="body2" sx={{ fontWeight: 600, color: '#e2e8f0' }}>
+                                                    {account.bankName}
+                                                </Typography>
+                                                <Typography variant="caption" sx={{ color: 'rgba(226,232,240,0.7)', display: 'block' }}>
+                                                    {formatIban(account.iban)}
+                                                </Typography>
+                                                <Typography variant="caption" sx={{ color: 'rgba(226,232,240,0.7)' }}>
+                                                    {account.accountName}
+                                                </Typography>
+                                            </Box>
+                                        </Box>
+                                    </Box>
+                                );
+                            })}
+                        </Stack>
+                    </Box>
+                )}
+            </Paper>
+            <QrModal />
+            <ShareSnackbar />
+        </Box>
+    );
+};
+
 // Tema seçici fonksiyonu
 export const getThemeComponent = (theme) => {
     switch (theme) {
         case 'modern':
             return ModernTheme;
-        case 'minimalist':
-            return MinimalistTheme;
         case 'icongrid':
             return IconGridTheme;
         case 'business':
@@ -2360,12 +2325,10 @@ export const getThemeComponent = (theme) => {
             return CreativeTheme;
         case 'dark':
             return DarkTheme;
-        case 'blue':
-            return BlueTheme;
-        case 'darkmodern':
-            return DarkModernTheme;
         case 'carousel':
             return CarouselTheme;
+        case 'ovalcarousel':
+            return OvalCarouselTheme;
         case 'light':
         default:
             return DefaultTheme;

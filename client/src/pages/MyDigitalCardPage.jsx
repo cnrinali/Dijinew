@@ -23,16 +23,10 @@ function MyDigitalCardPage() {
     const getBackgroundStyle = (theme) => {
         switch (theme) {
             case 'dark':
-            case 'darkmodern':
                 return {
                     background: '#0a0a0a',
                     minHeight: '100vh',
                     color: 'white'
-                };
-            case 'blue':
-                return {
-                    background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
-                    minHeight: '100vh'
                 };
             case 'modern':
                 return {
@@ -54,10 +48,11 @@ function MyDigitalCardPage() {
                     background: 'linear-gradient(135deg, #fafafa 0%, #f0f0f0 100%)',
                     minHeight: '100vh'
                 };
-            case 'minimalist':
+            case 'ovalcarousel':
                 return {
-                    background: '#fefefe',
-                    minHeight: '100vh'
+                    background: 'linear-gradient(145deg, #0f172a 0%, #1f2937 50%, #0b1120 100%)',
+                    minHeight: '100vh',
+                    color: 'white'
                 };
             case 'light':
             default:
