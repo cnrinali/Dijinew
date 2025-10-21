@@ -70,15 +70,85 @@ app.use((req, res, next) => {
 });
 app.use(express.json()); // Gelen JSON isteklerini parse etmek için
 
-// API Logger Middleware (tüm API isteklerini kaydet)
-app.use(apiLogger);
-
 // Statik dosyaları (yüklenen resimler) sunmak için
 app.use('/uploads', express.static(uploadsDir));
 
 // Temel Route
 app.get('/', (req, res) => {
   res.send('Dijinew Kartvizit API Çalışıyor!');
+});
+
+// API Dokümantasyonu - Scalar API Reference
+app.get('/api/docs', (req, res) => {
+  const swaggerUrl = `${req.protocol}://${req.get('host')}/api/docs/swagger.json`;
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dijinew API Documentation</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+  <script
+    id="api-reference"
+    data-url="${swaggerUrl}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+</body>
+</html>
+  `;
+  res.send(html);
+});
+
+// Swagger JSON endpoint
+app.get('/api/docs/swagger.json', (req, res) => {
+  const swaggerPath = require('path').join(__dirname, 'swagger.json');
+  const fs = require('fs');
+  
+  try {
+    const swaggerFile = fs.readFileSync(swaggerPath, 'utf8');
+    const swaggerJson = JSON.parse(swaggerFile);
+    
+    // Dinamik olarak server URL'lerini güncelle
+    swaggerJson.servers = [
+      {
+        url: `${req.protocol}://${req.get('host')}`,
+        description: "Current Server"
+      },
+      {
+        url: "http://localhost:5001",
+        description: "Development Server"
+      },
+      {
+        url: "https://api.dijinew.com",
+        description: "Production Server"
+      }
+    ];
+    
+    res.json(swaggerJson);
+  } catch (error) {
+    console.error('Swagger dosyası okunamadı:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'API dokümantasyonu yüklenemedi',
+      error: error.message 
+    });
+  }
+});
+
+// API Logger Middleware (tüm API isteklerini kaydet)
+// Docs endpoint'i için skip et
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/docs')) {
+    return next();
+  }
+  return apiLogger(req, res, next);
 });
 
 // API Rotaları

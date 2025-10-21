@@ -1,0 +1,1395 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Dijinew API",
+    "description": "Dijital Kartvizit Yönetim Sistemi API Dokümantasyonu",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Dijinew Support",
+      "url": "https://dijinew.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5001",
+      "description": "Development Server"
+    },
+    {
+      "url": "https://api.dijinew.com",
+      "description": "Production Server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Kimlik doğrulama ve yetkilendirme işlemleri"
+    },
+    {
+      "name": "Users",
+      "description": "Kullanıcı profil yönetimi"
+    },
+    {
+      "name": "Cards",
+      "description": "Kartvizit yönetimi (korumalı)"
+    },
+    {
+      "name": "Public",
+      "description": "Herkese açık kartvizit görüntüleme"
+    },
+    {
+      "name": "Admin",
+      "description": "Admin panel işlemleri"
+    },
+    {
+      "name": "Corporate",
+      "description": "Kurumsal işlemler"
+    },
+    {
+      "name": "Upload",
+      "description": "Dosya yükleme işlemleri"
+    },
+    {
+      "name": "Wizard",
+      "description": "Kartvizit oluşturma wizard"
+    },
+    {
+      "name": "Analytics",
+      "description": "Analitik ve istatistikler"
+    },
+    {
+      "name": "Activities",
+      "description": "Kullanıcı aktiviteleri"
+    },
+    {
+      "name": "System",
+      "description": "Sistem bilgileri"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token ile kimlik doğrulama"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["user", "admin", "corporate"]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Card": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "userId": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "company": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "website": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "profileImage": {
+            "type": "string"
+          },
+          "coverImage": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "socialLinks": {
+            "type": "object"
+          },
+          "theme": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "BankAccount": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "bankName": {
+            "type": "string"
+          },
+          "accountHolder": {
+            "type": "string"
+          },
+          "iban": {
+            "type": "string"
+          },
+          "swift": {
+            "type": "string"
+          },
+          "isDefault": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "message": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "Success": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "responses": {
+      "UnauthorizedError": {
+        "description": "Kimlik doğrulama hatası",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "ForbiddenError": {
+        "description": "Yetkilendirme hatası",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "NotFoundError": {
+        "description": "Kaynak bulunamadı",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "API Health Check",
+        "description": "API çalışma durumunu kontrol eder",
+        "responses": {
+          "200": {
+            "description": "API çalışıyor",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Dijinew Kartvizit API Çalışıyor!"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Yeni kullanıcı kaydı",
+        "description": "Sisteme yeni kullanıcı kaydeder",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "email", "password"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Ahmet Yılmaz"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "ahmet@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "example": "SecurePass123!"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Kayıt başarılı",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "token": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Kullanıcı girişi",
+        "description": "Email ve şifre ile sisteme giriş yapar",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "ahmet@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "example": "SecurePass123!"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Giriş başarılı",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "token": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Kullanıcı çıkışı",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Çıkış başarılı",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Success"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/api/auth/forgot": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Şifre sıfırlama talebi",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sıfırlama emaili gönderildi"
+          }
+        }
+      }
+    },
+    "/api/auth/reset/{resetToken}": {
+      "put": {
+        "tags": ["Auth"],
+        "summary": "Şifre sıfırlama",
+        "parameters": [
+          {
+            "name": "resetToken",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["password"],
+                "properties": {
+                  "password": {
+                    "type": "string",
+                    "format": "password"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Şifre başarıyla değiştirildi"
+          }
+        }
+      }
+    },
+    "/api/users/profile": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Kullanıcı profilini getir",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profil bilgileri",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Users"],
+        "summary": "Profil bilgilerini güncelle",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profil güncellendi"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/api/users/change-password": {
+      "put": {
+        "tags": ["Users"],
+        "summary": "Şifre değiştir",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["currentPassword", "newPassword"],
+                "properties": {
+                  "currentPassword": {
+                    "type": "string",
+                    "format": "password"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "format": "password"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Şifre değiştirildi"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/api/users/bank-accounts": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Kullanıcının banka hesaplarını listele",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Banka hesapları",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "bankAccounts": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/BankAccount"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Users"],
+        "summary": "Yeni banka hesabı ekle",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "bankName": {
+                    "type": "string"
+                  },
+                  "accountHolder": {
+                    "type": "string"
+                  },
+                  "iban": {
+                    "type": "string"
+                  },
+                  "swift": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Banka hesabı eklendi"
+          }
+        }
+      }
+    },
+    "/api/users/bank-accounts/{id}": {
+      "put": {
+        "tags": ["Users"],
+        "summary": "Banka hesabını güncelle",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BankAccount"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Banka hesabı güncellendi"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Users"],
+        "summary": "Banka hesabını sil",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Banka hesabı silindi"
+          }
+        }
+      }
+    },
+    "/api/cards": {
+      "get": {
+        "tags": ["Cards"],
+        "summary": "Kullanıcının kartlarını listele",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Kart listesi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "cards": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Card"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Cards"],
+        "summary": "Yeni kart oluştur",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "company": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "website": {
+                    "type": "string"
+                  },
+                  "address": {
+                    "type": "string"
+                  },
+                  "bio": {
+                    "type": "string"
+                  },
+                  "socialLinks": {
+                    "type": "object"
+                  },
+                  "theme": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Kart oluşturuldu",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "card": {
+                      "$ref": "#/components/schemas/Card"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cards/{id}": {
+      "get": {
+        "tags": ["Cards"],
+        "summary": "Kart detayını getir",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Kart detayı",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "card": {
+                      "$ref": "#/components/schemas/Card"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Cards"],
+        "summary": "Kartı güncelle",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Card"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Kart güncellendi"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Cards"],
+        "summary": "Kartı sil",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Kart silindi"
+          }
+        }
+      }
+    },
+    "/api/cards/{id}/status": {
+      "patch": {
+        "tags": ["Cards"],
+        "summary": "Kart durumunu değiştir (aktif/pasif)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Kart durumu değiştirildi"
+          }
+        }
+      }
+    },
+    "/api/cards/{cardId}/bank-accounts": {
+      "get": {
+        "tags": ["Cards"],
+        "summary": "Karta ait banka hesaplarını listele",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cardId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Banka hesapları"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Cards"],
+        "summary": "Karta banka hesabı ekle",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cardId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BankAccount"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Banka hesabı eklendi"
+          }
+        }
+      }
+    },
+    "/api/public/{slugOrId}": {
+      "get": {
+        "tags": ["Public"],
+        "summary": "Public kartvizit görüntüleme",
+        "description": "Slug veya ID ile herkese açık kartvizit bilgilerini getirir",
+        "parameters": [
+          {
+            "name": "slugOrId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Kartın slug'ı veya ID'si",
+            "example": "ahmet-yilmaz"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Kartvizit bilgileri",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "card": {
+                      "$ref": "#/components/schemas/Card"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      }
+    },
+    "/api/admin/stats": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Dashboard istatistikleri",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "İstatistikler",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "stats": {
+                      "type": "object",
+                      "properties": {
+                        "totalUsers": {
+                          "type": "integer"
+                        },
+                        "totalCards": {
+                          "type": "integer"
+                        },
+                        "totalCompanies": {
+                          "type": "integer"
+                        },
+                        "activeCards": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          }
+        }
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Tüm kullanıcıları listele",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Kullanıcı listesi"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Yeni kullanıcı oluştur",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "email", "password", "role"],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": ["user", "admin", "corporate"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Kullanıcı oluşturuldu"
+          }
+        }
+      }
+    },
+    "/api/admin/users/{id}": {
+      "put": {
+        "tags": ["Admin"],
+        "summary": "Kullanıcı güncelle",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/User"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Kullanıcı güncellendi"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Admin"],
+        "summary": "Kullanıcı sil",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Kullanıcı silindi"
+          }
+        }
+      }
+    },
+    "/api/upload": {
+      "post": {
+        "tags": ["Upload"],
+        "summary": "Dosya yükle",
+        "description": "Profil resmi, kapak resmi veya logo yükler",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["profile", "cover", "logo"],
+                    "description": "Dosya tipi"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Dosya yüklendi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "fileUrl": {
+                      "type": "string"
+                    },
+                    "filename": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wizard/create": {
+      "post": {
+        "tags": ["Wizard"],
+        "summary": "Wizard ile kart oluştur",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "step": {
+                    "type": "integer"
+                  },
+                  "data": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Kart oluşturuldu"
+          }
+        }
+      }
+    },
+    "/api/analytics/card/{cardId}": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Kart analitiklerini getir",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cardId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analitik veriler",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "analytics": {
+                      "type": "object",
+                      "properties": {
+                        "views": {
+                          "type": "integer"
+                        },
+                        "clicks": {
+                          "type": "integer"
+                        },
+                        "shares": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/activities": {
+      "get": {
+        "tags": ["Activities"],
+        "summary": "Kullanıcı aktivitelerini listele",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Aktivite listesi"
+          }
+        }
+      }
+    },
+    "/api/system/info": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Sistem bilgilerini getir",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sistem bilgileri"
+          }
+        }
+      }
+    }
+  }
+}
