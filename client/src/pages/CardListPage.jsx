@@ -84,12 +84,12 @@ function CardListPage() {
         if (!window.confirm('Bu kartviziti silmek istediğinizden emin misiniz?')) {
             return;
         }
-        setError(''); 
+        setError('');
         setCardProcessing(id, true);
         try {
             await cardService.deleteCard(id);
             setCards(cards.filter(card => card.id !== id));
-        } catch (err) { 
+        } catch (err) {
             console.error("Kartvizit silinirken hata:", err);
             const errorMsg = err.response?.data?.message || 'Kartvizit silinemedi.';
             setError(errorMsg);
@@ -105,7 +105,7 @@ function CardListPage() {
         try {
             const result = await cardService.toggleCardStatus(cardId, newStatus);
             // State'i güncelle
-            setCards(prevCards => 
+            setCards(prevCards =>
                 prevCards.map(c => c.id === cardId ? { ...c, isActive: result.card.isActive } : c)
             );
             // İsteğe bağlı: Başarı mesajı gösterilebilir
@@ -114,7 +114,7 @@ function CardListPage() {
             const errorMsg = err.response?.data?.message || 'Kart durumu değiştirilemedi.';
             setError(errorMsg);
              // Hata durumunda değişikliği geri al (opsiyonel)
-            setCards(prevCards => 
+            setCards(prevCards =>
                 prevCards.map(c => c.id === cardId ? { ...c, isActive: currentStatus } : c)
             );
         } finally {
@@ -124,7 +124,7 @@ function CardListPage() {
 
     // QR Kod Modal açma fonksiyonu
     const handleOpenQrModal = (card) => {
-        // Tam URL'i oluştur (örn: http://localhost:5173/card/slug-veya-id)
+        // Tam URL'i oluştur (örn: https://app.dijinew.com/card/slug-veya-id)
         const publicUrl = `${window.location.origin}/card/${card.customSlug || card.id}`;
         setSelectedQrUrl(publicUrl);
         setQrModalOpen(true);
@@ -155,11 +155,11 @@ function CardListPage() {
                 <Grid item>
                     {/* Sadece admin ve corporate kullanıcılar kart oluşturabilir */}
                     {user && (user.role === 'admin' || user.role === 'corporate') && (
-                        <Button 
-                            variant="contained" 
-                            color="primary" 
-                            startIcon={<AddIcon />} 
-                            component={RouterLink} 
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            startIcon={<AddIcon />}
+                            component={RouterLink}
                             to="/cards/new"
                         >
                             Yeni Kart Oluştur
@@ -167,7 +167,7 @@ function CardListPage() {
                     )}
                 </Grid>
             </Grid>
-            
+
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
             {cards.length === 0 && !loading ? (
@@ -182,7 +182,7 @@ function CardListPage() {
                                 <ListItem alignItems="flex-start">
                                     <ListItemAvatar>
                                         <Avatar alt={card.cardName} src={card.profileImageUrl || undefined}>
-                                            {!card.profileImageUrl && <ArticleIcon />} 
+                                            {!card.profileImageUrl && <ArticleIcon />}
                                         </Avatar>
                                     </ListItemAvatar>
                                     <ListItemText
@@ -209,7 +209,7 @@ function CardListPage() {
                                                          color="success" // Aktifken yeşil göster
                                                      />
                                                  }
-                                                 label={processStates[card.id] ? <CircularProgress size={20} /> : (card.isActive ? 'Aktif' : 'Pasif')} 
+                                                 label={processStates[card.id] ? <CircularProgress size={20} /> : (card.isActive ? 'Aktif' : 'Pasif')}
                                                  labelPlacement="start"
                                                  sx={{ mr: 1 }} // Sağa biraz boşluk
                                              />
@@ -221,7 +221,7 @@ function CardListPage() {
                                             </IconButton>
                                         </Tooltip>
                                         <Tooltip title="QR Kod">
-                                            <IconButton edge="end" aria-label="qr-code" onClick={() => handleOpenQrModal(card)} disabled={!card.isActive}> 
+                                            <IconButton edge="end" aria-label="qr-code" onClick={() => handleOpenQrModal(card)} disabled={!card.isActive}>
                                                 <QrCodeScannerIcon />
                                             </IconButton>
                                         </Tooltip>
@@ -235,10 +235,10 @@ function CardListPage() {
                                                 <DeleteIcon />
                                             </IconButton>
                                         </Tooltip>
-                                        {processStates[card.id] && <CircularProgress size={20} sx={{ ml: 1 }} />} 
+                                        {processStates[card.id] && <CircularProgress size={20} sx={{ ml: 1 }} />}
                                     </Box>
                                 </ListItem>
-                                {index < cards.length - 1 && <Divider variant="inset" component="li" />} 
+                                {index < cards.length - 1 && <Divider variant="inset" component="li" />}
                            </React.Fragment>
                         ))}
                     </List>
@@ -255,4 +255,4 @@ function CardListPage() {
     );
 }
 
-export default CardListPage; 
+export default CardListPage;

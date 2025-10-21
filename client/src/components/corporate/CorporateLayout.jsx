@@ -95,19 +95,19 @@ function CorporateLayout({ children }) {
   const drawer = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Logo Section - Minimal Kurumsal */}
-      <Box sx={{ 
-        p: 2.5, 
-        display: 'flex', 
-        alignItems: 'center', 
+      <Box sx={{
+        p: 2.5,
+        display: 'flex',
+        alignItems: 'center',
         justifyContent: 'center',
         borderBottom: '1px solid',
         borderColor: 'divider',
         background: 'background.paper',
         minHeight: 64
       }}>
-        <Box sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
+        <Box sx={{
+          display: 'flex',
+          alignItems: 'center',
           gap: 1.5,
           cursor: 'pointer'
         }}>
@@ -123,16 +123,16 @@ function CorporateLayout({ children }) {
           >
             <BusinessIcon sx={{ fontSize: 20, color: 'white' }} />
           </Box>
-          <Typography 
-            variant="h6" 
-            sx={{ 
-              fontWeight: 700, 
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 700,
               fontSize: '1.1rem',
               color: 'text.primary',
               letterSpacing: '-0.01em'
             }}
           >
-            DijiCard
+            Dijinew
           </Typography>
         </Box>
       </Box>
@@ -282,4 +282,4 @@ function CorporateLayout({ children }) {
   );
 }
 
-export default CorporateLayout; 
+export default CorporateLayout;

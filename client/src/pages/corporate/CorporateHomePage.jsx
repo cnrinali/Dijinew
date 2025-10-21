@@ -41,49 +41,49 @@ const CorporateHomePage = () => {
       icon: <CreditCardIcon />,
       path: "/corporate/cards",
       description: "Kurumsal kartvizitlerinizi yönetin",
-      color: "#1E3A8A"
+      color: "#F4C734"
     },
     {
       title: "KULLANICILAR",
       icon: <PeopleIcon />,
       path: "/corporate/users",
       description: "Şirket kullanıcılarınızı yönetin",
-      color: "#059669"
+      color: "#F4C734"
     },
     {
       title: "GENEL BAKIŞ",
       icon: <AnalyticsIcon />,
       path: "/corporate/dashboard",
       description: "Dashboard ve istatistiklerinizi görün",
-      color: "#7C3AED"
+      color: "#000000"
     },
     {
       title: "AKTİVİTELER",
       icon: <HistoryIcon />,
       path: "/corporate/activities",
       description: "Sistem aktivitelerini görüntüleyin",
-      color: "#F59E0B"
+      color: "#F4C734"
     },
     {
       title: "İSTATİSTİKLER",
       icon: <ReportIcon />,
       path: "/analytics",
       description: "Detaylı analiz raporlarınız",
-      color: "#8B5CF6"
+      color: "#000000"
     },
     {
       title: "AYARLAR",
       icon: <SettingsIcon />,
       path: "/profile",
       description: "Hesap ve sistem ayarlarınız",
-      color: "#6B7280"
+      color: "#F4C734"
     },
     {
       title: "GÜVENLİK",
       icon: <SecurityIcon />,
       path: "/profile",
       description: "Güvenlik ve şifre ayarları",
-      color: "#EF4444"
+      color: "#000000"
     }
   ];
 

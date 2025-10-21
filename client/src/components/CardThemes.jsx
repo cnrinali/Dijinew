@@ -505,7 +505,7 @@ export const DefaultTheme = ({ cardData }) => {
                                     target="_blank" 
                                     rel="noopener noreferrer" 
                                     aria-label="Instagram" 
-                                    sx={{ color: '#E1306C' }}
+                                    sx={{ color: '#F4C734' }}
                                     onClick={() => handleLinkClick('instagram')}
                                 >
                                     <InstagramIcon />
@@ -1381,7 +1381,7 @@ export const DarkTheme = ({ cardData }) => {
                     )}
                     {cardData.email && (
                         <ListItem component={Link} href={`mailto:${cardData.email}`} sx={{ color: 'white', textDecoration: 'none' }}>
-                            <ListItemIcon><EmailIcon sx={{ color: '#2196F3' }} /></ListItemIcon>
+                            <ListItemIcon><EmailIcon sx={{ color: '#F4C734' }} /></ListItemIcon>
                             <ListItemText primary={cardData.email} sx={{ color: 'white' }} />
                         </ListItem>
                     )}
@@ -1457,17 +1457,17 @@ export const DarkTheme = ({ cardData }) => {
                     <CardContent sx={{ py: 1, textAlign: 'center', backgroundColor: '#1a1a1a' }}>
                         <Stack direction="row" spacing={1} justifyContent="center">
                             {cardData.linkedinUrl && (
-                                <IconButton component="a" href={cardData.linkedinUrl} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" sx={{ color: '#0077B5' }}>
+                                <IconButton component="a" href={cardData.linkedinUrl} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" sx={{ color: '#000000' }}>
                                     <LinkedInIcon />
                                 </IconButton>
                             )}
                             {cardData.twitterUrl && (
-                                <IconButton component="a" href={cardData.twitterUrl} target="_blank" rel="noopener noreferrer" aria-label="Twitter" sx={{ color: '#1DA1F2' }}>
+                                <IconButton component="a" href={cardData.twitterUrl} target="_blank" rel="noopener noreferrer" aria-label="Twitter" sx={{ color: '#000000' }}>
                                     <TwitterIcon />
                                 </IconButton>
                             )}
                             {cardData.instagramUrl && (
-                                <IconButton component="a" href={cardData.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Instagram" sx={{ color: '#E1306C' }}>
+                                <IconButton component="a" href={cardData.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Instagram" sx={{ color: '#F4C734' }}>
                                     <InstagramIcon />
                                 </IconButton>
                             )}
@@ -1515,7 +1515,7 @@ export const CarouselTheme = ({ cardData }) => {
         cardData.phone && {
             icon: <PhoneIcon sx={{ fontSize: 32 }} />,
             label: 'Telefon',
-            color: '#10B981',
+            color: '#F4C734',
             action: () => {
                 handleLinkClick('phone');
                 window.location.href = `tel:${cardData.phone}`;
@@ -1524,7 +1524,7 @@ export const CarouselTheme = ({ cardData }) => {
         cardData.email && {
             icon: <EmailIcon sx={{ fontSize: 32 }} />,
             label: 'E-posta',
-            color: '#3B82F6',
+            color: '#F4C734',
             action: () => {
                 handleLinkClick('email');
                 window.location.href = `mailto:${cardData.email}`;
@@ -1533,7 +1533,7 @@ export const CarouselTheme = ({ cardData }) => {
         cardData.website && {
             icon: <LanguageIcon sx={{ fontSize: 32 }} />,
             label: 'Web',
-            color: '#8B5CF6',
+            color: '#000000',
             action: () => {
                 handleLinkClick('website');
                 window.open(cardData.website, '_blank');
@@ -1542,7 +1542,7 @@ export const CarouselTheme = ({ cardData }) => {
         cardData.linkedinUrl && {
             icon: <LinkedInIcon sx={{ fontSize: 32 }} />,
             label: 'LinkedIn',
-            color: '#0077B5',
+            color: '#000000',
             action: () => {
                 handleLinkClick('linkedin');
                 window.open(cardData.linkedinUrl, '_blank');
@@ -1551,7 +1551,7 @@ export const CarouselTheme = ({ cardData }) => {
         cardData.instagramUrl && {
             icon: <InstagramIcon sx={{ fontSize: 32 }} />,
             label: 'Instagram',
-            color: '#E1306C',
+            color: '#F4C734',
             action: () => {
                 handleLinkClick('instagram');
                 window.open(cardData.instagramUrl, '_blank');
@@ -1560,7 +1560,7 @@ export const CarouselTheme = ({ cardData }) => {
         cardData.twitterUrl && {
             icon: <TwitterIcon sx={{ fontSize: 32 }} />,
             label: 'Twitter',
-            color: '#1DA1F2',
+            color: '#000000',
             action: () => {
                 handleLinkClick('twitter');
                 window.open(cardData.twitterUrl, '_blank');
@@ -1569,19 +1569,19 @@ export const CarouselTheme = ({ cardData }) => {
         cardData.address && {
             icon: <LocationOnIcon sx={{ fontSize: 32 }} />,
             label: 'Konum',
-            color: '#EF4444',
+            color: '#F4C734',
             action: null
         },
         {
             icon: <QrCodeIcon sx={{ fontSize: 32 }} />,
             label: 'QR Kod',
-            color: '#F59E0B',
+            color: '#F4C734',
             action: handleQrClick
         },
         {
             icon: <ShareIcon sx={{ fontSize: 32 }} />,
             label: 'Paylaş',
-            color: '#EC4899',
+            color: '#000000',
             action: handleShareClick
         }
     ].filter(Boolean);
@@ -1901,7 +1901,7 @@ export const OvalCarouselTheme = ({ cardData }) => {
         cardData.phone && {
             icon: <PhoneIcon sx={{ fontSize: 32 }} />,
             label: 'Telefon',
-            color: '#10B981',
+            color: '#F4C734',
             action: () => {
                 handleLinkClick('phone');
                 window.location.href = `tel:${cardData.phone}`;
@@ -1910,7 +1910,7 @@ export const OvalCarouselTheme = ({ cardData }) => {
         cardData.email && {
             icon: <EmailIcon sx={{ fontSize: 32 }} />,
             label: 'E-posta',
-            color: '#3B82F6',
+            color: '#F4C734',
             action: () => {
                 handleLinkClick('email');
                 window.location.href = `mailto:${cardData.email}`;
@@ -1919,7 +1919,7 @@ export const OvalCarouselTheme = ({ cardData }) => {
         cardData.website && {
             icon: <LanguageIcon sx={{ fontSize: 32 }} />,
             label: 'Web',
-            color: '#8B5CF6',
+            color: '#000000',
             action: () => {
                 handleLinkClick('website');
                 window.open(cardData.website, '_blank');
@@ -1928,7 +1928,7 @@ export const OvalCarouselTheme = ({ cardData }) => {
         cardData.linkedinUrl && {
             icon: <LinkedInIcon sx={{ fontSize: 32 }} />,
             label: 'LinkedIn',
-            color: '#0077B5',
+            color: '#000000',
             action: () => {
                 handleLinkClick('linkedin');
                 window.open(cardData.linkedinUrl, '_blank');
@@ -1937,7 +1937,7 @@ export const OvalCarouselTheme = ({ cardData }) => {
         cardData.instagramUrl && {
             icon: <InstagramIcon sx={{ fontSize: 32 }} />,
             label: 'Instagram',
-            color: '#E1306C',
+            color: '#F4C734',
             action: () => {
                 handleLinkClick('instagram');
                 window.open(cardData.instagramUrl, '_blank');
@@ -1946,7 +1946,7 @@ export const OvalCarouselTheme = ({ cardData }) => {
         cardData.twitterUrl && {
             icon: <TwitterIcon sx={{ fontSize: 32 }} />,
             label: 'Twitter',
-            color: '#1DA1F2',
+            color: '#000000',
             action: () => {
                 handleLinkClick('twitter');
                 window.open(cardData.twitterUrl, '_blank');
@@ -1955,19 +1955,19 @@ export const OvalCarouselTheme = ({ cardData }) => {
         cardData.address && {
             icon: <LocationOnIcon sx={{ fontSize: 32 }} />,
             label: 'Konum',
-            color: '#EF4444',
+            color: '#F4C734',
             action: null
         },
         {
             icon: <QrCodeIcon sx={{ fontSize: 32 }} />,
             label: 'QR Kod',
-            color: '#F59E0B',
+            color: '#F4C734',
             action: handleQrClick
         },
         {
             icon: <ShareIcon sx={{ fontSize: 32 }} />,
             label: 'Paylaş',
-            color: '#EC4899',
+            color: '#000000',
             action: handleShareClick
         }
     ].filter(Boolean);

@@ -152,7 +152,7 @@ function CorporateCardsPage() {
                                 sx={{
                                     p: 2,
                                     borderRadius: 3,
-                                    background: 'linear-gradient(135deg, #1565C0 0%, #2196F3 100%)',
+                                    background: 'linear-gradient(135deg, #F4C734 0%, #000000 100%)',
                                     color: 'white',
                                     display: 'flex',
                                     alignItems: 'center',

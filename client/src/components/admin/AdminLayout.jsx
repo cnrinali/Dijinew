@@ -91,8 +91,8 @@ function AdminLayout({ children }) {
   const getActiveItem = () => {
     const currentPath = location.pathname;
     if (currentPath === '/analytics') return 'analytics';
-    return menuItems.find(item => 
-      item.path === currentPath || 
+    return menuItems.find(item =>
+      item.path === currentPath ||
       (item.id === 'dashboard' && currentPath === '/admin/dashboard')
     )?.id || 'dashboard';
   };
@@ -123,10 +123,10 @@ function AdminLayout({ children }) {
             </Typography>
           </Box>
         </Box>
-        <Chip 
+        <Chip
           label="Administrator"
           size="small"
-          sx={{ 
+          sx={{
             backgroundColor: 'rgba(255, 255, 255, 0.2)',
             color: 'white',
             fontWeight: 500,
@@ -194,8 +194,8 @@ function AdminLayout({ children }) {
           <>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
               <Avatar
-                sx={{ 
-                  width: 40, 
+                sx={{
+                  width: 40,
                   height: 40,
                   backgroundColor: 'primary.main',
                   fontSize: '1.1rem',
@@ -213,7 +213,7 @@ function AdminLayout({ children }) {
                 </Typography>
               </Box>
             </Box>
-            
+
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Button
                 fullWidth
@@ -221,7 +221,7 @@ function AdminLayout({ children }) {
                 size="small"
                 startIcon={<AccountCircleIcon />}
                 onClick={() => navigate('/profile')}
-                sx={{ 
+                sx={{
                   borderRadius: 2,
                   textTransform: 'none',
                   fontSize: '0.8rem',
@@ -243,7 +243,7 @@ function AdminLayout({ children }) {
                 size="small"
                 startIcon={<ExitToAppIcon />}
                 onClick={logout}
-                sx={{ 
+                sx={{
                   borderRadius: 2,
                   textTransform: 'none',
                   fontSize: '0.8rem',
@@ -260,13 +260,13 @@ function AdminLayout({ children }) {
                 Çıkış
               </Button>
             </Box>
-            
+
             <Divider sx={{ my: 2 }} />
           </>
         )}
-        
+
         <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center' }}>
-          DijiCard Admin v1.0
+            Dijinew Admin v1.0
         </Typography>
       </Box>
     </Box>
@@ -370,4 +370,4 @@ function AdminLayout({ children }) {
   );
 }
 
-export default AdminLayout; 
+export default AdminLayout;

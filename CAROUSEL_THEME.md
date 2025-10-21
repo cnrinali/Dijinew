@@ -13,15 +13,15 @@
 - **Smooth Animasyon**: Yumuşak geçişler ve hover efektleri
 
 ### 📱 Desteklenen İletişim Kanalları
-- Telefon (Yeşil)
-- E-posta (Mavi)
-- Web Sitesi (Mor)
-- LinkedIn (LinkedIn Mavisi)
-- Instagram (Pembe/Mor Gradient)
-- Twitter (Açık Mavi)
-- Konum (Kırmızı)
-- QR Kod (Turuncu)
-- Paylaş (Pembe)
+- Telefon (Sarı)
+- E-posta (Sarı)
+- Web Sitesi (Siyah)
+- LinkedIn (Siyah)
+- Instagram (Sarı)
+- Twitter (Siyah)
+- Konum (Sarı)
+- QR Kod (Sarı)
+- Paylaş (Siyah)
 
 ## Teknik Detaylar
 
@@ -83,7 +83,7 @@ const ThemeComponent = getThemeComponent('carousel');
 ```css
 Profil Bölümü: linear-gradient(135deg, #667eea 0%, #764ba2 100%)
 Telefon: #10B981 (Yeşil)
-E-posta: #3B82F6 (Mavi)
+E-posta: #F4C734 (Sarı)
 Web: #8B5CF6 (Mor)
 LinkedIn: #0077B5
 Instagram: #E1306C

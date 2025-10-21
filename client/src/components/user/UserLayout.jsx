@@ -91,9 +91,9 @@ function UserLayout({ children }) {
     };
 
     const drawer = (
-        <Box sx={{ 
-            height: '100%', 
-            display: 'flex', 
+        <Box sx={{
+            height: '100%',
+            display: 'flex',
             flexDirection: 'column',
             backgroundColor: 'background.default'
         }}>
@@ -118,7 +118,7 @@ function UserLayout({ children }) {
                         color: 'text.primary'
                     }}
                 >
-                    DijiCard
+                    Dijinew
                 </Typography>
             </Box>
 
@@ -147,8 +147,8 @@ function UserLayout({ children }) {
                                     transition: 'all 0.2s'
                                 }}
                             >
-                                <ListItemIcon 
-                                    sx={{ 
+                                <ListItemIcon
+                                    sx={{
                                         minWidth: 36,
                                         color: isActive ? 'white' : 'text.secondary',
                                         '& svg': {
@@ -254,10 +254,10 @@ function UserLayout({ children }) {
                 }}
             >
                 {/* Top Header Bar */}
-                <AppBar 
-                    position="sticky" 
+                <AppBar
+                    position="sticky"
                     elevation={0}
-                    sx={{ 
+                    sx={{
                         backgroundColor: 'background.paper',
                         borderBottom: '1px solid',
                         borderColor: 'divider',
@@ -318,7 +318,7 @@ function UserLayout({ children }) {
                                     </Typography>
                                 </Box>
                                 <Divider />
-                                <MenuItem 
+                                <MenuItem
                                     onClick={() => {
                                         navigate('/profile');
                                         handleProfileMenuClose();
@@ -329,7 +329,7 @@ function UserLayout({ children }) {
                                     <Typography variant="body2">Profilim</Typography>
                                 </MenuItem>
                                 <Divider />
-                                <MenuItem 
+                                <MenuItem
                                     onClick={handleLogout}
                                     sx={{ py: 1.5, gap: 1.5, color: 'error.main' }}
                                 >

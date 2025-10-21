@@ -9,10 +9,10 @@ const generateCardQRCode = async (cardData) => {
     try {
         // QR kod yolunu oluştur
         const cardPath = cardData.customSlug ? `/card/${cardData.customSlug}` : `/card/${cardData.id}`;
-        
+
         // QR kodu oluştur (Data URL formatında)
         const qrCodeDataURL = await qrcode.toDataURL(cardPath);
-        
+
         return {
             success: true,
             cardPath,
@@ -36,32 +36,32 @@ const createSimpleWizard = async (req, res) => {
 
     // Yetki kontrolü
     if (!['admin', 'corporate'].includes(userRole)) {
-        return res.status(403).json({ 
-            success: false, 
-            message: 'Bu işlem için yetkiniz yok.' 
+        return res.status(403).json({
+            success: false,
+            message: 'Bu işlem için yetkiniz yok.'
         });
     }
 
     try {
         const pool = await getPool();
-        
+
         // Benzersiz token oluştur
         const token = crypto.randomBytes(16).toString('hex'); // Daha kısa token
-        
+
         // Geçerlilik süresi 30 gün
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + 30);
-        
+
         // Önce Cards tablosunun mevcut kolonlarını kontrol edelim
         // Sadece kesinlikle var olan kolonları kullanarak kart oluşturalım
         // GUID ile unique slug oluştur
         const uniqueSlug = uuidv4();
         console.log('🏷️ Generated UUID slug:', uniqueSlug);
-        
+
         // Kurumsal kullanıcı için companyId kontrolü
         let companyId = null;
         let companyName = null;
-        
+
         if (userRole === 'corporate') {
             // Kullanıcının şirket bilgilerini al
             const companyResult = await pool.request()
@@ -72,7 +72,7 @@ const createSimpleWizard = async (req, res) => {
                     LEFT JOIN Companies c ON u.companyId = c.id 
                     WHERE u.id = @userId
                 `);
-            
+
             if (companyResult.recordset.length > 0 && companyResult.recordset[0].companyId) {
                 companyId = companyResult.recordset[0].companyId;
                 companyName = companyResult.recordset[0].companyName;
@@ -88,10 +88,10 @@ const createSimpleWizard = async (req, res) => {
                 FROM INFORMATION_SCHEMA.COLUMNS 
                 WHERE TABLE_NAME = 'Cards' AND COLUMN_NAME IN ('companyId', 'permanentSlug')
             `);
-        
+
         const hasCompanyIdColumn = columnCheckResult.recordset[0].hasCompanyId > 0;
         const hasPermanentSlugColumn = columnCheckResult.recordset[0].hasPermanentSlug > 0;
-        
+
         let cardResult;
         if (hasCompanyIdColumn && userRole === 'corporate' && companyId) {
             // CompanyId kolonu varsa ve kurumsal kullanıcıysa company bilgisi ile oluştur
@@ -103,7 +103,7 @@ const createSimpleWizard = async (req, res) => {
                 .input('userId', sql.Int, userId)
                 .input('companyId', sql.Int, companyId)
                 .input('isActive', sql.Bit, false);
-            
+
             if (hasPermanentSlugColumn) {
                 request.input('permanentSlug', sql.NVarChar(255), uniqueSlug);
                 cardResult = await request.query(`
@@ -127,7 +127,7 @@ const createSimpleWizard = async (req, res) => {
                 .input('email', sql.NVarChar(255), email || '')
                 .input('userId', sql.Int, userId)
                 .input('isActive', sql.Bit, false);
-            
+
             if (hasPermanentSlugColumn) {
                 request.input('permanentSlug', sql.NVarChar(255), uniqueSlug);
                 cardResult = await request.query(`
@@ -146,7 +146,7 @@ const createSimpleWizard = async (req, res) => {
 
         const card = cardResult.recordset[0];
         console.log('💳 Card creation result:', card);
-        
+
         // Token'ı veritabanına kaydet
         const tokenResult = await pool.request()
             .input('token', sql.NVarChar, token)
@@ -163,17 +163,17 @@ const createSimpleWizard = async (req, res) => {
             `);
 
         const wizardToken = tokenResult.recordset[0];
-        
+
         // Wizard URL oluştur (CLIENT tarafında - port 5173)
-        const clientBaseUrl = req.get('host').includes('localhost') 
-            ? `http://localhost:5173` 
+        const clientBaseUrl = req.get('host').includes('localhost')
+            ? `https://app.dijinew.com`
             : `https://${req.get('host').replace(':5001', '')}`;
         const wizardUrl = `${clientBaseUrl}/wizard/${card.customSlug}?token=${token}`;
 
         // Kart için QR kod oluştur
         const qrResult = await generateCardQRCode(card);
         let qrCodeUrl = null;
-        
+
         if (qrResult.success) {
             qrCodeUrl = `${clientBaseUrl}/qr/${card.customSlug}`;
             console.log('QR kod başarıyla oluşturuldu:', qrResult.cardPath);
@@ -183,31 +183,31 @@ const createSimpleWizard = async (req, res) => {
 
         // Email göndermeyi dene (opsiyonel - sadece geçerli email varsa)
         let emailResult = { success: false, message: 'Email belirtilmedi' };
-        
+
         // Email kontrolü: boş değil, @ içeriyor ve en az 5 karakter
-        const isValidEmail = email && 
-                            typeof email === 'string' && 
-                            email.trim().length > 4 && 
-                            email.includes('@') && 
+        const isValidEmail = email &&
+                            typeof email === 'string' &&
+                            email.trim().length > 4 &&
+                            email.includes('@') &&
                             email.includes('.');
-        
+
         if (isValidEmail) {
             try {
                 console.log('Email gönderme işlemi başlatılıyor:', email);
-                
+
                 const user = await pool.request()
                     .input('userId', sql.Int, userId)
                     .query('SELECT name FROM Users WHERE id = @userId');
-                
-                const senderName = user.recordset[0]?.name || 'DijiCard Ekibi';
-                
+
+                const senderName = user.recordset[0]?.name || 'Dijinew Ekibi';
+
                 emailResult = await emailService.sendWizardLinkEmail(email.trim(), wizardUrl, senderName);
                 console.log('Email gönderim sonucu:', emailResult);
-                
+
             } catch (emailErr) {
                 console.error('Email gönderim hatası (ana işlemi etkilemez):', emailErr);
-                emailResult = { 
-                    success: false, 
+                emailResult = {
+                    success: false,
                     message: 'Email gönderilemedi: ' + (emailErr.message || 'Bilinmeyen hata')
                 };
                 // Email hatası ana işlemi ETKİLEMEZ
@@ -235,9 +235,9 @@ const createSimpleWizard = async (req, res) => {
 
     } catch (error) {
         console.error('Basit sihirbaz token oluşturma hatası:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Sunucu hatası oluştu.' 
+        res.status(500).json({
+            success: false,
+            message: 'Sunucu hatası oluştu.'
         });
     }
 };
@@ -264,9 +264,9 @@ const validateSimpleWizardToken = async (req, res) => {
             `);
 
         if (result.recordset.length === 0) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Geçersiz token.' 
+            return res.status(404).json({
+                success: false,
+                message: 'Geçersiz token.'
             });
         }
 
@@ -274,17 +274,17 @@ const validateSimpleWizardToken = async (req, res) => {
 
         // Token süresi dolmuş mu?
         if (data.isExpired) {
-            return res.status(410).json({ 
-                success: false, 
-                message: 'Token süresi dolmuş.' 
+            return res.status(410).json({
+                success: false,
+                message: 'Token süresi dolmuş.'
             });
         }
 
         // Token daha önce kullanılmış mı?
         if (data.isUsed) {
-            return res.status(409).json({ 
-                success: false, 
-                message: 'Bu token daha önce kullanılmış.' 
+            return res.status(409).json({
+                success: false,
+                message: 'Bu token daha önce kullanılmış.'
             });
         }
 
@@ -302,9 +302,9 @@ const validateSimpleWizardToken = async (req, res) => {
 
     } catch (error) {
         console.error('Token doğrulama hatası:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Sunucu hatası oluştu.' 
+        res.status(500).json({
+            success: false,
+            message: 'Sunucu hatası oluştu.'
         });
     }
 };
@@ -313,15 +313,15 @@ const getCardByToken = async (req, res) => {
     const { token } = req.params;
 
     if (!token) {
-        return res.status(400).json({ 
-            success: false, 
-            message: 'Token parametresi gerekli.' 
+        return res.status(400).json({
+            success: false,
+            message: 'Token parametresi gerekli.'
         });
     }
 
     try {
         const pool = await getPool();
-        
+
         const result = await pool.request()
             .input('token', sql.NVarChar, token)
             .query(`
@@ -357,9 +357,9 @@ const getCardByToken = async (req, res) => {
             `);
 
         if (result.recordset.length === 0) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Geçersiz token.' 
+            return res.status(404).json({
+                success: false,
+                message: 'Geçersiz token.'
             });
         }
 
@@ -367,9 +367,9 @@ const getCardByToken = async (req, res) => {
 
         // Token süresi dolmuş mu?
         if (data.isExpired) {
-            return res.status(410).json({ 
-                success: false, 
-                message: 'Token süresi dolmuş.' 
+            return res.status(410).json({
+                success: false,
+                message: 'Token süresi dolmuş.'
             });
         }
 
@@ -381,9 +381,9 @@ const getCardByToken = async (req, res) => {
 
     } catch (error) {
         console.error('Token ile kart getirme hatası:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Sunucu hatası oluştu.' 
+        res.status(500).json({
+            success: false,
+            message: 'Sunucu hatası oluştu.'
         });
     }
 };
@@ -394,15 +394,15 @@ const updateCardByToken = async (req, res) => {
     const cardData = req.body;
 
     if (!token) {
-        return res.status(400).json({ 
-            success: false, 
-            message: 'Token parametresi gerekli.' 
+        return res.status(400).json({
+            success: false,
+            message: 'Token parametresi gerekli.'
         });
     }
 
     try {
         const pool = await getPool();
-        
+
         // Önce token'ı doğrula
         const tokenResult = await pool.request()
             .input('token', sql.NVarChar, token)
@@ -414,18 +414,18 @@ const updateCardByToken = async (req, res) => {
             `);
 
         if (tokenResult.recordset.length === 0) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Geçersiz token.' 
+            return res.status(404).json({
+                success: false,
+                message: 'Geçersiz token.'
             });
         }
 
         const tokenData = tokenResult.recordset[0];
 
         if (tokenData.isExpired) {
-            return res.status(410).json({ 
-                success: false, 
-                message: 'Token süresi dolmuş.' 
+            return res.status(410).json({
+                success: false,
+                message: 'Token süresi dolmuş.'
             });
         }
 
@@ -433,7 +433,7 @@ const updateCardByToken = async (req, res) => {
         // Eğer cardData'da name var ise sihirbaz dolduruluyor demektir, otomatik aktif et
         const shouldActivate = cardData.name && cardData.name.trim() !== '' && cardData.name !== 'Henüz Belirtilmedi';
         const isActiveValue = shouldActivate ? 1 : (cardData.isActive === true ? 1 : 0);
-        
+
         const updateResult = await pool.request()
             .input('cardId', sql.Int, tokenData.cardId)
             .input('name', sql.NVarChar, cardData.name || '')
@@ -459,9 +459,9 @@ const updateCardByToken = async (req, res) => {
             `);
 
         if (updateResult.rowsAffected[0] === 0) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Kart bulunamadı.' 
+            return res.status(404).json({
+                success: false,
+                message: 'Kart bulunamadı.'
             });
         }
 
@@ -487,14 +487,14 @@ const updateCardByToken = async (req, res) => {
                 .replace(/[^a-z0-9]/g, '-')
                 .replace(/-+/g, '-')
                 .replace(/^-|-$/g, '');
-            
+
             const newSlug = slugBase + '-' + Math.random().toString(36).substr(2, 6);
-            
+
             await pool.request()
                 .input('cardId', sql.Int, tokenData.cardId)
                 .input('customSlug', sql.NVarChar, newSlug)
                 .query(`UPDATE Cards SET customSlug = @customSlug WHERE id = @cardId`);
-            
+
             updatedCard.customSlug = newSlug;
         }
 
@@ -517,9 +517,9 @@ const updateCardByToken = async (req, res) => {
 
     } catch (error) {
         console.error('Token ile kart güncelleme hatası:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Sunucu hatası oluştu.' 
+        res.status(500).json({
+            success: false,
+            message: 'Sunucu hatası oluştu.'
         });
     }
 };
@@ -530,16 +530,16 @@ const updateCardOwnership = async (req, res) => {
     try {
         const { token } = req.params;
         const { newUserId } = req.body;
-        
+
         if (!token || !newUserId) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Token ve yeni kullanıcı ID gerekli.' 
+            return res.status(400).json({
+                success: false,
+                message: 'Token ve yeni kullanıcı ID gerekli.'
             });
         }
-        
+
         const pool = await getPool();
-        
+
         // Önce token ile kart ID'sini bul
         const tokenResult = await pool.request()
             .input('token', sql.NVarChar, token)
@@ -547,16 +547,16 @@ const updateCardOwnership = async (req, res) => {
                 SELECT cardId FROM SimpleWizardTokens 
                 WHERE token = @token AND isUsed = 0
             `);
-            
+
         if (tokenResult.recordset.length === 0) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Geçersiz veya kullanılmış token.' 
+            return res.status(404).json({
+                success: false,
+                message: 'Geçersiz veya kullanılmış token.'
             });
         }
-        
+
         const cardId = tokenResult.recordset[0].cardId;
-        
+
         // Kartın userId'sini güncelle
         const updateResult = await pool.request()
             .input('cardId', sql.Int, cardId)
@@ -566,7 +566,7 @@ const updateCardOwnership = async (req, res) => {
                 SET userId = @newUserId, updatedAt = GETDATE()
                 WHERE id = @cardId
             `);
-            
+
         if (updateResult.rowsAffected[0] > 0) {
             res.json({
                 success: true,
@@ -579,12 +579,12 @@ const updateCardOwnership = async (req, res) => {
                 message: 'Kart güncellenemedi.'
             });
         }
-        
+
     } catch (error) {
         console.error('Kart sahipliği güncelleme hatası:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Sunucu hatası oluştu.' 
+        res.status(500).json({
+            success: false,
+            message: 'Sunucu hatası oluştu.'
         });
     }
 };
@@ -593,16 +593,16 @@ const updateCardOwnership = async (req, res) => {
 const markSimpleTokenAsUsed = async (req, res) => {
     try {
         const { token } = req.params;
-        
+
         if (!token) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Token parametresi gerekli.' 
+            return res.status(400).json({
+                success: false,
+                message: 'Token parametresi gerekli.'
             });
         }
-        
+
         const pool = await getPool();
-        
+
         // Token'ı kullanıldı olarak işaretle
         const result = await pool.request()
             .input('token', sql.NVarChar, token)
@@ -611,7 +611,7 @@ const markSimpleTokenAsUsed = async (req, res) => {
                 SET isUsed = 1, updatedAt = GETDATE()
                 WHERE token = @token AND isUsed = 0
             `);
-            
+
         if (result.rowsAffected[0] > 0) {
             res.json({
                 success: true,
@@ -623,12 +623,12 @@ const markSimpleTokenAsUsed = async (req, res) => {
                 message: 'Token bulunamadı veya zaten kullanılmış.'
             });
         }
-        
+
     } catch (error) {
         console.error('Token işaretleme hatası:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Sunucu hatası oluştu.' 
+        res.status(500).json({
+            success: false,
+            message: 'Sunucu hatası oluştu.'
         });
     }
 };
@@ -638,15 +638,15 @@ const getUserSimpleWizards = async (req, res) => {
     const userRole = req.user.role;
 
     if (!['admin', 'corporate'].includes(userRole)) {
-        return res.status(403).json({ 
-            success: false, 
-            message: 'Bu işlem için yetkiniz yok.' 
+        return res.status(403).json({
+            success: false,
+            message: 'Bu işlem için yetkiniz yok.'
         });
     }
 
     try {
         const pool = await getPool();
-        
+
         const result = await pool.request()
             .input('createdBy', sql.Int, userId)
             .query(`
@@ -683,9 +683,9 @@ const getUserSimpleWizards = async (req, res) => {
 
     } catch (error) {
         console.error('Sihirbaz listesi getirme hatası:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Sunucu hatası oluştu.' 
+        res.status(500).json({
+            success: false,
+            message: 'Sunucu hatası oluştu.'
         });
     }
 };
@@ -694,9 +694,9 @@ const getUserSimpleWizards = async (req, res) => {
 const debugDatabaseSchema = async (req, res) => {
     try {
         const pool = await getPool();
-        
+
         console.log('🔍 Checking database schema...');
-        
+
         // Cards tablosundaki kolonları listele
         const columnsResult = await pool.request().query(`
             SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE 
@@ -704,19 +704,19 @@ const debugDatabaseSchema = async (req, res) => {
             WHERE TABLE_NAME = 'Cards' 
             ORDER BY ORDINAL_POSITION
         `);
-        
+
         const columns = columnsResult.recordset.map(col => ({
             name: col.COLUMN_NAME,
             type: col.DATA_TYPE,
             nullable: col.IS_NULLABLE
         }));
-        
+
         // CompanyId kolonu var mı kontrol et
         const hasCompanyId = columns.some(col => col.name === 'companyId');
         const hasPermanentSlug = columns.some(col => col.name === 'permanentSlug');
-        
+
         let migrationResults = [];
-        
+
         if (!hasCompanyId) {
             console.log('🔧 Adding companyId column...');
             try {
@@ -724,7 +724,7 @@ const debugDatabaseSchema = async (req, res) => {
                     ALTER TABLE Cards ADD companyId INT NULL;
                 `);
                 migrationResults.push('CompanyId column added successfully');
-                
+
                 // Foreign key constraint ekle
                 try {
                     await pool.request().query(`
@@ -741,7 +741,7 @@ const debugDatabaseSchema = async (req, res) => {
         } else {
             migrationResults.push('CompanyId column already exists');
         }
-        
+
         // PermanentSlug kolonu kontrolü ve ekleme
         if (!hasPermanentSlug) {
             console.log('🔧 Adding permanentSlug column...');
@@ -750,7 +750,7 @@ const debugDatabaseSchema = async (req, res) => {
                     ALTER TABLE Cards ADD permanentSlug NVARCHAR(255) NULL;
                 `);
                 migrationResults.push('PermanentSlug column added successfully');
-                
+
                 // Unique index ekle
                 try {
                     await pool.request().query(`
@@ -768,14 +768,14 @@ const debugDatabaseSchema = async (req, res) => {
         } else {
             migrationResults.push('PermanentSlug column already exists');
         }
-        
+
         // Son kartları kontrol et
         const recentCardsResult = await pool.request().query(`
             SELECT TOP 5 id, cardName, name, userId, companyId, customSlug, permanentSlug, isActive, createdAt 
             FROM Cards 
             ORDER BY createdAt DESC
         `);
-        
+
         res.json({
             success: true,
             data: {
@@ -787,7 +787,7 @@ const debugDatabaseSchema = async (req, res) => {
             },
             message: 'Database schema check completed'
         });
-        
+
     } catch (error) {
         console.error('Database schema check error:', error);
         res.status(500).json({
@@ -801,7 +801,7 @@ const debugDatabaseSchema = async (req, res) => {
         try {
             const pool = await getPool();
             const testSlug = '71f358a2-cd21-4dfa-8ec9-6e1b2b68d35d';
-            
+
             // Test different queries
             const queries = [
                 { name: 'exact_match', query: `SELECT id, permanentSlug FROM Cards WHERE permanentSlug = '${testSlug}'` },
@@ -809,19 +809,19 @@ const debugDatabaseSchema = async (req, res) => {
                 { name: 'like_match', query: `SELECT id, permanentSlug FROM Cards WHERE permanentSlug LIKE '%${testSlug}%'` },
                 { name: 'all_permanent', query: `SELECT id, permanentSlug, LEN(permanentSlug) as len FROM Cards WHERE permanentSlug IS NOT NULL` }
             ];
-            
+
             const results = {};
             for (const q of queries) {
                 const result = await pool.request().query(q.query);
                 results[q.name] = result.recordset;
             }
-            
+
             res.json({
                 success: true,
                 testSlug,
                 results
             });
-            
+
         } catch (error) {
             console.error('Test permanent slug error:', error);
             res.status(500).json({

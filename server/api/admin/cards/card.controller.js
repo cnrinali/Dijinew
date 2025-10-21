@@ -12,7 +12,7 @@ const generateQRCodeDataURL = async (cardData) => {
     // Öncelikli olarak customSlug varsa onu, yoksa id'yi kullan
     // URL'yi göreceli yol olarak oluşturuyoruz
     const cardPath = cardData.customSlug ? `/card/${cardData.customSlug}` : `/card/${cardData.id}`;
-    // Tam URL için domain ekleyebilirsiniz: const fullUrl = `http://localhost:5173${cardPath}`;
+    // Tam URL için domain ekleyebilirsiniz: const fullUrl = `https://app.dijinew.com${cardPath}`;
     console.log("Generating QR code for path:", cardPath);
 
     try {
@@ -72,7 +72,7 @@ const getCards = async (req, res) => {
             whereConditions.push('c.companyId = @companyIdParam');
             request.input('companyIdParam', sql.Int, companyIdParam);
         }
-        
+
         if (whereConditions.length > 0) {
              query += ` WHERE ${whereConditions.join(' AND ')}`;
         }
@@ -94,12 +94,12 @@ const getCards = async (req, res) => {
 const createCard = async (req, res) => {
     console.log("createCard controller çağrıldı", req.body);
     // customSlug'ı da req.body'den al
-    const { companyId, userId, name, title, email, phone, website, address, status, customSlug } = req.body; 
+    const { companyId, userId, name, title, email, phone, website, address, status, customSlug } = req.body;
 
     if (!name) {
         return res.status(400).json({ message: 'Kart Adı zorunludur.' });
     }
-    
+
     const slugToCheck = customSlug && customSlug.trim() ? customSlug.trim() : null;
 
     let companyIdToSet = null;
@@ -164,7 +164,7 @@ const createCard = async (req, res) => {
             insertRequest.input('address', sql.NVarChar, address);
             insertRequest.input('status', sql.Bit, status !== undefined ? status : true);
             insertRequest.input('customSlug', sql.NVarChar, slugToCheck); // slug'ı ekle (null olabilir)
-            
+
             // INSERT ve OUTPUT sorgusuna customSlug ekle
             const insertResult = await insertRequest.query(`
                 INSERT INTO Cards (companyId, userId, name, title, email, phone, website, address, status, customSlug)
@@ -186,9 +186,9 @@ const createCard = async (req, res) => {
                  qrUpdateRequest.input('cardId', sql.Int, newCard.id);
                  qrUpdateRequest.input('qrCodeData', sql.NVarChar, qrCodeData);
                  await qrUpdateRequest.query('UPDATE Cards SET qrCodeData = @qrCodeData WHERE id = @cardId');
-                 newCard.qrCodeData = qrCodeData; 
+                 newCard.qrCodeData = qrCodeData;
             }
-            
+
             // Yanıta şirket ve kullanıcı adını da ekleyelim (varsa)
             if (newCard.companyId) {
                  const companyNameRequest = new sql.Request(transaction);
@@ -215,7 +215,7 @@ const createCard = async (req, res) => {
                 return res.status(400).json({ message: 'Geçersiz Şirket veya Kullanıcı ID.' });
             }
             // SQL unique constraint hatası (varsa)
-            if (error.number === 2627 || error.number === 2601) { 
+            if (error.number === 2627 || error.number === 2601) {
                  return res.status(400).json({ message: 'Bu özel URL zaten kullanılıyor (DB Kısıtlaması).' });
             }
             res.status(500).json({ message: 'Sunucu hatası oluştu.' });
@@ -234,7 +234,7 @@ const createCard = async (req, res) => {
 const updateCard = async (req, res) => {
     const cardId = req.params.id;
     // customSlug'ı da req.body'den al
-    const { companyId, userId, name, title, email, phone, website, address, status, customSlug } = req.body; 
+    const { companyId, userId, name, title, email, phone, website, address, status, customSlug } = req.body;
     console.log(`updateCard controller çağrıldı, ID: ${cardId}`, req.body);
 
     if (!name) { return res.status(400).json({ message: 'Kart Adı zorunludur.' }); }
@@ -270,7 +270,7 @@ const updateCard = async (req, res) => {
     // Eğer userId null'a çekiliyorsa, companyId null olamaz.
     const finalCompanyId = updateCompanyId ? companyIdToSet : undefined; // Güncellenmiyorsa undefined
     const finalUserId = updateUserId ? userIdToSet : undefined;          // Güncellenmiyorsa undefined
-    
+
     // Bu kontrol backend'de biraz karmaşık, frontend'de validasyon yapmak daha iyi olabilir.
     // Şimdilik sadece temel kontrolleri yapalım.
     if (updateCompanyId && companyIdToSet === null && updateUserId && userIdToSet === null) {
@@ -328,7 +328,7 @@ const updateCard = async (req, res) => {
                     return res.status(404).json({ message: `Belirtilen kullanıcı bulunamadı (ID: ${userIdToSet}).` });
                 }
             }
-            
+
             // Son durumu tekrar kontrol et (eğer sadece biri güncelleniyorsa)
              const finalCompanyIdResolved = updateCompanyId ? companyIdToSet : currentCard.companyId;
              const finalUserIdResolved = updateUserId ? userIdToSet : currentCard.userId;
@@ -379,7 +379,7 @@ const updateCard = async (req, res) => {
                     createdAt DATETIME2, updatedAt DATETIME2, qrCodeData NVARCHAR(MAX) NULL
                 );
             `;
-            
+
             const updateQuery = `
                 ${declareOutputTable}
                 UPDATE Cards SET ${setClauses}
@@ -389,7 +389,7 @@ const updateCard = async (req, res) => {
 
                 SELECT * FROM @UpdatedCards;
             `;
-            
+
             const updateResult = await updateRequest.query(updateQuery);
 
             if (updateResult.recordset.length === 0) {
@@ -398,7 +398,7 @@ const updateCard = async (req, res) => {
             }
 
             const updatedCard = updateResult.recordset[0];
-            
+
             // QR Kodunu yeniden oluştur (updatedCard'da yeni slug olabilir)
             const qrCodeData = await generateQRCodeDataURL(updatedCard);
             if (qrCodeData && qrCodeData !== updatedCard.qrCodeData) { // Sadece değiştiyse güncelle
@@ -406,9 +406,9 @@ const updateCard = async (req, res) => {
                  qrUpdateRequest.input('cardId', sql.Int, updatedCard.id);
                  qrUpdateRequest.input('qrCodeData', sql.NVarChar, qrCodeData);
                  await qrUpdateRequest.query('UPDATE Cards SET qrCodeData = @qrCodeData WHERE id = @cardId');
-                 updatedCard.qrCodeData = qrCodeData; 
+                 updatedCard.qrCodeData = qrCodeData;
             }
-            
+
             // Yanıta şirket ve kullanıcı adını da ekleyelim (varsa)
              if (updatedCard.companyId) {
                  const companyNameRequest = new sql.Request(transaction);
@@ -434,7 +434,7 @@ const updateCard = async (req, res) => {
                 return res.status(400).json({ message: 'Geçersiz Şirket veya Kullanıcı ID.' });
             }
             // SQL unique constraint hatası (varsa)
-            if (error.number === 2627 || error.number === 2601) { 
+            if (error.number === 2627 || error.number === 2601) {
                  return res.status(400).json({ message: 'Bu özel URL zaten kullanılıyor (DB Kısıtlaması).' });
             }
             res.status(500).json({ message: 'Sunucu hatası oluştu.' });
@@ -653,7 +653,7 @@ const generateBulkQRCodes = async (req, res) => {
             const qrCodeData = await qrcode.toDataURL(cardPath);
             const base64Data = qrCodeData.replace(/^data:image\/png;base64,/, '');
             const buffer = Buffer.from(base64Data, 'base64');
-            
+
             // Dosya adını oluştur
             let fileName = card.name;
             if (card.userName) {
@@ -678,7 +678,7 @@ const generateBulkQRCodes = async (req, res) => {
                 .replace(/[Ç]/g, 'C')
                 .replace(/\s+/g, '-')
                 .toLowerCase();
-            
+
             archive.append(buffer, { name: `qr-${fileName}.png` });
         }
 
@@ -723,7 +723,7 @@ const getCardQRCode = async (req, res) => {
 
         const qrCodeData = await qrcode.toDataURL(cardPath);
         console.log(`[getCardQRCode] QR kod Data URL oluşturuldu.`);
-        
+
         const base64Data = qrCodeData.replace(/^data:image\/png;base64,/, '');
         const buffer = Buffer.from(base64Data, 'base64');
         console.log(`[getCardQRCode] Buffer oluşturuldu.`);
@@ -772,4 +772,4 @@ module.exports = {
     importCardsFromExcel,
     generateBulkQRCodes,
     getCardQRCode
-}; 
+};

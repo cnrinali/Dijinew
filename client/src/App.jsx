@@ -13,7 +13,6 @@ import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { lightTheme, darkTheme } from './theme/modernTheme';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import HomePage from './pages/HomePage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminUserListPage from './pages/admin/AdminUserListPage';
 import AdminCompanyListPage from './pages/admin/CompanyManagementPage';
@@ -44,8 +43,6 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import MyDigitalCardPage from './pages/MyDigitalCardPage';
 
 const navItems = [
-  { label: 'Ana Sayfa', path: '/home', public: true },
-  { label: 'Giriş Yap', path: '/login', public: true, hideWhenLoggedIn: true },
   { label: 'Dijital Kartım', path: '/cards', roles: ['user'] },
   { label: 'Kurumsal Panel', path: '/corporate/dashboard', roles: ['corporate'] },
 ];
@@ -77,7 +74,7 @@ function AppContent() {
     setAnchorElUser(null);
   };
 
-  const isAdminRoute = location.pathname.startsWith('/admin') || 
+  const isAdminRoute = location.pathname.startsWith('/admin') ||
                       location.pathname.startsWith('/corporate') ||
                       (location.pathname === '/profile' && user?.role === 'admin') ||
                       (location.pathname.startsWith('/cards/') && user?.role === 'corporate') ||
@@ -107,11 +104,11 @@ function AppContent() {
                 <Route path="/card/:slug" element={<PublicCardViewPage />} />
                 <Route path="/card/my-digital-card" element={<MyDigitalCardPage />} />
                 <Route path="/qr/:slug" element={<QrCardPage />} />
-                
+
                 {/* Card Wizard - Public route for new users */}
                 <Route path="/wizard/:cardSlug" element={<CardWizard />} />
-                
-        
+
+
         {/* All other routes with navbar */}
         <Route path="*" element={
           <>
@@ -119,7 +116,7 @@ function AppContent() {
                       <AppBar position="static" sx={{ boxShadow: 2 }}>
               <Container maxWidth="xl">
                 <Toolbar disableGutters sx={{ minHeight: { xs: 56, sm: 64 } }}>
-                  {!location.pathname.startsWith('/corporate') && 
+                  {!location.pathname.startsWith('/corporate') &&
                    !(user?.role === 'corporate' && location.pathname === '/analytics') && (
                     <Box
                       component={RouterLink}
@@ -139,14 +136,14 @@ function AppContent() {
                           fontWeight: 700,
                           color: 'text.primary',
                           fontFamily: 'Inter, sans-serif',
-                          background: 'linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%)',
+                          background: 'linear-gradient(135deg, #F4C734 0%, #B58505 100%)',
                           backgroundClip: 'text',
                           WebkitBackgroundClip: 'text',
                           WebkitTextFillColor: 'transparent',
                           fontSize: { xs: '1.25rem', sm: '1.5rem' }
                         }}
                       >
-                        DijiCard
+                        Dijinew
                       </Typography>
                     </Box>
                   )}
@@ -159,7 +156,7 @@ function AppContent() {
                       aria-haspopup="true"
                       onClick={handleOpenNavMenu}
                       color="inherit"
-                      sx={{ 
+                      sx={{
                         color: 'text.primary',
                         '&:hover': {
                           backgroundColor: 'primary.50'
@@ -205,7 +202,7 @@ function AppContent() {
                         },
                       }}
                     >
-                      {!(user?.role === 'corporate' && location.pathname === '/analytics') && 
+                      {!(user?.role === 'corporate' && location.pathname === '/analytics') &&
                        filteredNavItems.map((item) => (
                         <MenuItem key={item.label} onClick={handleCloseNavMenu} component={RouterLink} to={item.path}>
                           <Typography textAlign="center">{item.label}</Typography>
@@ -238,20 +235,20 @@ function AppContent() {
                       <Typography
                         variant="h6"
                         sx={{
-                          fontWeight: 600,
+                          fontWeight: 700,
                           color: 'text.primary',
                           fontFamily: 'Inter, sans-serif',
-                          background: 'linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%)',
+                          background: 'linear-gradient(135deg, #F4C734 0%, #B58505 100%)',
                           backgroundClip: 'text',
                           WebkitBackgroundClip: 'text',
                           WebkitTextFillColor: 'transparent',
                         }}
                       >
-                        DijiCard
+                        Dijinew
                       </Typography>
                     </Box>
                   )}
-                  {!location.pathname.startsWith('/corporate') && 
+                  {!location.pathname.startsWith('/corporate') &&
                    !(user?.role === 'corporate' && location.pathname === '/analytics') && (
                     <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, gap: 0.5 }}>
                       {filteredNavItems.map((item) => (
@@ -260,7 +257,7 @@ function AppContent() {
                           component={RouterLink}
                           to={item.path}
                           onClick={handleCloseNavMenu}
-                          sx={{ 
+                          sx={{
                             mx: 0.5,
                             px: 2,
                             py: 1,
@@ -284,20 +281,20 @@ function AppContent() {
                   )}
 
                   {user && (
-                    <Box sx={{ 
-                      flexGrow: location.pathname.startsWith('/corporate') || (user?.role === 'corporate' && location.pathname === '/analytics') ? 1 : 0, 
-                      display: { xs: 'none', md: 'flex' }, 
-                      alignItems: 'center', 
+                    <Box sx={{
+                      flexGrow: location.pathname.startsWith('/corporate') || (user?.role === 'corporate' && location.pathname === '/analytics') ? 1 : 0,
+                      display: { xs: 'none', md: 'flex' },
+                      alignItems: 'center',
                       gap: 1,
                       justifyContent: location.pathname.startsWith('/corporate') || (user?.role === 'corporate' && location.pathname === '/analytics') ? 'flex-end' : 'flex-start'
                     }}>
                       <ThemeToggle />
-                      
+
                       {/* User Profile Dropdown */}
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <IconButton
                           onClick={handleOpenUserMenu}
-                          sx={{ 
+                          sx={{
                             p: 0,
                             '&:hover': {
                               backgroundColor: 'transparent'
@@ -316,7 +313,7 @@ function AppContent() {
                             {user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
                           </Avatar>
                         </IconButton>
-                        
+
                         <Menu
                           anchorEl={anchorElUser}
                           open={Boolean(anchorElUser)}
@@ -340,8 +337,8 @@ function AppContent() {
                               {user.email}
                             </Typography>
                           </Box>
-                          
-                          <MenuItem 
+
+                          <MenuItem
                             onClick={() => {
                               handleCloseUserMenu();
                               // Navigate to profile
@@ -351,14 +348,14 @@ function AppContent() {
                             <PersonIcon sx={{ mr: 1.5, fontSize: 20 }} />
                             Profil
                           </MenuItem>
-                          
-                          <MenuItem 
+
+                          <MenuItem
                             onClick={() => {
                               handleCloseUserMenu();
                               logout();
                             }}
-                            sx={{ 
-                              py: 1.5, 
+                            sx={{
+                              py: 1.5,
                               px: 2,
                               color: 'error.main',
                               '&:hover': {
@@ -376,18 +373,18 @@ function AppContent() {
 
                   {/* Mobile User Profile */}
                   {user && (
-                    <Box sx={{ 
-                      flexGrow: location.pathname.startsWith('/corporate') || (user?.role === 'corporate' && location.pathname === '/analytics') ? 1 : 0, 
-                      display: { xs: 'flex', md: 'none' }, 
-                      alignItems: 'center', 
+                    <Box sx={{
+                      flexGrow: location.pathname.startsWith('/corporate') || (user?.role === 'corporate' && location.pathname === '/analytics') ? 1 : 0,
+                      display: { xs: 'flex', md: 'none' },
+                      alignItems: 'center',
                       gap: 1,
                       justifyContent: location.pathname.startsWith('/corporate') || (user?.role === 'corporate' && location.pathname === '/analytics') ? 'flex-end' : 'flex-start'
                     }}>
                       <ThemeToggle />
-                      
+
                       <IconButton
                         onClick={handleOpenUserMenu}
-                        sx={{ 
+                        sx={{
                           p: 0,
                           '&:hover': {
                             backgroundColor: 'transparent'
@@ -413,12 +410,12 @@ function AppContent() {
             </AppBar>
             )}
 
-            <Container 
-              component="main" 
-              maxWidth={false} 
+            <Container
+              component="main"
+              maxWidth={false}
               disableGutters
-              sx={{ 
-                py: 0, 
+              sx={{
+                py: 0,
                 px: 0,
                 minHeight: isAdminRoute ? '100vh' : 'auto'
               }}
@@ -433,13 +430,12 @@ function AppContent() {
                     ) : user.role === 'user' ? (
                       <Navigate to="/cards" replace />
                     ) : (
-                      <HomePage />
+                      <Navigate to="/login" replace />
                     )
                   ) : (
-                    <HomePage />
+                    <Navigate to="/login" replace />
                   )
-                } /> 
-                <Route path="/home" element={<HomePage />} />
+                } />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -457,7 +453,7 @@ function AppContent() {
                     <Navigate to="/login" />
                   )
                 } />
-                
+
                 {/* Admin Routes */}
                 <Route path="/admin/dashboard" element={user && user.role === 'admin' ? <AdminLayout><AdminDashboardPage /></AdminLayout> : <Navigate to="/login" />} />
                 <Route path="/admin/users" element={user && user.role === 'admin' ? <AdminLayout><AdminUserListPage /></AdminLayout> : <Navigate to="/login" />} />

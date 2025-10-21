@@ -14,12 +14,12 @@ const ModernStatCard = ({
 }) => {
   const getGradientColor = (color) => {
     const gradients = {
-      primary: 'linear-gradient(135deg, #1565C0 0%, #2196F3 100%)',
-      secondary: 'linear-gradient(135deg, #37474F 0%, #62727B 100%)',
-      success: 'linear-gradient(135deg, #10B981 0%, #34D399 100%)',
-      warning: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)',
-      error: 'linear-gradient(135deg, #EF4444 0%, #F87171 100%)',
-      info: 'linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%)',
+      primary: 'linear-gradient(135deg, #F4C734 0%, #C99506 100%)',
+      secondary: 'linear-gradient(135deg, #000000 0%, #1E1E1E 100%)',
+      success: 'linear-gradient(135deg, #5AD66F 0%, #2E7D32 100%)',
+      warning: 'linear-gradient(135deg, #F4C734 0%, #B58505 100%)',
+      error: 'linear-gradient(135deg, #EF4444 0%, #C62828 100%)',
+      info: 'linear-gradient(135deg, #F4C734 0%, #000000 100%)',
     };
     return gradients[color] || gradients.primary;
   };
@@ -64,7 +64,7 @@ const ModernStatCard = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'white',
+              color: color === 'secondary' ? '#F4C734' : '#000000',
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
             }}
           >
