@@ -68,17 +68,15 @@ export default function CardWizard() {
     const { showNotification } = useNotification();
     const [loading, setLoading] = useState(false);
 
-    // Token doğrulama state'leri
-    const [tokenValidating, setTokenValidating] = useState(true);
-    const [tokenValid, setTokenValid] = useState(false);
-    const [tokenData, setTokenData] = useState(null);
+    // Kart yükleme state'leri
+    const [cardLoading, setCardLoading] = useState(true);
+    const [cardLoaded, setCardLoaded] = useState(false);
     
     // Kullanıcı kayıt durumu kontrolü
     const [userRegistered, setUserRegistered] = useState(false);
 
     // Sihirbazın hangi tipte olduğunu belirle (admin, corporate, user)
     const wizardType = searchParams.get('type') || 'user';
-    const token = searchParams.get('token');
 
     // Form verileri
     const [userData, setUserData] = useState({
@@ -171,51 +169,73 @@ export default function CardWizard() {
         setKvkkScrolledToBottom(false);
     };
 
-    // Token doğrulama useEffect (Simple Wizard için)
+    // Kart bilgilerini yükle (Herkese açık sihirbaz için)
     useEffect(() => {
-        const validateToken = async () => {
-            if (!token || !cardSlug) {
-                // Token veya cardSlug yok - hatalı link
-                showNotification('Geçersiz sihirbaz linki. Token veya kart ID bulunamadı.', 'error');
-                setTokenValidating(false);
-                setTokenValid(false);
+        const loadCardData = async () => {
+            if (!cardSlug) {
+                showNotification('Geçersiz sihirbaz linki. Kart ID bulunamadı.', 'error');
+                setCardLoading(false);
+                setCardLoaded(false);
                 return;
             }
 
             try {
-                setTokenValidating(true);
-                // Simple wizard API'sini kullan
-                const response = await fetch(`http://localhost:5001/api/simple-wizard/validate/${token}`);
+                setCardLoading(true);
+                
+                // Kart bilgilerini cardSlug ile yükle (token gerektirmez)
+                const apiBaseUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:5001' 
+                    : 'https://api.dijinew.com';
+                const response = await fetch(`${apiBaseUrl}/api/public/${cardSlug}`);
                 const data = await response.json();
                 
-                if (data.success) {
-                    setTokenValid(true);
-                    setTokenData(data.data);
+                if (data && data.id) {
+                    setCardLoaded(true);
                     
-                    // Token ile kart bilgilerini yükle
-                    await loadCardData(token);
+                    // Kart bilgilerini form'a yükle
+                    setCardData(prev => ({
+                        ...prev,
+                        cardName: data.cardName || 'Kartvizitim',
+                        name: data.name || '',
+                        title: data.title || '',
+                        company: data.company || '',
+                        bio: data.bio || '',
+                        phone: data.phone || '',
+                        email: data.email || '',
+                        website: data.website || '',
+                        address: data.address || '',
+                        theme: data.theme || 'light',
+                        linkedinUrl: data.linkedinUrl || '',
+                        twitterUrl: data.twitterUrl || '',
+                        instagramUrl: data.instagramUrl || '',
+                        trendyolUrl: data.trendyolUrl || '',
+                        hepsiburadaUrl: data.hepsiburadaUrl || ''
+                    }));
                     
-                    showNotification('Sihirbaz linki geçerli. Kart bilgilerinizi girebilirsiniz.', 'success');
+                    showNotification('Sihirbaz hazır. Kart bilgilerinizi girebilirsiniz.', 'success');
                 } else {
-                    setTokenValid(false);
-                    showNotification(data.message || 'Token doğrulanamadı.', 'error');
+                    setCardLoaded(false);
+                    showNotification('Kart bulunamadı veya erişim izni yok.', 'error');
                 }
             } catch (error) {
-                console.error('Token doğrulama hatası:', error);
-                setTokenValid(false);
-                showNotification('Token doğrulanırken hata oluştu.', 'error');
+                console.error('Kart yükleme hatası:', error);
+                setCardLoaded(false);
+                showNotification('Kart bilgileri yüklenirken hata oluştu.', 'error');
             } finally {
-                setTokenValidating(false);
+                setCardLoading(false);
             }
         };
 
-        validateToken();
-    }, [token, cardSlug, showNotification]);
+        loadCardData();
+    }, [cardSlug, showNotification]);
 
-    // Kartın sahipliğini güncelle
-    const updateCardOwnership = useCallback(async (token, newUserId) => {
+    // Kartın sahipliğini güncelle (cardSlug ile)
+    const updateCardOwnership = useCallback(async (cardSlug, newUserId) => {
         try {
-            const response = await fetch(`http://localhost:5001/api/simple-wizard/update-ownership/${token}`, {
+            const apiBaseUrl = window.location.hostname === 'localhost' 
+                ? 'http://localhost:5001' 
+                : 'https://api.dijinew.com';
+            const response = await fetch(`${apiBaseUrl}/api/cards/slug/${cardSlug}/ownership`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -235,32 +255,6 @@ export default function CardWizard() {
         }
     }, []);
 
-    // Token ile kart verilerini yükle
-    const loadCardData = async (token) => {
-        try {
-            const response = await fetch(`http://localhost:5001/api/simple-wizard/card/${token}`);
-            const data = await response.json();
-            
-            if (data.success && data.data) {
-                const card = data.data;
-                setCardData(prev => ({
-                    ...prev,
-                    name: card.name || card.cardName || prev.name,
-                    email: card.email || prev.email,
-                    phone: card.phone || prev.phone,
-                    website: card.website || prev.website,
-                    address: card.address || prev.address,
-                    bio: card.bio || prev.bio,
-                    company: card.company || prev.company,
-                    title: card.title || prev.title,
-                    theme: card.theme || prev.theme
-                }));
-                console.log('Kart verileri yüklendi:', card);
-            }
-        } catch (error) {
-            console.error('Kart verileri yüklenirken hata:', error);
-        }
-    };
 
 
 
@@ -293,23 +287,10 @@ export default function CardWizard() {
                         
                         // Kartın sahipliğini yeni kullanıcıya aktar
                         if (loginResult && loginResult.id) {
-                            await updateCardOwnership(token, loginResult.id);
+                            await updateCardOwnership(cardSlug, loginResult.id);
                         }
                         
-                        // Token'ı kullanıldı olarak işaretle
-                        try {
-                            const markUsedResponse = await fetch(`http://localhost:5001/api/simple-wizard/use/${token}`, {
-                                method: 'PUT',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                }
-                            });
-                            const markData = await markUsedResponse.json();
-                            console.log('Token kullanıldı olarak işaretlendi:', markData);
-                        } catch (tokenError) {
-                            console.warn('Token kullanıldı olarak işaretlenirken hata:', tokenError);
-                            // Bu hata kullanıcı kaydını engellemez
-                        }
+                        // Kart sahipliği güncellendi
                         
                         // Kullanıcı bilgilerini kart verilerine aktar
                         setCardData(prev => ({
@@ -352,23 +333,10 @@ export default function CardWizard() {
                                 
                                 // Kartın sahipliğini mevcut kullanıcıya aktar
                                 if (authLoginResult && authLoginResult.id) {
-                                    await updateCardOwnership(token, authLoginResult.id);
+                                    await updateCardOwnership(cardSlug, authLoginResult.id);
                                 }
                                 
-                                // Token'ı kullanıldı olarak işaretle
-                                try {
-                                    const markUsedResponse = await fetch(`http://localhost:5001/api/simple-wizard/use/${token}`, {
-                                        method: 'PUT',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                        }
-                                    });
-                                    const markData = await markUsedResponse.json();
-                                    console.log('Token kullanıldı olarak işaretlendi:', markData);
-                                } catch (tokenError) {
-                                    console.warn('Token kullanıldı olarak işaretlenirken hata:', tokenError);
-                                    // Bu hata kullanıcı kaydını engellemez
-                                }
+                                // Kart sahipliği güncellendi
                                 
                                 // Kullanıcı bilgilerini kart verilerine aktar
                                 setCardData(prev => ({
@@ -422,7 +390,10 @@ export default function CardWizard() {
             };
 
             // Simple wizard API ile kartı güncelle
-            const response = await fetch(`http://localhost:5001/api/simple-wizard/card/${token}`, {
+            const apiBaseUrl = window.location.hostname === 'localhost' 
+                ? 'http://localhost:5001' 
+                : 'https://api.dijinew.com';
+            const response = await fetch(`${apiBaseUrl}/api/cards/slug/${cardSlug}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1711,22 +1682,22 @@ export default function CardWizard() {
         }
     };
 
-    // Token doğrulanıyor ise loading göster
-    if (tokenValidating) {
+    // Kart yükleniyor ise loading göster
+    if (cardLoading) {
         return (
             <Container maxWidth="md" sx={{ py: 4 }}>
                 <Paper sx={{ p: 4, textAlign: 'center' }}>
                     <CircularProgress sx={{ mb: 2 }} />
                     <Typography variant="h6">
-                        Sihirbaz linki doğrulanıyor...
+                        Sihirbaz hazırlanıyor...
                     </Typography>
                 </Paper>
             </Container>
         );
     }
 
-    // Token geçersiz ise hata göster
-    if (!tokenValid) {
+    // Kart yüklenemedi ise hata göster
+    if (!cardLoaded) {
         return (
             <Container maxWidth="md" sx={{ py: 4 }}>
                 <Paper sx={{ p: 4, textAlign: 'center' }}>
@@ -1734,7 +1705,7 @@ export default function CardWizard() {
                         Geçersiz Sihirbaz Linki
                     </Typography>
                     <Typography variant="body1" sx={{ mb: 3 }}>
-                        Bu link geçersiz, süresi dolmuş veya daha önce kullanılmış olabilir.
+                        Bu link geçersiz veya kart bulunamadı.
                     </Typography>
                     <Button variant="outlined" onClick={() => navigate('/')}>
                         Ana Sayfaya Dön
@@ -1786,7 +1757,7 @@ export default function CardWizard() {
                             Kartvizit Sihirbazı
                         </Typography>
                         <Chip 
-                            label={tokenData?.type === 'corporate' ? 'Kurumsal' : tokenData?.type === 'admin' ? 'Admin' : 'Bireysel'}
+                            label={wizardType === 'corporate' ? 'Kurumsal' : wizardType === 'admin' ? 'Admin' : 'Bireysel'}
                             sx={{ 
                                 fontWeight: 600,
                                 fontSize: '0.85rem',

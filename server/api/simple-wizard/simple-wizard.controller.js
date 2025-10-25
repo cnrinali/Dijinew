@@ -102,7 +102,7 @@ const createSimpleWizard = async (req, res) => {
                 .input('email', sql.NVarChar(255), email || '')
                 .input('userId', sql.Int, userId)
                 .input('companyId', sql.Int, companyId)
-                .input('isActive', sql.Bit, false);
+                .input('isActive', sql.Bit, true);
 
             if (hasPermanentSlugColumn) {
                 request.input('permanentSlug', sql.NVarChar(255), uniqueSlug);
@@ -126,7 +126,7 @@ const createSimpleWizard = async (req, res) => {
                 .input('name', sql.NVarChar(255), 'Henüz Belirtilmedi')
                 .input('email', sql.NVarChar(255), email || '')
                 .input('userId', sql.Int, userId)
-                .input('isActive', sql.Bit, false);
+                .input('isActive', sql.Bit, true);
 
             if (hasPermanentSlugColumn) {
                 request.input('permanentSlug', sql.NVarChar(255), uniqueSlug);
@@ -167,7 +167,7 @@ const createSimpleWizard = async (req, res) => {
         // Wizard URL oluştur (CLIENT tarafında - port 5173)
         const clientBaseUrl = req.get('host').includes('localhost')
             ? `https://app.dijinew.com`
-            : `https://${req.get('host').replace(':5001', '')}`;
+            : `https://app.dijinew.com`;
         const wizardUrl = `${clientBaseUrl}/wizard/${card.customSlug}?token=${token}`;
 
         // Kart için QR kod oluştur
@@ -796,6 +796,52 @@ const debugDatabaseSchema = async (req, res) => {
         });
     }
 };
+
+    // Debug: Token arama (Herkese açık - debugging için)
+    const debugTokenSearch = async (req, res) => {
+        try {
+            const { token } = req.params;
+            const pool = await getPool();
+
+            // SimpleWizardTokens tablosunda ara
+            const simpleResult = await pool.request()
+                .input('token', sql.NVarChar, token)
+                .query(`
+                    SELECT swt.*, c.customSlug, c.cardName
+                    FROM SimpleWizardTokens swt
+                    LEFT JOIN Cards c ON swt.cardId = c.id
+                    WHERE swt.token = @token
+                `);
+
+            // WizardTokens tablosunda ara
+            const wizardResult = await pool.request()
+                .input('token', sql.NVarChar, token)
+                .query(`
+                    SELECT *
+                    FROM WizardTokens
+                    WHERE token = @token
+                `);
+
+            res.json({
+                success: true,
+                data: {
+                    token: token,
+                    simpleWizardTokens: simpleResult.recordset,
+                    wizardTokens: wizardResult.recordset,
+                    foundInSimple: simpleResult.recordset.length > 0,
+                    foundInWizard: wizardResult.recordset.length > 0
+                },
+                message: 'Token arama tamamlandı.'
+            });
+
+        } catch (error) {
+            console.error('Token arama hatası:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Sunucu hatası oluştu.'
+            });
+        }
+    };
 
     const testPermanentSlug = async (req, res) => {
         try {

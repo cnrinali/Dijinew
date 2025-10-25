@@ -60,7 +60,7 @@ const createWizardToken = async (req, res) => {
         // Tam URL oluştur
         const baseUrl = req.get('host').includes('localhost') 
             ? `http://${req.get('host')}` 
-            : `https://${req.get('host')}`;
+            : `https://app.dijinew.com`;
         const wizardUrl = `${baseUrl}/wizard?token=${token}`;
 
         res.status(201).json({

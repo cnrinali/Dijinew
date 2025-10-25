@@ -529,8 +529,13 @@ const getPublicCard = async (req, res) => {
         const pool = await getPool();
         
         // Gelen parametrenin sayı (ID) mı yoksa string (slug) mı olduğunu kontrol et
-        if (!isNaN(parseInt(slugOrId))) {
-            // Sayı ise ID'ye göre ara
+        // UUID formatı kontrolü (36 karakter, doğru pozisyonlarda tireler)
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const isUUID = uuidRegex.test(slugOrId);
+        const isNumeric = /^\d+$/.test(slugOrId); // Sadece rakamlardan oluşuyorsa
+        
+        if (isNumeric && !isUUID) {
+            // Sadece rakamlardan oluşuyorsa ve UUID değilse ID'ye göre ara
             query = 'SELECT TOP 1 * FROM Cards WHERE id = @idValue AND isActive = 1';
             inputName = 'idValue';
             inputType = sql.Int;
