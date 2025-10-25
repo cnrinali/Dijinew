@@ -57,44 +57,26 @@ const deleteUser = async (req, res) => {
         await transaction.begin();
 
         try {
-            // 1. Önce kullanıcının kartları var mı kontrol et
-            const checkCards = new sql.Request(transaction);
-            checkCards.input('userId', sql.Int, parseInt(userIdToDelete));
-            const cardsCount = await checkCards.query('SELECT COUNT(*) as cardCount FROM Cards WHERE userId = @userId');
-            const hasCards = cardsCount.recordset[0].cardCount > 0;
-            
-            if (hasCards) {
-                await transaction.rollback();
-                return res.status(400).json({ 
-                    message: 'Bu kullanıcının aktif kartları bulunmaktadır. Lütfen önce tüm kartlarını silin.' 
-                });
-            }
-            
-            console.log(`Kullanıcı ${userIdToDelete} için ilişkili veriler siliniyor...`);
-            
-            // 2. Tüm sistem tablolarındaki kayıtları sil (sistem aktiviteleri)
+            // 1. Önce kullanıcının tüm ilişkili verilerini sil
+            // ApiRequests tablosundaki kayıtları sil
             const deleteApiRequests = new sql.Request(transaction);
             deleteApiRequests.input('userId', sql.Int, parseInt(userIdToDelete));
-            const apiRequestsResult = await deleteApiRequests.query('DELETE FROM ApiRequests WHERE userId = @userId');
-            console.log(`ApiRequests: ${apiRequestsResult.rowsAffected[0]} kayıt silindi`);
+            await deleteApiRequests.query('DELETE FROM ApiRequests WHERE userId = @userId');
 
-            // WizardTokens tablosundaki kayıtları sil
-            const deleteWizardTokens = new sql.Request(transaction);
-            deleteWizardTokens.input('userId', sql.Int, parseInt(userIdToDelete));
-            const wizardTokensResult = await deleteWizardTokens.query('DELETE FROM WizardTokens WHERE createdBy = @userId');
-            console.log(`WizardTokens: ${wizardTokensResult.rowsAffected[0]} kayıt silindi`);
+            // Cards tablosundaki kayıtları sil
+            const deleteCards = new sql.Request(transaction);
+            deleteCards.input('userId', sql.Int, parseInt(userIdToDelete));
+            await deleteCards.query('DELETE FROM Cards WHERE userId = @userId');
 
-            // SystemErrors tablosundaki kayıtları sil
-            const deleteSystemErrors = new sql.Request(transaction);
-            deleteSystemErrors.input('userId', sql.Int, parseInt(userIdToDelete));
-            const systemErrorsResult = await deleteSystemErrors.query('DELETE FROM SystemErrors WHERE userId = @userId');
-            console.log(`SystemErrors: ${systemErrorsResult.rowsAffected[0]} kayıt silindi`);
+            // Activities tablosundaki kayıtları sil (eğer varsa)
+            const deleteActivities = new sql.Request(transaction);
+            deleteActivities.input('userId', sql.Int, parseInt(userIdToDelete));
+            await deleteActivities.query('DELETE FROM Activities WHERE userId = @userId');
 
-            // 3. Son olarak kullanıcıyı sil
+            // 2. Son olarak kullanıcıyı sil
             const deleteUser = new sql.Request(transaction);
             deleteUser.input('userId', sql.Int, parseInt(userIdToDelete));
             const result = await deleteUser.query('DELETE FROM Users WHERE id = @userId');
-            console.log(`Users: ${result.rowsAffected[0]} kayıt silindi`);
 
             if (result.rowsAffected && result.rowsAffected[0] > 0) {
                 await transaction.commit();
@@ -526,4 +508,4 @@ module.exports = {
     createUserAdmin,
     updateAnyUser,
     getDashboardStats
-}; 
+};
