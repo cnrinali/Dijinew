@@ -593,6 +593,9 @@ const updateCardOwnership = async (req, res) => {
 const markSimpleTokenAsUsed = async (req, res) => {
     try {
         const { token } = req.params;
+        const { newUserId } = req.body;
+
+        console.log('🔍 markSimpleTokenAsUsed çağrıldı:', { token, newUserId });
 
         if (!token) {
             return res.status(400).json({
@@ -601,9 +604,71 @@ const markSimpleTokenAsUsed = async (req, res) => {
             });
         }
 
+        if (!newUserId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Yeni kullanıcı ID gerekli.'
+            });
+        }
+
         const pool = await getPool();
 
+        // Önce token ile kart ID'sini bul
+        console.log('🔍 Token ile kart ID\'sini arıyor:', token);
+        const tokenResult = await pool.request()
+            .input('token', sql.NVarChar, token)
+            .query(`
+                SELECT cardId, isUsed FROM SimpleWizardTokens 
+                WHERE token = @token
+            `);
+
+        console.log('🔍 Token sonucu:', tokenResult.recordset);
+
+        if (tokenResult.recordset.length === 0) {
+            console.log('❌ Token bulunamadı');
+            return res.status(404).json({
+                success: false,
+                message: 'Token bulunamadı veya zaten kullanılmış.'
+            });
+        }
+
+        const tokenData = tokenResult.recordset[0];
+        console.log('🔍 Token verisi:', tokenData);
+
+        if (tokenData.isUsed === 1) {
+            console.log('❌ Token zaten kullanılmış');
+            return res.status(404).json({
+                success: false,
+                message: 'Token bulunamadı veya zaten kullanılmış.'
+            });
+        }
+
+        const cardId = tokenData.cardId;
+        console.log('🔍 Kart ID:', cardId);
+
+        // Kartın sahipliğini güncelle
+        console.log('🔍 Kart sahipliğini güncelliyor:', { cardId, newUserId });
+        const ownershipResult = await pool.request()
+            .input('cardId', sql.Int, cardId)
+            .input('newUserId', sql.Int, newUserId)
+            .query(`
+                UPDATE Cards 
+                SET userId = @newUserId, updatedAt = GETDATE()
+                WHERE id = @cardId
+            `);
+
+        console.log('🔍 Sahiplik güncelleme sonucu:', ownershipResult.rowsAffected[0]);
+
+        if (ownershipResult.rowsAffected[0] === 0) {
+            console.log('❌ Kart bulunamadı');
+            return res.status(404).json({
+                success: false,
+                message: 'Kart bulunamadı.'
+            });
+        }
+
         // Token'ı kullanıldı olarak işaretle
+        console.log('🔍 Token\'ı kullanıldı olarak işaretliyor');
         const result = await pool.request()
             .input('token', sql.NVarChar, token)
             .query(`
@@ -612,12 +677,16 @@ const markSimpleTokenAsUsed = async (req, res) => {
                 WHERE token = @token AND isUsed = 0
             `);
 
+        console.log('🔍 Token işaretleme sonucu:', result.rowsAffected[0]);
+
         if (result.rowsAffected[0] > 0) {
+            console.log('✅ Token başarıyla kullanıldı ve kart sahipliği güncellendi');
             res.json({
                 success: true,
-                message: 'Token başarıyla kullanıldı olarak işaretlendi.'
+                message: 'Token başarıyla kullanıldı ve kart sahipliği güncellendi.'
             });
         } else {
+            console.log('❌ Token işaretlenemedi');
             res.status(404).json({
                 success: false,
                 message: 'Token bulunamadı veya zaten kullanılmış.'
@@ -625,7 +694,7 @@ const markSimpleTokenAsUsed = async (req, res) => {
         }
 
     } catch (error) {
-        console.error('Token işaretleme hatası:', error);
+        console.error('❌ Token işaretleme hatası:', error);
         res.status(500).json({
             success: false,
             message: 'Sunucu hatası oluştu.'

@@ -895,6 +895,122 @@ const deleteCardBankAccount = async (req, res) => {
     }
 };
 
+// @desc    Update card ownership by slug
+// @route   PUT /api/cards/slug/:slug/ownership
+// @access  Private
+const updateCardOwnershipBySlug = async (req, res) => {
+    const userId = req.user.id;
+    const cardSlug = req.params.slug;
+    const { newUserId } = req.body;
+
+    if (!newUserId) {
+        return res.status(400).json({ message: 'Yeni kullanıcı ID gerekli' });
+    }
+
+    try {
+        const pool = await getPool();
+
+        // Kartı slug ile bul ve sahipliğini güncelle
+        const updateResult = await pool.request()
+            .input('cardSlug', sql.VarChar, cardSlug)
+            .input('newUserId', sql.Int, newUserId)
+            .input('currentUserId', sql.Int, userId)
+            .query(`
+                UPDATE Cards 
+                SET userId = @newUserId 
+                WHERE (customSlug = @cardSlug OR permanentSlug = @cardSlug) 
+                AND userId = @currentUserId
+            `);
+
+        if (updateResult.rowsAffected[0] === 0) {
+            return res.status(404).json({ message: 'Kartvizit bulunamadı veya bu işlem için yetkiniz yok' });
+        }
+
+        res.status(200).json({ 
+            success: true, 
+            message: 'Kart sahipliği başarıyla güncellendi' 
+        });
+
+    } catch (error) {
+        console.error('Kart sahipliği güncelleme hatası:', error);
+        res.status(500).json({ message: 'Sunucu hatası oluştu' });
+    }
+};
+
+// @desc    Update card by slug
+// @route   PUT /api/cards/slug/:slug
+// @access  Private
+const updateCardBySlug = async (req, res) => {
+    const userId = req.user.id;
+    const cardSlug = req.params.slug;
+    const updateData = req.body;
+
+    try {
+        const pool = await getPool();
+
+        // Önce kartı slug ile bul
+        const cardResult = await pool.request()
+            .input('cardSlug', sql.VarChar, cardSlug)
+            .input('userId', sql.Int, userId)
+            .query(`
+                SELECT id FROM Cards 
+                WHERE (customSlug = @cardSlug OR permanentSlug = @cardSlug) 
+                AND userId = @userId
+            `);
+
+        if (cardResult.recordset.length === 0) {
+            return res.status(404).json({ message: 'Kartvizit bulunamadı veya bu işlem için yetkiniz yok' });
+        }
+
+        const cardId = cardResult.recordset[0].id;
+
+        // Kartı güncelle
+        const updateResult = await pool.request()
+            .input('cardId', sql.Int, cardId)
+            .input('userId', sql.Int, userId)
+            .input('cardName', sql.NVarChar, updateData.cardName)
+            .input('name', sql.NVarChar, updateData.name)
+            .input('title', sql.NVarChar, updateData.title)
+            .input('company', sql.NVarChar, updateData.company)
+            .input('bio', sql.NVarChar, updateData.bio)
+            .input('phone', sql.NVarChar, updateData.phone)
+            .input('email', sql.NVarChar, updateData.email)
+            .input('website', sql.NVarChar, updateData.website)
+            .input('address', sql.NVarChar, updateData.address)
+            .input('theme', sql.NVarChar, updateData.theme)
+            .input('isActive', sql.Bit, updateData.isActive)
+            .query(`
+                UPDATE Cards 
+                SET cardName = @cardName,
+                    name = @name,
+                    title = @title,
+                    company = @company,
+                    bio = @bio,
+                    phone = @phone,
+                    email = @email,
+                    website = @website,
+                    address = @address,
+                    theme = @theme,
+                    isActive = @isActive,
+                    updatedAt = GETDATE()
+                WHERE id = @cardId AND userId = @userId
+            `);
+
+        if (updateResult.rowsAffected[0] === 0) {
+            return res.status(404).json({ message: 'Kartvizit güncellenemedi' });
+        }
+
+        res.status(200).json({ 
+            success: true, 
+            message: 'Kartvizit başarıyla güncellendi' 
+        });
+
+    } catch (error) {
+        console.error('Kart güncelleme hatası:', error);
+        res.status(500).json({ message: 'Sunucu hatası oluştu' });
+    }
+};
+
 module.exports = {
     getCards,
     createCard,
@@ -906,5 +1022,7 @@ module.exports = {
     getCardBankAccounts,
     addCardBankAccount,
     updateCardBankAccount,
-    deleteCardBankAccount
+    deleteCardBankAccount,
+    updateCardOwnershipBySlug,
+    updateCardBySlug
 }; 

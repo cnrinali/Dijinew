@@ -77,6 +77,7 @@ export default function CardWizard() {
 
     // Sihirbazın hangi tipte olduğunu belirle (admin, corporate, user)
     const wizardType = searchParams.get('type') || 'user';
+    const token = searchParams.get('token');
 
     // Form verileri
     const [userData, setUserData] = useState({
@@ -235,10 +236,20 @@ export default function CardWizard() {
             const apiBaseUrl = window.location.hostname === 'localhost' 
                 ? 'http://localhost:5001' 
                 : 'https://api.dijinew.com';
+            
+            // Token'ı localStorage'dan al
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                console.warn('Token bulunamadı, kart sahipliği güncellenemedi');
+                return;
+            }
+            
             const response = await fetch(`${apiBaseUrl}/api/cards/slug/${cardSlug}/ownership`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({ newUserId })
             });
@@ -287,7 +298,14 @@ export default function CardWizard() {
                         
                         // Kartın sahipliğini yeni kullanıcıya aktar
                         if (loginResult && loginResult.id) {
-                            await updateCardOwnership(cardSlug, loginResult.id);
+                            // Token'ı manuel olarak localStorage'a kaydet
+                            if (loginResult.token) {
+                                localStorage.setItem('token', loginResult.token);
+                                console.log('Token manuel olarak kaydedildi:', loginResult.token);
+                            }
+                            
+                            // Token'ı localStorage'a kaydet
+                            console.log('Token kaydedildi, kart oluşturma işlemi devam ediyor...');
                         }
                         
                         // Kart sahipliği güncellendi
@@ -333,7 +351,14 @@ export default function CardWizard() {
                                 
                                 // Kartın sahipliğini mevcut kullanıcıya aktar
                                 if (authLoginResult && authLoginResult.id) {
-                                    await updateCardOwnership(cardSlug, authLoginResult.id);
+                                    // Token'ı manuel olarak localStorage'a kaydet
+                                    if (authLoginResult.token) {
+                                        localStorage.setItem('token', authLoginResult.token);
+                                        console.log('Token manuel olarak kaydedildi:', authLoginResult.token);
+                                    }
+                                    
+                                    // Token'ı localStorage'a kaydet
+                                    console.log('Token kaydedildi, kart oluşturma işlemi devam ediyor...');
                                 }
                                 
                                 // Kart sahipliği güncellendi
@@ -386,37 +411,132 @@ export default function CardWizard() {
             const finalCardData = {
                 ...cardData,
                 bankAccounts: bankAccounts,
-                isActive: true // Kartı aktif hale getir
+                isActive: true, // Kartı aktif hale getir
+                customSlug: crypto.randomUUID() // UUID oluştur
             };
 
             // Simple wizard API ile kartı güncelle
             const apiBaseUrl = window.location.hostname === 'localhost' 
                 ? 'http://localhost:5001' 
                 : 'https://api.dijinew.com';
-            const response = await fetch(`${apiBaseUrl}/api/cards/slug/${cardSlug}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(finalCardData)
-            });
             
-            const data = await response.json();
+            // Token'ı localStorage'dan al
+            let token = localStorage.getItem('token');
             
-            if (data.success) {
-                showNotification('Kartvizit başarıyla tamamlandı ve aktifleştirildi!', 'success');
-                // Kullanıcı giriş yapmış olduğundan uygun yere yönlendir
+            // Eğer token yoksa, kullanıcının giriş yapmış olup olmadığını kontrol et
+            if (!token) {
+                // Kullanıcı giriş yapmış mı kontrol et
+                if (!isAuthenticated) {
+                    showNotification('Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.', 'error');
+                    navigate('/login');
+                    return;
+                }
+                
+                // Kullanıcı giriş yapmış ama token localStorage'da yok
+                // Bu durumda kullanıcıyı login sayfasına yönlendirmek yerine
+                // mevcut oturum bilgilerini kullanarak devam et
+                showNotification('Oturum bilgileri güncelleniyor...', 'info');
+                
+                // Kullanıcı bilgilerini localStorage'dan al
                 const user = JSON.parse(localStorage.getItem('user'));
-                if (user) {
-                    if (user.role === 'admin') {
-                        navigate('/admin/cards');
-                    } else if (user.role === 'corporate') {
-                        navigate('/corporate/cards');
+                if (user && user.token) {
+                    token = user.token;
+                    localStorage.setItem('token', token);
+                } else {
+                    showNotification('Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.', 'error');
+                    navigate('/login');
+                    return;
+                }
+            }
+            
+            // Mevcut kartı güncelle (PUT) - Simple Wizard token ile
+            const simpleWizardToken = searchParams.get('token');
+            
+            if (simpleWizardToken) {
+                // Simple Wizard token ile kartı güncelle
+                const response = await fetch(`${apiBaseUrl}/api/simple-wizard/card/${simpleWizardToken}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(finalCardData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Kart güncellendi, şimdi kullanıcı sahipliğini güncelle
+                    const user = JSON.parse(localStorage.getItem('user'));
+                    if (user && user.id) {
+                        try {
+                            const ownershipResponse = await fetch(`${apiBaseUrl}/api/simple-wizard/use/${simpleWizardToken}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({ newUserId: user.id })
+                            });
+                            
+                            const ownershipData = await ownershipResponse.json();
+                            
+                            if (ownershipData.success) {
+                                showNotification('Kartvizit başarıyla güncellendi ve sahipliğinize geçti!', 'success');
+                            } else {
+                                showNotification('Kartvizit güncellendi ama sahiplik güncellenemedi: ' + (ownershipData.message || 'Bilinmeyen hata'), 'warning');
+                            }
+                        } catch (ownershipError) {
+                            console.error('Sahiplik güncelleme hatası:', ownershipError);
+                            showNotification('Kartvizit güncellendi ama sahiplik güncellenemedi', 'warning');
+                        }
+                    } else {
+                        showNotification('Kartvizit güncellendi!', 'success');
+                    }
+                    
+                    // Kullanıcı giriş yapmış olduğundan uygun yere yönlendir
+                    if (user) {
+                        if (user.role === 'admin') {
+                            navigate('/admin/cards');
+                        } else if (user.role === 'corporate') {
+                            navigate('/corporate/cards');
+                        } else {
+                            navigate('/cards');
+                        }
                     } else {
                         navigate('/cards');
                     }
                 } else {
-                    navigate('/cards');
+                    showNotification('Kartvizit güncellenemedi: ' + (data.message || 'Bilinmeyen hata'), 'error');
+                }
+            } else {
+                // Fallback: JWT token ile kart oluştur
+                const response = await fetch(`${apiBaseUrl}/api/cards`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(finalCardData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('Kartvizit başarıyla oluşturuldu!', 'success');
+                    // Kullanıcı giriş yapmış olduğundan uygun yere yönlendir
+                    const user = JSON.parse(localStorage.getItem('user'));
+                    if (user) {
+                        if (user.role === 'admin') {
+                            navigate('/admin/cards');
+                        } else if (user.role === 'corporate') {
+                            navigate('/corporate/cards');
+                        } else {
+                            navigate('/cards');
+                        }
+                    } else {
+                        navigate('/cards');
+                    }
+                } else {
+                    showNotification('Kartvizit oluşturulamadı: ' + (data.message || 'Bilinmeyen hata'), 'error');
                 }
             }
         } catch (error) {

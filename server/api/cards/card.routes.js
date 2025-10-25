@@ -38,6 +38,10 @@ router.route('/:id')
 // Yeni rota: Kart durumunu değiştirme
 router.patch('/:id/status', cardController.toggleCardStatus);
 
+// Slug ile kart işlemleri
+router.put('/slug/:slug/ownership', cardController.updateCardOwnershipBySlug);
+router.put('/slug/:slug', cardController.updateCardBySlug);
+
 // Banka hesap bilgileri rotaları
 router.route('/:cardId/bank-accounts')
     .get(cardController.getCardBankAccounts)    // GET /api/cards/:cardId/bank-accounts
