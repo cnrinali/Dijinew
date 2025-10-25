@@ -14,6 +14,7 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import HistoryIcon from '@mui/icons-material/History';
 import BarChartIcon from '@mui/icons-material/BarChart';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 const drawerWidth = 280;
 
@@ -60,6 +61,13 @@ const menuItems = [
     path: '/corporate/activities',
     description: 'Şirket aktivitelerini görüntüle'
   },
+  {
+    id: 'settings',
+    label: 'Ayarlar',
+    icon: <SettingsIcon />,
+    path: '/corporate/settings',
+    description: 'Kurumsal ayarlar ve dil seçimi'
+  },
 ];
 
 function CorporateLayout({ children }) {
@@ -89,6 +97,7 @@ function CorporateLayout({ children }) {
     if (currentPath.includes('/corporate/users')) return 'users';
     if (currentPath === '/analytics') return 'analytics';
     if (currentPath.includes('/corporate/activities')) return 'activities';
+    if (currentPath.includes('/corporate/settings')) return 'settings';
     return 'home';
   };
 

@@ -39,6 +39,21 @@ async function runMigrations() {
         } else {
             console.log('✓ Companies tablosunda updatedAt kolonu zaten mevcut.');
         }
+
+        // Dil desteği ekle (Users ve Companies tablolarına)
+        const checkUsersLanguage = await pool.request().query(`
+            SELECT COUNT(*) as count 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_NAME = 'Users' AND COLUMN_NAME = 'language'
+        `);
+        
+        if (checkUsersLanguage.recordset[0].count === 0) {
+            console.log('🌍 Users ve Companies tablolarına dil desteği ekleniyor...');
+            const { addLanguageSupport } = require('./migrate_language_support');
+            await addLanguageSupport();
+        } else {
+            console.log('✓ Dil desteği zaten mevcut.');
+        }
         
         console.log('✅ Tüm migration işlemleri tamamlandı.');
     } catch (error) {
@@ -48,7 +63,6 @@ async function runMigrations() {
 }
 
 module.exports = { runMigrations };
-
 
 
 

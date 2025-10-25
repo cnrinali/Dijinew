@@ -439,9 +439,86 @@ const getCompanyUsers = async (req, res) => {
     }
 };
 
+// @desc    Get company information for logged-in corporate user
+// @route   GET /api/corporate/company
+// @access  Private/Corporate
+const getCompanyInfo = async (req, res) => {
+    const companyId = req.user.companyId;
+
+    if (!companyId) {
+        return res.status(403).json({ message: 'Bu işlem için bir şirkete atanmış olmanız gerekmektedir.' });
+    }
+
+    try {
+        const pool = await getPool();
+        const result = await pool.request()
+            .input('companyId', sql.Int, companyId)
+            .query('SELECT id, name, userLimit, cardLimit, status, phone, website, address, language, createdAt, updatedAt FROM Companies WHERE id = @companyId');
+
+        if (result.recordset.length === 0) {
+            return res.status(404).json({ message: 'Şirket bulunamadı.' });
+        }
+
+        res.status(200).json(result.recordset[0]);
+    } catch (error) {
+        console.error("Şirket bilgilerini getirme hatası (Corporate):", error);
+        res.status(500).json({ message: 'Sunucu hatası oluştu.' });
+    }
+};
+
+// @desc    Update company language for logged-in corporate user
+// @route   PUT /api/corporate/company/language
+// @access  Private/Corporate
+const updateCompanyLanguage = async (req, res) => {
+    const companyId = req.user.companyId;
+    const { language } = req.body;
+
+    if (!companyId) {
+        return res.status(403).json({ message: 'Bu işlem için bir şirkete atanmış olmanız gerekmektedir.' });
+    }
+
+    // Dil validasyonu
+    const validLanguages = ['tr', 'en', 'ar', 'ru', 'pt'];
+    if (!language || !validLanguages.includes(language)) {
+        return res.status(400).json({ message: 'Geçersiz dil seçimi. Geçerli diller: tr, en, ar, ru, pt' });
+    }
+
+    try {
+        const pool = await getPool();
+        
+        // Şirketin varlığını kontrol et
+        const checkResult = await pool.request()
+            .input('companyId', sql.Int, companyId)
+            .query('SELECT id FROM Companies WHERE id = @companyId');
+
+        if (checkResult.recordset.length === 0) {
+            return res.status(404).json({ message: 'Şirket bulunamadı.' });
+        }
+
+        // Dili güncelle
+        await pool.request()
+            .input('companyId', sql.Int, companyId)
+            .input('language', sql.NVarChar(5), language)
+            .input('updatedAt', sql.DateTime2, new Date())
+            .query('UPDATE Companies SET language = @language, updatedAt = @updatedAt WHERE id = @companyId');
+
+        // Güncellenmiş şirket bilgilerini getir
+        const updatedResult = await pool.request()
+            .input('companyId', sql.Int, companyId)
+            .query('SELECT id, name, userLimit, cardLimit, status, phone, website, address, language, createdAt, updatedAt FROM Companies WHERE id = @companyId');
+
+        res.status(200).json(updatedResult.recordset[0]);
+    } catch (error) {
+        console.error("Şirket dili güncelleme hatası (Corporate):", error);
+        res.status(500).json({ message: 'Sunucu hatası oluştu.' });
+    }
+};
+
 module.exports = {
     getCompanyCards,
     createCompanyCard,
     createCompanyUser,
-    getCompanyUsers
+    getCompanyUsers,
+    getCompanyInfo,
+    updateCompanyLanguage
 }; 

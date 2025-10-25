@@ -11,7 +11,7 @@ const getUserProfile = async (req, res) => {
         const pool = await getPool();
         const result = await pool.request()
             .input('userId', sql.Int, userId)
-            .query('SELECT id, name, email, role, createdAt FROM Users WHERE id = @userId');
+            .query('SELECT id, name, email, role, language, createdAt FROM Users WHERE id = @userId');
 
         if (result.recordset.length === 0) {
             return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
@@ -30,7 +30,7 @@ const getUserProfile = async (req, res) => {
 // @access  Private
 const updateUserProfile = async (req, res) => {
     const userId = req.user.id;
-    const { name, email } = req.body;
+    const { name, email, language } = req.body;
 
     // Gelen veriyi doğrula
     if (!name || !email) {
@@ -39,6 +39,12 @@ const updateUserProfile = async (req, res) => {
      // E-posta formatını basitçe kontrol et (daha kapsamlı kontrol eklenebilir)
      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return res.status(400).json({ message: 'Geçersiz e-posta formatı.' });
+    }
+
+    // Dil kontrolü (opsiyonel)
+    const validLanguages = ['tr', 'en', 'ar', 'ru', 'pt'];
+    if (language && !validLanguages.includes(language)) {
+        return res.status(400).json({ message: 'Geçersiz dil seçimi.' });
     }
 
     try {
@@ -55,16 +61,25 @@ const updateUserProfile = async (req, res) => {
         }
 
         // 2. Kullanıcı bilgilerini güncelle
-        await pool.request()
+        const request = pool.request()
             .input('userId', sql.Int, userId)
             .input('name', sql.NVarChar, name)
-            .input('email', sql.NVarChar, email)
-            .query('UPDATE Users SET name = @name, email = @email WHERE id = @userId');
+            .input('email', sql.NVarChar, email);
+
+        let updateQuery = 'UPDATE Users SET name = @name, email = @email';
+        
+        if (language) {
+            request.input('language', sql.NVarChar(5), language);
+            updateQuery += ', language = @language';
+        }
+        
+        updateQuery += ' WHERE id = @userId';
+        await request.query(updateQuery);
         
         // 3. Güncellenmiş kullanıcı verisini çekip döndür
         const updatedUserResult = await pool.request()
             .input('userId', sql.Int, userId)
-            .query('SELECT id, name, email, role, createdAt FROM Users WHERE id = @userId');
+            .query('SELECT id, name, email, role, language, createdAt FROM Users WHERE id = @userId');
 
         if (updatedUserResult.recordset.length === 0) {
             return res.status(404).json({ message: 'Güncellenmiş kullanıcı verisi alınamadı.' });

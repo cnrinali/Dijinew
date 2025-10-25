@@ -6,7 +6,7 @@ const { getPool, sql } = require('../../../config/db'); // Path'i kontrol et
 const createCompany = async (req, res) => {
     console.log("createCompany controller çağrıldı", req.body);
     // Yeni alanları da alalım (status varsayılan olarak 1 olacak)
-    const { name, userLimit, cardLimit, status = 1, phone, website, address } = req.body;
+    const { name, userLimit, cardLimit, status = 1, phone, website, address, language = 'tr' } = req.body;
 
     if (!name || userLimit == null || cardLimit == null) {
         return res.status(400).json({ message: 'Şirket adı, kullanıcı limiti ve kart limiti zorunludur.' });
@@ -16,6 +16,12 @@ const createCompany = async (req, res) => {
          return res.status(400).json({ message: 'Durum alanı 0, 1, true veya false olmalıdır.' });
     }
     const companyStatus = (status === 1 || status === true); // Boolean'a çevir
+
+    // Dil kontrolü
+    const validLanguages = ['tr', 'en', 'ar', 'ru', 'pt'];
+    if (language && !validLanguages.includes(language)) {
+        return res.status(400).json({ message: 'Geçersiz dil seçimi.' });
+    }
 
     try {
         const pool = await getPool();
@@ -27,8 +33,9 @@ const createCompany = async (req, res) => {
             .input('phone', sql.NVarChar, phone || null) // Boşsa NULL gönder
             .input('website', sql.NVarChar, website || null)
             .input('address', sql.NVarChar, address || null)
+            .input('language', sql.NVarChar(5), language || 'tr')
             // updatedAt eklendi
-            .query('INSERT INTO Companies (name, userLimit, cardLimit, status, phone, website, address, updatedAt) VALUES (@name, @userLimit, @cardLimit, @status, @phone, @website, @address, GETDATE()); SELECT SCOPE_IDENTITY() as id;');
+            .query('INSERT INTO Companies (name, userLimit, cardLimit, status, phone, website, address, language, updatedAt) VALUES (@name, @userLimit, @cardLimit, @status, @phone, @website, @address, @language, GETDATE()); SELECT SCOPE_IDENTITY() as id;');
         
         const newId = insertResult.recordset[0].id;
         
@@ -55,7 +62,7 @@ const getCompanies = async (req, res) => {
     try {
         const pool = await getPool();
         // Yeni alanları da seçelim
-        const result = await pool.request().query('SELECT id, name, userLimit, cardLimit, status, phone, website, address, createdAt, updatedAt FROM Companies ORDER BY createdAt DESC');
+        const result = await pool.request().query('SELECT id, name, userLimit, cardLimit, status, phone, website, address, language, createdAt, updatedAt FROM Companies ORDER BY createdAt DESC');
         res.status(200).json(result.recordset);
     } catch (error) {
         console.error("Şirketleri listeleme hatası:", error);
@@ -74,7 +81,7 @@ const getCompanyById = async (req, res) => {
         const result = await pool.request()
             .input('companyId', sql.Int, companyId)
             // Yeni alanları da seçelim
-            .query('SELECT id, name, userLimit, cardLimit, status, phone, website, address, createdAt, updatedAt FROM Companies WHERE id = @companyId');
+            .query('SELECT id, name, userLimit, cardLimit, status, phone, website, address, language, createdAt, updatedAt FROM Companies WHERE id = @companyId');
 
         if (result.recordset.length === 0) {
             return res.status(404).json({ message: 'Şirket bulunamadı.' });
@@ -92,7 +99,7 @@ const getCompanyById = async (req, res) => {
 const updateCompany = async (req, res) => {
     const companyId = req.params.id;
     // Yeni alanları al
-    const { name, userLimit, cardLimit, status, phone, website, address } = req.body;
+    const { name, userLimit, cardLimit, status, phone, website, address, language } = req.body;
     console.log(`updateCompany controller çağrıldı, ID: ${companyId}`, req.body);
 
      if (!name || userLimit == null || cardLimit == null) {
@@ -105,6 +112,12 @@ const updateCompany = async (req, res) => {
             return res.status(400).json({ message: 'Durum alanı 0, 1, true veya false olmalıdır.' });
         }
         companyStatus = (status === 1 || status === true);
+    }
+
+    // Dil kontrolü (opsiyonel)
+    const validLanguages = ['tr', 'en', 'ar', 'ru', 'pt'];
+    if (language && !validLanguages.includes(language)) {
+        return res.status(400).json({ message: 'Geçersiz dil seçimi.' });
     }
 
     try {
@@ -124,6 +137,10 @@ const updateCompany = async (req, res) => {
         if (companyStatus !== null) {
             setClauses += ', status = @status';
             request.input('status', sql.Bit, companyStatus);
+        }
+        if (language) {
+            setClauses += ', language = @language';
+            request.input('language', sql.NVarChar(5), language);
         }
 
         const query = `UPDATE Companies SET ${setClauses} WHERE id = @companyId`;

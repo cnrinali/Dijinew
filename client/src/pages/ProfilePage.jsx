@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import userService from '../services/userService';
 import { useAuth } from '../context/AuthContext.jsx'; // Auth context'i import et
 import { useNotification } from '../context/NotificationContext.jsx'; // Eklendi
+import LanguageSelector from '../components/LanguageSelector'; // Dil seçici
 
 // MUI Imports
 import Box from '@mui/material/Box';
@@ -20,7 +21,7 @@ function ProfilePage() {
     const { updateAuthUser } = useAuth(); // Context'teki kullanıcıyı güncellemek için (updateUserContext -> updateAuthUser)
     const { showNotification } = useNotification(); // Eklendi
     
-    const [profileData, setProfileData] = useState({ name: '', email: '' });
+    const [profileData, setProfileData] = useState({ name: '', email: '', language: 'tr' });
     const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
     const [tabIndex, setTabIndex] = useState(0); // Aktif sekme state'i
     
@@ -34,7 +35,11 @@ function ProfilePage() {
             setLoading(true);
             try {
                 const data = await userService.getUserProfile();
-                setProfileData({ name: data.name, email: data.email });
+                setProfileData({ 
+                    name: data.name, 
+                    email: data.email,
+                    language: data.language || 'tr' 
+                });
             } catch (err) {
                 console.error("Profil bilgisi getirilirken hata:", err);
                 showNotification(err.response?.data?.message || 'Profil bilgileri yüklenemedi.', 'error');
@@ -66,9 +71,17 @@ function ProfilePage() {
         setUpdateLoading(true);
         try {
             const updatedUser = await userService.updateUserProfile(profileData);
-            setProfileData({ name: updatedUser.name, email: updatedUser.email });
+            setProfileData({ 
+                name: updatedUser.name, 
+                email: updatedUser.email,
+                language: updatedUser.language || 'tr'
+            });
             // Sadece güncellenen alanları context'e gönder
-            updateAuthUser({ name: updatedUser.name, email: updatedUser.email }); 
+            updateAuthUser({ 
+                name: updatedUser.name, 
+                email: updatedUser.email,
+                language: updatedUser.language 
+            }); 
             showNotification('Profil bilgileri başarıyla güncellendi.', 'success');
         } catch (err) {
             const errorMsg = err.response?.data?.message || 'Profil güncellenemedi.';
@@ -205,6 +218,16 @@ function ProfilePage() {
                                         value={profileData.email}
                                         onChange={onProfileChange}
                                         disabled={updateLoading}
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <LanguageSelector
+                                        value={profileData.language}
+                                        onChange={(newLang) => setProfileData({ ...profileData, language: newLang })}
+                                        disabled={updateLoading}
+                                        label="Dil / Language"
+                                        showFlag={true}
+                                        size="medium"
                                     />
                                 </Grid>
                             </Grid>

@@ -61,29 +61,29 @@ function AdminDashboardPage() {
             // Paralel olarak tüm verileri çek
             const [statsData, statusResponse, resourcesResponse, performanceResponse, maintenanceResponse, dailyStatsResponse] = await Promise.all([
                 getDashboardStats(),
-                fetch('/api/system/status', {
+                fetch('https://api.dijinew.com/api/system/status', {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${JSON.parse(localStorage.getItem('user'))?.token}`
                     }
                 }),
-                fetch('/api/system/resources', {
+                fetch('https://api.dijinew.com/api/system/resources', {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${JSON.parse(localStorage.getItem('user'))?.token}`
                     }
                 }),
-                fetch('/api/system/performance', {
+                fetch('https://api.dijinew.com/api/system/performance', {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${JSON.parse(localStorage.getItem('user'))?.token}`
                     }
                 }),
-                fetch('/api/system/maintenance', {
+                fetch('https://api.dijinew.com/api/system/maintenance', {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${JSON.parse(localStorage.getItem('user'))?.token}`
                     }
                 }),
-                fetch('/api/system/daily-stats', {
+                fetch('https://api.dijinew.com/api/system/daily-stats', {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${JSON.parse(localStorage.getItem('user'))?.token}`
                     }
                 })
             ]);

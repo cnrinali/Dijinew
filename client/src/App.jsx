@@ -28,6 +28,7 @@ import CorporateDashboardPage from './pages/corporate/CorporateDashboardPage';
 import CorporateHomePage from './pages/corporate/CorporateHomePage';
 import CorporateCardsPage from './pages/corporate/CorporateCardsPage';
 import CorporateUserManagementPage from './pages/corporate/CorporateUserManagementPage';
+import CorporateSettingsPage from './pages/corporate/CorporateSettingsPage';
 import { NotificationProvider } from './context/NotificationContext.jsx';
 import ThemeToggle from './components/ThemeToggle';
 import QrCardPage from './pages/QrCardPage';
@@ -469,6 +470,7 @@ function AppContent() {
                 <Route path="/corporate/cards" element={user && user.role === 'corporate' && user.companyId ? <CorporateLayout><CorporateCardsPage /></CorporateLayout> : <Navigate to="/login" />} />
                 <Route path="/corporate/users" element={user && user.role === 'corporate' && user.companyId ? <CorporateLayout><CorporateUserManagementPage /></CorporateLayout> : <Navigate to="/login" />} />
                 <Route path="/corporate/activities" element={user && user.role === 'corporate' && user.companyId ? <CorporateLayout><CorporateActivitiesPage /></CorporateLayout> : <Navigate to="/login" />} />
+                <Route path="/corporate/settings" element={user && user.role === 'corporate' && user.companyId ? <CorporateLayout><CorporateSettingsPage /></CorporateLayout> : <Navigate to="/login" />} />
 
                 {/* User Routes */}
                 <Route path="/cards" element={user && user.role === 'user' ? <UserLayout><CardListPage /></UserLayout> : <Navigate to="/login" />} />

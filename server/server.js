@@ -80,7 +80,7 @@ app.get('/', (req, res) => {
 
 // API Dokümantasyonu - Scalar API Reference
 app.get('/api/docs', (req, res) => {
-  const swaggerUrl = `${req.protocol}://${req.get('host')}/api/docs/swagger.json`;
+  const swaggerUrl = `https://${req.get('host')}/api/docs/swagger.json`;
   const html = `
 <!DOCTYPE html>
 <html>
@@ -115,18 +115,14 @@ app.get('/api/docs/swagger.json', (req, res) => {
     const swaggerFile = fs.readFileSync(swaggerPath, 'utf8');
     const swaggerJson = JSON.parse(swaggerFile);
     
-    // Dinamik olarak server URL'lerini güncelle
+    // Dinamik olarak server URL'lerini güncelle - HTTPS kullan
     swaggerJson.servers = [
       {
-        url: `${req.protocol}://${req.get('host')}`,
+        url: `https://${req.get('host')}`, // HTTPS kullan
         description: "Current Server"
       },
       {
-        url: "http://localhost:5001",
-        description: "Development Server"
-      },
-      {
-        url: "https://api.dijinew.com",
+        url: "https://api.dijinew.com", // HTTPS kullan
         description: "Production Server"
       }
     ];

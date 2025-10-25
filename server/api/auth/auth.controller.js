@@ -88,11 +88,11 @@ const loginUser = async (req, res) => {
     try {
         const pool = await getPool();
 
-        // Kullanıcıyı bul (role ve companyId eklendi) - GÜNCELLENDİ
+        // Kullanıcıyı bul (role, companyId ve language eklendi) - GÜNCELLENDİ
         const userResult = await pool.request()
             .input('email', sql.NVarChar, email)
-            // role ve companyId'yi de seç
-            .query('SELECT TOP 1 id, name, email, password, role, companyId FROM Users WHERE email = @email'); 
+            // role, companyId ve language'yi de seç
+            .query('SELECT TOP 1 id, name, email, password, role, companyId, language FROM Users WHERE email = @email'); 
 
         if (userResult.recordset.length === 0) {
             return res.status(401).json({ message: 'Geçersiz e-posta veya şifre' }); 
@@ -119,13 +119,14 @@ const loginUser = async (req, res) => {
             req
         });
 
-        // Giriş başarılı, JWT oluştur ve gönder (role ve companyId eklendi) - GÜNCELLENDİ
+        // Giriş başarılı, JWT oluştur ve gönder (role, companyId ve language eklendi) - GÜNCELLENDİ
         res.status(200).json({
             id: user.id,
             name: user.name,
             email: user.email,
             role: user.role, // Rol eklendi
             companyId: user.companyId, // Şirket ID eklendi (null olabilir)
+            language: user.language || 'tr', // Dil eklendi (varsayılan: tr)
             token: generateToken(user.id, user.role, user.companyId), // Token'a da eklendi
         });
 

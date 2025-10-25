@@ -45,7 +45,6 @@ export const getAllUsers = async () => {
 // --- Dashboard --- 
 // Get Dashboard Stats (TODO: Backend'de /stats endpoint'inin olduğundan emin olun)
 const getDashboardStats = async () => {
-    console.warn("getDashboardStats fonksiyonu çağrıldı ama implementasyonu eksik olabilir.");
     // Örnek API çağrısı:
     const response = await axios.get(`${API_URL}/stats`, getAuthConfig());
     return response.data; 

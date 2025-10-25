@@ -80,6 +80,7 @@ export const AuthProvider = ({ children }) => {
     // Context Değerleri
     const value = {
         user,
+        token: user?.token, // Token'ı ayrı bir alan olarak export et
         isLoggedIn: !!user, // user null değilse true
         loading, // Yüklenme durumunu context'e ekle
         login,

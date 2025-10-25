@@ -4,7 +4,9 @@ const {
     getCompanyCards,
     createCompanyCard,
     createCompanyUser,
-    getCompanyUsers
+    getCompanyUsers,
+    getCompanyInfo,
+    updateCompanyLanguage
 } = require('./corporate.controller');
 const { protect, authorize } = require('../../middleware/authMiddleware');
 
@@ -18,9 +20,12 @@ router.route('/users')
     .get(protect, authorize('corporate'), getCompanyUsers)
     .post(protect, authorize('corporate'), createCompanyUser);
 
-// Gelecekte eklenecek diğer kurumsal rotalar buraya gelebilir:
-// router.route('/users').get(protect, authorize('corporate'), getCompanyUsers);
-// router.route('/users').post(protect, authorize('corporate'), createCompanyUser);
-// vb.
+// Şirket bilgilerini getirme
+router.route('/company')
+    .get(protect, authorize('corporate'), getCompanyInfo);
+
+// Şirket dili güncelleme
+router.route('/company/language')
+    .put(protect, authorize('corporate'), updateCompanyLanguage);
 
 module.exports = router; 
