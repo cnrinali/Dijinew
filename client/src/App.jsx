@@ -141,18 +141,24 @@ function AppContent() {
                     {!location.pathname.startsWith('/admin') && !location.pathname.startsWith('/cards') && !location.pathname.startsWith('/login') && !(user?.role === 'user' && (location.pathname === '/profile' || location.pathname === '/analytics')) && (
                       <AppBar position="static" sx={{ boxShadow: 2 }}>
               <Container maxWidth="xl">
-                <Toolbar disableGutters sx={{ minHeight: { xs: 56, sm: 64 } }}>
+                <Toolbar disableGutters sx={{ minHeight: { xs: 56, sm: 64 }, justifyContent: 'space-between' }}>
+                  {/* Sol taraf - boş alan */}
+                  <Box sx={{ flex: 1 }} />
+                  
+                  {/* Orta - Logo */}
                   {!location.pathname.startsWith('/corporate') &&
                    !(user?.role === 'corporate' && location.pathname === '/analytics') && (
                     <Box
                       component={RouterLink}
                       to="/"
                       sx={{
-                        mr: 2,
                         display: { xs: 'none', md: 'flex' },
                         alignItems: 'center',
                         textDecoration: 'none',
                         gap: 1,
+                        position: 'absolute',
+                        left: '50%',
+                        transform: 'translateX(-50%)'
                       }}
                     >
                       <img 
@@ -165,6 +171,9 @@ function AppContent() {
                       />
                     </Box>
                   )}
+                  
+                  {/* Sağ taraf - boş alan */}
+                  <Box sx={{ flex: 1 }} />
 
                   <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
                     <IconButton
@@ -241,12 +250,13 @@ function AppContent() {
                       component={RouterLink}
                       to="/"
                       sx={{
-                        mr: 2,
                         display: { xs: 'flex', md: 'none' },
-                        flexGrow: 1,
                         alignItems: 'center',
                         textDecoration: 'none',
                         gap: 1,
+                        position: 'absolute',
+                        left: '50%',
+                        transform: 'translateX(-50%)'
                       }}
                     >
                       <img 
@@ -293,11 +303,12 @@ function AppContent() {
 
                   {user && (
                     <Box sx={{
-                      flexGrow: location.pathname.startsWith('/corporate') || (user?.role === 'corporate' && location.pathname === '/analytics') ? 1 : 0,
                       display: { xs: 'none', md: 'flex' },
                       alignItems: 'center',
                       gap: 1,
-                      justifyContent: location.pathname.startsWith('/corporate') || (user?.role === 'corporate' && location.pathname === '/analytics') ? 'flex-end' : 'flex-start'
+                      justifyContent: 'flex-end',
+                      position: 'absolute',
+                      right: 16
                     }}>
                       <ThemeToggle />
 
@@ -385,11 +396,12 @@ function AppContent() {
                   {/* Mobile User Profile */}
                   {user && (
                     <Box sx={{
-                      flexGrow: location.pathname.startsWith('/corporate') || (user?.role === 'corporate' && location.pathname === '/analytics') ? 1 : 0,
                       display: { xs: 'flex', md: 'none' },
                       alignItems: 'center',
                       gap: 1,
-                      justifyContent: location.pathname.startsWith('/corporate') || (user?.role === 'corporate' && location.pathname === '/analytics') ? 'flex-end' : 'flex-start'
+                      justifyContent: 'flex-end',
+                      position: 'absolute',
+                      right: 16
                     }}>
                       <ThemeToggle />
 

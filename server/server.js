@@ -22,11 +22,24 @@ const apiLogger = require('./middleware/apiLogger'); // API logger middleware'in
 const app = express();
 const port = process.env.PORT || 5001;
 
-// Yükleme klasörünü kontrol et/oluştur
+// Yükleme klasörlerini kontrol et/oluştur
 const uploadsDir = path.join(__dirname, 'uploads');
+const imagesDir = path.join(__dirname, 'uploads/images');
+const documentsDir = path.join(__dirname, 'uploads/documents');
+
 if (!fs.existsSync(uploadsDir)){
     fs.mkdirSync(uploadsDir);
     console.log(`'uploads' klasörü oluşturuldu: ${uploadsDir}`);
+}
+
+if (!fs.existsSync(imagesDir)){
+    fs.mkdirSync(imagesDir, { recursive: true });
+    console.log(`'uploads/images' klasörü oluşturuldu: ${imagesDir}`);
+}
+
+if (!fs.existsSync(documentsDir)){
+    fs.mkdirSync(documentsDir, { recursive: true });
+    console.log(`'uploads/documents' klasörü oluşturuldu: ${documentsDir}`);
 }
 
 // CORS Middleware
@@ -163,6 +176,10 @@ app.use('/api/public', publicCardRoutes); // Public card rotalarını /api/publi
 app.use('/api/cards', cardRoutes); // Korumalı card rotaları /api/cards altında kalsın
 
 app.use('/api/upload', uploadRoutes); // Upload rotalarını kullan
+
+// Static dosya servisi - yüklenen dosyaları serve et
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // TODO: Diğer API Rotalarını buraya ekleyeceğiz (örn: /api/cards)
 
 // Veritabanı bağlantısını kontrol et ve sunucuyu başlat

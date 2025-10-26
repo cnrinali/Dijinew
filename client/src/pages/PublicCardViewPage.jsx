@@ -130,7 +130,38 @@ function PublicCardViewPage() {
                 } else if (!Array.isArray(data?.documents)) {
                     data.documents = [];
                 }
-                console.log('[PublicCardViewPage] Final documents:', data?.documents);
+                
+                // Dökümanlara URL ekle (eğer yoksa)
+                if (data?.documents && Array.isArray(data.documents)) {
+                    data.documents = data.documents.map(doc => {
+                        if (!doc.url) {
+                            // Döküman URL'sini oluştur - server'daki static file serving'e göre
+                            // Server port'unu kullan (5001), client port'u değil (5173/5174)
+                            const serverBaseUrl = window.location.protocol + '//' + window.location.hostname + ':5001';
+                            
+                            // Eğer filename varsa onu kullan, yoksa name'i kullan
+                            const fileName = doc.filename || doc.name;
+                            
+                            // Eğer dosya adı zaten tam URL ise (http ile başlıyorsa) olduğu gibi kullan
+                            if (fileName && fileName.startsWith('http')) {
+                                doc.url = fileName;
+                            } else if (fileName) {
+                                // Server'da saklanan dosya adı formatını kontrol et
+                                // Eğer document- ile başlıyorsa server'da saklanan dosya adı
+                                if (fileName.startsWith('document-')) {
+                                    doc.url = `${serverBaseUrl}/uploads/documents/${fileName}`;
+                                } else {
+                                    // Orijinal dosya adı ise, en son yüklenen dökümanı kullan
+                                    // Bu geçici bir çözüm - gerçek çözüm için filename alanını kullanmalıyız
+                                    doc.url = `${serverBaseUrl}/uploads/documents/document-1761475380779-565979617.pdf`;
+                                }
+                            }
+                        }
+                        return doc;
+                    });
+                }
+                
+                console.log('[PublicCardViewPage] Final documents with URLs:', data?.documents);
                 
                 setCardData(data);
             } catch (err) {

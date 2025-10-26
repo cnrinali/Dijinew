@@ -171,17 +171,35 @@ function UserDashboardPage() {
         fontSize: { xs: '0.75rem', sm: '0.875rem' }
     });
 
-    return (
-        <Box sx={{ 
-            minHeight: '100vh', 
-            backgroundColor: isDarkMode ? '#0a0a0a' : theme.palette.background.default,
-            color: isDarkMode ? 'white' : theme.palette.text.primary
-        }}>
+            return (
+                <Box sx={{
+                    minHeight: '100vh',
+                    backgroundColor: isDarkMode ? '#0a0a0a' : theme.palette.background.default,
+                    color: isDarkMode ? 'white' : theme.palette.text.primary,
+                    position: 'relative',
+                    '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: '300px',
+                        height: '300px',
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 60'%3E%3Ctext x='10' y='35' font-family='Arial, sans-serif' font-size='24' font-weight='bold' fill='%23000000' opacity='0.05'%3Edijinew%3C/text%3E%3Ctext x='10' y='50' font-family='Arial, sans-serif' font-size='12' fill='%23000000' opacity='0.05'%3ECreative Agency%3C/text%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'center',
+                        backgroundSize: 'contain',
+                        zIndex: 0,
+                        pointerEvents: 'none'
+                    }
+                }}>
             {/* Main Content */}
             <Box sx={{ 
                 p: { xs: 2, sm: 4 },
                 maxWidth: '1200px',
-                mx: 'auto'
+                mx: 'auto',
+                position: 'relative',
+                zIndex: 1
             }}>
                 {/* 2 Column Grid Layout - 4 Rows (Vertical) */}
                 <Box sx={{ 
