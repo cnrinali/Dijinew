@@ -11,7 +11,12 @@ import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Container from '@mui/material/Container';
 import EditIcon from '@mui/icons-material/Edit';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import AcUnitIcon from '@mui/icons-material/AcUnit';
 
 function PublicCardViewPage() {
     const [cardData, setCardData] = useState(null);
@@ -23,8 +28,6 @@ function PublicCardViewPage() {
     // Edit mode kontrolü
     const isEditMode = searchParams.get('edit') === '1';
     const token = searchParams.get('token');
-    const [editModeValid, setEditModeValid] = useState(false);
-    const [editModeLoading, setEditModeLoading] = useState(false);
     
     console.log('Slug or ID:', slug);
     console.log('Edit mode:', isEditMode, 'Token:', token);
@@ -87,12 +90,10 @@ function PublicCardViewPage() {
                 
                 // Edit mode ise token ile veri al
                 if (isEditMode && token) {
-                    setEditModeLoading(true);
                     try {
                         const tokenResponse = await simpleWizardService.getCardByToken(token);
                         if (tokenResponse.success) {
                             data = tokenResponse.data;
-                            setEditModeValid(true);
                             console.log('[PublicCardViewPage] Token ile alınan kart verisi:', data);
                         } else {
                             throw new Error(tokenResponse.message || 'Token geçersiz');
@@ -100,10 +101,7 @@ function PublicCardViewPage() {
                     } catch (tokenErr) {
                         console.error('Token ile kart getirme hatası:', tokenErr);
                         setError(tokenErr.response?.data?.message || 'Geçersiz veya süresi dolmuş link.');
-                        setEditModeValid(false);
                         return;
-                    } finally {
-                        setEditModeLoading(false);
                     }
                 } else {
                     // Normal public view
@@ -188,28 +186,127 @@ function PublicCardViewPage() {
                 justifyContent: 'center', 
                 alignItems: 'center', 
                 minHeight: '100vh',
-                background: '#f5f5f5'
+                background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #000000 100%)'
             }}>
-                <CircularProgress />
+                <Card sx={{ 
+                    borderRadius: 3,
+                    boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+                    background: 'rgba(255, 255, 255, 0.98)',
+                    backdropFilter: 'blur(10px)',
+                    border: '2px solid rgba(255, 215, 0, 0.3)',
+                    p: 4
+                }}>
+                    <Box sx={{ textAlign: 'center' }}>
+                        <CircularProgress 
+                            size={60} 
+                            sx={{ 
+                                color: '#FFD700',
+                                mb: 2
+                            }} 
+                        />
+                        <Typography variant="h6" sx={{ 
+                            color: '#000000',
+                            fontWeight: 'bold'
+                        }}>
+                            Kartvizit Yükleniyor...
+                        </Typography>
+                        <Typography variant="body2" sx={{ 
+                            color: '#333333',
+                            mt: 1
+                        }}>
+                            Lütfen bekleyin
+                        </Typography>
+                    </Box>
+                </Card>
             </Box>
         );
     }
 
     if (error) {
         // 404 durumunda daha kullanıcı dostu bir mesaj gösterilebilir
-        const message = error.toLowerCase().includes('bulunamadı') || error.toLowerCase().includes('not found')
-            ? 'Aradığınız kartvizit bulunamadı veya aktif değil.'
+        const isNotFound = error.toLowerCase().includes('bulunamadı') || error.toLowerCase().includes('not found') || error.toLowerCase().includes('aktif değil');
+        const message = isNotFound 
+            ? 'Bu kartvizit şu anda dondurulmuş durumda.'
             : `Hata: ${error}`;
+        
         return (
             <Box sx={{ 
                 minHeight: '100vh',
-                background: '#f5f5f5',
+                background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #000000 100%)',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
                 p: 2
             }}>
-                <Alert severity="error">{message}</Alert>
+                <Container maxWidth="sm">
+                    <Card sx={{ 
+                        borderRadius: 3,
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+                        background: 'rgba(255, 255, 255, 0.98)',
+                        backdropFilter: 'blur(10px)',
+                        border: '2px solid rgba(255, 215, 0, 0.3)'
+                    }}>
+                        <CardContent sx={{ p: 4, textAlign: 'center' }}>
+                            <Box sx={{ 
+                                display: 'flex', 
+                                justifyContent: 'center', 
+                                mb: 3 
+                            }}>
+                                {isNotFound ? (
+                                    <AcUnitIcon sx={{ 
+                                        fontSize: 80, 
+                                        color: '#FFD700',
+                                        opacity: 0.9
+                                    }} />
+                                ) : (
+                                    <ErrorOutlineIcon sx={{ 
+                                        fontSize: 80, 
+                                        color: '#FF6B35',
+                                        opacity: 0.9
+                                    }} />
+                                )}
+                            </Box>
+                            
+                            <Typography variant="h4" sx={{ 
+                                fontWeight: 'bold',
+                                color: '#000000',
+                                mb: 2,
+                                fontSize: { xs: '1.5rem', sm: '2rem' }
+                            }}>
+                                {isNotFound ? 'Kartvizit Donduruldu' : 'Bir Hata Oluştu'}
+                            </Typography>
+                            
+                            <Typography variant="body1" sx={{ 
+                                color: '#333333',
+                                mb: 4,
+                                fontSize: '1.1rem',
+                                lineHeight: 1.6
+                            }}>
+                                {message}
+                            </Typography>
+                            
+                            {isNotFound && (
+                                <Box sx={{ 
+                                    background: 'linear-gradient(135deg, #FFF8DC 0%, #FFE4B5 100%)',
+                                    borderRadius: 2,
+                                    p: 3,
+                                    mb: 4,
+                                    border: '2px solid #FFD700'
+                                }}>
+                                    <Typography variant="body2" sx={{ 
+                                        color: '#000000',
+                                        fontStyle: 'italic',
+                                        fontWeight: '500'
+                                    }}>
+                                        Bu kartvizit geçici olarak dondurulmuş durumda. 
+                                        Kartvizit sahibi ile iletişime geçebilir veya daha sonra tekrar deneyebilirsiniz.
+                                    </Typography>
+                                </Box>
+                            )}
+                            
+                        </CardContent>
+                    </Card>
+                </Container>
             </Box>
         );
     }
