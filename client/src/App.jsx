@@ -42,9 +42,9 @@ import CardCreationChoicePage from './pages/CardCreationChoicePage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import MyDigitalCardPage from './pages/MyDigitalCardPage';
+import UserDashboardPage from './pages/UserDashboardPage';
 
 const navItems = [
-  { label: 'Dijital Kartım', path: '/cards', roles: ['user'] },
   { label: 'Kurumsal Panel', path: '/corporate/dashboard', roles: ['corporate'] },
 ];
 
@@ -439,7 +439,7 @@ function AppContent() {
                     ) : user.role === 'corporate' && user.companyId ? (
                       <Navigate to="/corporate/dashboard" replace />
                     ) : user.role === 'user' ? (
-                      <Navigate to="/cards" replace />
+                      <UserLayout><UserDashboardPage /></UserLayout>
                     ) : (
                       <Navigate to="/login" replace />
                     )
@@ -483,6 +483,7 @@ function AppContent() {
                 <Route path="/corporate/settings" element={user && user.role === 'corporate' && user.companyId ? <CorporateLayout><CorporateSettingsPage /></CorporateLayout> : <Navigate to="/login" />} />
 
                 {/* User Routes */}
+                <Route path="/" element={user && user.role === 'user' ? <UserLayout><UserDashboardPage /></UserLayout> : <Navigate to="/login" />} />
                 <Route path="/cards" element={user && user.role === 'user' ? <UserLayout><CardListPage /></UserLayout> : <Navigate to="/login" />} />
                 <Route path="/analytics" element={
                   user && (user.role === 'user' || user.role === 'corporate' || user.role === 'admin') ? (
