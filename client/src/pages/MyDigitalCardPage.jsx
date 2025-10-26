@@ -19,6 +19,11 @@ function MyDigitalCardPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
+    // Sayfa başlığını ayarla
+    useEffect(() => {
+        document.title = 'Yeni Nesil Kartvizit Dijinew';
+    }, []);
+
     // Tema uyumlu arka plan renklerini belirle
     const getBackgroundStyle = (theme) => {
         switch (theme) {

@@ -29,6 +29,11 @@ function PublicCardViewPage() {
     console.log('Slug or ID:', slug);
     console.log('Edit mode:', isEditMode, 'Token:', token);
 
+    // Sayfa başlığını ayarla
+    useEffect(() => {
+        document.title = 'Yeni Nesil Kartvizit Dijinew';
+    }, []);
+
     // Tema uyumlu arka plan renklerini belirle
     const getBackgroundStyle = (theme) => {
         switch (theme) {
@@ -105,6 +110,27 @@ function PublicCardViewPage() {
                     data = await cardService.getPublicCard(slug);
                     console.log('[PublicCardViewPage] Public kart verisi:', data);
                 }
+                
+                // Documents parse et (JSON string ise)
+                console.log('[PublicCardViewPage] Raw documents from DB:', data?.documents);
+                if (data && typeof data.documents === 'string') {
+                    try {
+                        data.documents = JSON.parse(data.documents);
+                        console.log('[PublicCardViewPage] Documents parse edildi:', data.documents);
+                        
+                        // Tüm dökümanları göster
+                        console.log('[PublicCardViewPage] All documents from DB:', data.documents);
+                        data.documents.forEach((doc, index) => {
+                            console.log(`[PublicCardViewPage] Document ${index}:`, doc);
+                        });
+                    } catch (e) {
+                        console.error('[PublicCardViewPage] Documents parse hatası:', e);
+                        data.documents = [];
+                    }
+                } else if (!Array.isArray(data?.documents)) {
+                    data.documents = [];
+                }
+                console.log('[PublicCardViewPage] Final documents:', data?.documents);
                 
                 setCardData(data);
             } catch (err) {

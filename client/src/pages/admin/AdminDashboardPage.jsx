@@ -149,19 +149,14 @@ function AdminDashboardPage() {
             <Box sx={{ mb: 4 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Box
-                            sx={{
-                                p: 2,
-                                borderRadius: 2,
-                                background: 'linear-gradient(135deg, #F4C734 0%, #000000 100%)',
-                                color: 'white',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                            }}
-                        >
-                            <BusinessIcon sx={{ fontSize: 28 }} />
-                        </Box>
+                        <img 
+                            src="/img/dijinew_logo_light.png" 
+                            alt="Dijinew Logo" 
+                            style={{ 
+                                height: '36px', 
+                                width: 'auto'
+                            }} 
+                        />
                         <Box>
                             <Typography variant="h4" component="h1" sx={{ fontWeight: 700, color: 'text.primary' }}>
                                 Genel Bakış

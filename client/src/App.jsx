@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link as RouterLink, Navigate, useLocation } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Button, Container, Box, IconButton, Menu, MenuItem, Avatar, Divider } from '@mui/material';
 import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
@@ -54,6 +54,31 @@ function AppContent() {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
   const location = useLocation();
+
+  // Sayfa başlığını ve favicon'u dinamik olarak değiştir
+  useEffect(() => {
+    const isAdminRoute = location.pathname.startsWith('/admin') || 
+                        location.pathname.startsWith('/corporate') ||
+                        (location.pathname === '/profile' && user?.role === 'admin') ||
+                        (location.pathname.startsWith('/cards/') && user?.role === 'corporate') ||
+                        (location.pathname.startsWith('/cards/') && user?.role === 'admin');
+
+    if (isAdminRoute) {
+      document.title = 'Dijinew Dijital Kartvizit Admin Arayüzü';
+    } else {
+      document.title = 'Dijinew Dijital Kartvizit Kullanıcı Arayüzü';
+    }
+
+    // Favicon'u tema moduna göre değiştir
+    const favicon = document.querySelector('link[rel="icon"]');
+    if (favicon) {
+      if (isDarkMode) {
+        favicon.href = '/img/dijinew_logo_light.png'; // Dark modda light logo
+      } else {
+        favicon.href = '/img/dijinew_logo_dark.png'; // Light modda dark logo
+      }
+    }
+  }, [location.pathname, user?.role, isDarkMode]);
 
   if (loading) {
     return null;
@@ -113,7 +138,7 @@ function AppContent() {
         {/* All other routes with navbar */}
         <Route path="*" element={
           <>
-                    {!location.pathname.startsWith('/admin') && !location.pathname.startsWith('/cards') && !(user?.role === 'user' && (location.pathname === '/profile' || location.pathname === '/analytics')) && (
+                    {!location.pathname.startsWith('/admin') && !location.pathname.startsWith('/cards') && !location.pathname.startsWith('/login') && !(user?.role === 'user' && (location.pathname === '/profile' || location.pathname === '/analytics')) && (
                       <AppBar position="static" sx={{ boxShadow: 2 }}>
               <Container maxWidth="xl">
                 <Toolbar disableGutters sx={{ minHeight: { xs: 56, sm: 64 } }}>
@@ -130,22 +155,14 @@ function AppContent() {
                         gap: 1,
                       }}
                     >
-                      <BusinessIcon sx={{ color: 'primary.main', fontSize: 32 }} />
-                      <Typography
-                        variant="h5"
-                        sx={{
-                          fontWeight: 700,
-                          color: 'text.primary',
-                          fontFamily: 'Inter, sans-serif',
-                          background: 'linear-gradient(135deg, #F4C734 0%, #B58505 100%)',
-                          backgroundClip: 'text',
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                          fontSize: { xs: '1.25rem', sm: '1.5rem' }
-                        }}
-                      >
-                        Dijinew
-                      </Typography>
+                      <img 
+                        src={isDarkMode ? "/img/dijinew_logo_light.png" : "/img/dijinew_logo_dark.png"} 
+                        alt="Dijinew Logo" 
+                        style={{ 
+                          height: '40px', 
+                          width: 'auto'
+                        }} 
+                      />
                     </Box>
                   )}
 
@@ -232,21 +249,14 @@ function AppContent() {
                         gap: 1,
                       }}
                     >
-                      <BusinessIcon sx={{ color: 'primary.main', fontSize: 28 }} />
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          fontWeight: 700,
-                          color: 'text.primary',
-                          fontFamily: 'Inter, sans-serif',
-                          background: 'linear-gradient(135deg, #F4C734 0%, #B58505 100%)',
-                          backgroundClip: 'text',
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                        }}
-                      >
-                        Dijinew
-                      </Typography>
+                      <img 
+                        src={isDarkMode ? "/img/dijinew_logo_light.png" : "/img/dijinew_logo_dark.png"} 
+                        alt="Dijinew Logo" 
+                        style={{ 
+                          height: '36px', 
+                          width: 'auto'
+                        }} 
+                      />
                     </Box>
                   )}
                   {!location.pathname.startsWith('/corporate') &&

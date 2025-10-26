@@ -72,6 +72,44 @@ export default function CorporateDashboardPage() {
   return (
     <Box sx={{ p: 2 }}>
       <Container maxWidth={false} sx={{ maxWidth: '1400px' }}>
+        
+        {/* Header Section */}
+        <Box sx={{ mb: 4 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <img 
+                src="/img/dijinew_logo_light.png" 
+                alt="Dijinew Logo" 
+                style={{ 
+                  height: '36px', 
+                  width: 'auto'
+                }} 
+              />
+              <Box>
+                <Typography variant="h4" component="h1" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                  Kurumsal Panel
+                </Typography>
+                <Typography variant="body1" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                  Şirketinizin dijital kartvizit yönetimi
+                </Typography>
+              </Box>
+            </Box>
+            
+            <Tooltip title="Verileri Yenile">
+              <IconButton 
+                onClick={fetchDashboardData}
+                disabled={loading}
+                sx={{ 
+                  bgcolor: 'primary.main', 
+                  color: 'white',
+                  '&:hover': { bgcolor: 'primary.dark' }
+                }}
+              >
+                <RefreshIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        </Box>
 
         {/* Dashboard Content */}
         <Grid container spacing={3} sx={{ mb: 4 }}>

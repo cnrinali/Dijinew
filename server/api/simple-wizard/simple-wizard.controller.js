@@ -444,6 +444,43 @@ const updateCardByToken = async (req, res) => {
             .input('address', sql.NVarChar, cardData.address || '')
             .input('bio', sql.NVarChar, cardData.bio || '')
             .input('isActive', sql.Bit, isActiveValue)
+            // Yeni sosyal medya alanları
+            .input('linkedinUrl', sql.NVarChar, cardData.linkedinUrl || '')
+            .input('twitterUrl', sql.NVarChar, cardData.twitterUrl || '')
+            .input('instagramUrl', sql.NVarChar, cardData.instagramUrl || '')
+            .input('whatsappUrl', sql.NVarChar, cardData.whatsappUrl || '')
+            .input('facebookUrl', sql.NVarChar, cardData.facebookUrl || '')
+            .input('telegramUrl', sql.NVarChar, cardData.telegramUrl || '')
+            .input('youtubeUrl', sql.NVarChar, cardData.youtubeUrl || '')
+            .input('skypeUrl', sql.NVarChar, cardData.skypeUrl || '')
+            .input('wechatUrl', sql.NVarChar, cardData.wechatUrl || '')
+            .input('snapchatUrl', sql.NVarChar, cardData.snapchatUrl || '')
+            .input('pinterestUrl', sql.NVarChar, cardData.pinterestUrl || '')
+            .input('tiktokUrl', sql.NVarChar, cardData.tiktokUrl || '')
+            // Yeni pazaryeri alanları
+            .input('trendyolUrl', sql.NVarChar, cardData.trendyolUrl || '')
+            .input('hepsiburadaUrl', sql.NVarChar, cardData.hepsiburadaUrl || '')
+            .input('ciceksepeti', sql.NVarChar, cardData.ciceksepeti || '')
+            .input('sahibindenUrl', sql.NVarChar, cardData.sahibindenUrl || '')
+            .input('hepsiemlakUrl', sql.NVarChar, cardData.hepsiemlakUrl || '')
+            .input('gittigidiyorUrl', sql.NVarChar, cardData.gittigidiyorUrl || '')
+            .input('n11Url', sql.NVarChar, cardData.n11Url || '')
+            .input('amazonTrUrl', sql.NVarChar, cardData.amazonTrUrl || '')
+            .input('getirUrl', sql.NVarChar, cardData.getirUrl || '')
+            .input('yemeksepetiUrl', sql.NVarChar, cardData.yemeksepetiUrl || '')
+            .input('arabamUrl', sql.NVarChar, cardData.arabamUrl || '')
+            .input('letgoUrl', sql.NVarChar, cardData.letgoUrl || '')
+            .input('pttAvmUrl', sql.NVarChar, cardData.pttAvmUrl || '')
+            .input('ciceksepetiUrl', sql.NVarChar, cardData.ciceksepetiUrl || '')
+            .input('websiteUrl', sql.NVarChar, cardData.websiteUrl || '')
+            .input('whatsappBusinessUrl', sql.NVarChar, cardData.whatsappBusinessUrl || '')
+            .input('videoUrl', sql.NVarChar, cardData.videoUrl || '')
+            .input('documents', sql.NVarChar, (() => {
+                const documentsJson = JSON.stringify(cardData.documents || []);
+                console.log('Documents being saved:', cardData.documents);
+                console.log('Documents JSON:', documentsJson);
+                return documentsJson;
+            })())
             .query(`
                 UPDATE Cards 
                 SET name = @name,
@@ -454,6 +491,36 @@ const updateCardByToken = async (req, res) => {
                     address = @address,
                     bio = @bio,
                     isActive = @isActive,
+                    linkedinUrl = @linkedinUrl,
+                    twitterUrl = @twitterUrl,
+                    instagramUrl = @instagramUrl,
+                    whatsappUrl = @whatsappUrl,
+                    facebookUrl = @facebookUrl,
+                    telegramUrl = @telegramUrl,
+                    youtubeUrl = @youtubeUrl,
+                    skypeUrl = @skypeUrl,
+                    wechatUrl = @wechatUrl,
+                    snapchatUrl = @snapchatUrl,
+                    pinterestUrl = @pinterestUrl,
+                    tiktokUrl = @tiktokUrl,
+                    trendyolUrl = @trendyolUrl,
+                    hepsiburadaUrl = @hepsiburadaUrl,
+                    ciceksepeti = @ciceksepeti,
+                    sahibindenUrl = @sahibindenUrl,
+                    hepsiemlakUrl = @hepsiemlakUrl,
+                    gittigidiyorUrl = @gittigidiyorUrl,
+                    n11Url = @n11Url,
+                    amazonTrUrl = @amazonTrUrl,
+                    getirUrl = @getirUrl,
+                    yemeksepetiUrl = @yemeksepetiUrl,
+                    arabamUrl = @arabamUrl,
+                    letgoUrl = @letgoUrl,
+                    pttAvmUrl = @pttAvmUrl,
+                    ciceksepetiUrl = @ciceksepetiUrl,
+                    websiteUrl = @websiteUrl,
+                    whatsappBusinessUrl = @whatsappBusinessUrl,
+                    videoUrl = @videoUrl,
+                    documents = @documents,
                     updatedAt = GETDATE()
                 WHERE id = @cardId
             `);
@@ -469,10 +536,22 @@ const updateCardByToken = async (req, res) => {
         const cardResult = await pool.request()
             .input('cardId', sql.Int, tokenData.cardId)
             .query(`
-                SELECT id, name, customSlug, isActive 
+                SELECT id, name, customSlug, isActive, documents 
                 FROM Cards 
                 WHERE id = @cardId
             `);
+        
+        // Dökümanları kontrol et
+        const savedCard = cardResult.recordset[0];
+        console.log('Saved card documents:', savedCard.documents);
+        if (savedCard.documents) {
+            try {
+                const parsedDocs = JSON.parse(savedCard.documents);
+                console.log('Parsed documents:', parsedDocs);
+            } catch (e) {
+                console.error('Documents parse error:', e);
+            }
+        }
 
         const updatedCard = cardResult.recordset[0];
 
@@ -628,7 +707,7 @@ const markSimpleTokenAsUsed = async (req, res) => {
             console.log('❌ Token bulunamadı');
             return res.status(404).json({
                 success: false,
-                message: 'Token bulunamadı veya zaten kullanılmış.'
+                message: 'Token bulunamadı.'
             });
         }
 
@@ -636,11 +715,8 @@ const markSimpleTokenAsUsed = async (req, res) => {
         console.log('🔍 Token verisi:', tokenData);
 
         if (tokenData.isUsed === 1) {
-            console.log('❌ Token zaten kullanılmış');
-            return res.status(404).json({
-                success: false,
-                message: 'Token bulunamadı veya zaten kullanılmış.'
-            });
+            console.log('⚠️ Token zaten kullanılmış, ama işlem devam ediyor');
+            // Token zaten kullanılmış olsa bile işlemi devam ettir
         }
 
         const cardId = tokenData.cardId;
@@ -836,6 +912,36 @@ const debugDatabaseSchema = async (req, res) => {
             }
         } else {
             migrationResults.push('PermanentSlug column already exists');
+        }
+
+        // Yeni sosyal medya alanlarını ekle
+        const newSocialMediaFields = [
+            'whatsappUrl', 'facebookUrl', 'telegramUrl', 'youtubeUrl', 
+            'skypeUrl', 'wechatUrl', 'snapchatUrl', 'pinterestUrl', 'tiktokUrl'
+        ];
+
+        const newMarketplaceFields = [
+            'arabamUrl', 'letgoUrl', 'pttAvmUrl', 'ciceksepetiUrl', 
+            'websiteUrl', 'whatsappBusinessUrl', 'videoUrl', 'documents'
+        ];
+
+        const allNewFields = [...newSocialMediaFields, ...newMarketplaceFields];
+
+        for (const field of allNewFields) {
+            const hasField = columns.some(col => col.name === field);
+            if (!hasField) {
+                console.log(`🔧 Adding ${field} column...`);
+                try {
+                    await pool.request().query(`
+                        ALTER TABLE Cards ADD ${field} NVARCHAR(500) NULL;
+                    `);
+                    migrationResults.push(`${field} column added successfully`);
+                } catch (error) {
+                    migrationResults.push(`${field} column addition failed: ${error.message}`);
+                }
+            } else {
+                migrationResults.push(`${field} column already exists`);
+            }
         }
 
         // Son kartları kontrol et

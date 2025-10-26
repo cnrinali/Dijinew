@@ -10,6 +10,9 @@ export default function QrCardPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    // Sayfa başlığını ayarla
+    document.title = 'Yeni Nesil Kartvizit Dijinew';
+    
     const fetchCard = async () => {
       try {
         const data = await getPublicCard(slug);

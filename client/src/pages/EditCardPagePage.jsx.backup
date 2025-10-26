@@ -1,0 +1,1274 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import cardService from '../services/cardService';
+import axios from 'axios';
+import { API_ENDPOINTS } from '../config/api.js';
+import { useNotification } from '../context/NotificationContext.jsx';
+import ThemePreview from '../components/ThemePreview';
+import { TURKISH_BANKS, formatIban, validateTurkishIban } from '../constants/turkishBanks';
+import { optimizeImageForUpload } from '../utils/imageCompression.jsx';
+
+// MUI Imports
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Container from '@mui/material/Container';
+import Grid from '@mui/material/Grid';
+import Paper from '@mui/material/Paper';
+import CircularProgress from '@mui/material/CircularProgress';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Switch from '@mui/material/Switch';
+import Avatar from '@mui/material/Avatar';
+import CardMedia from '@mui/material/CardMedia';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import InputAdornment from '@mui/material/InputAdornment';
+import LinkedInIcon from '@mui/icons-material/LinkedIn';
+import TwitterIcon from '@mui/icons-material/Twitter';
+import InstagramIcon from '@mui/icons-material/Instagram';
+// Yeni sosyal medya icon'ları
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import FacebookIcon from '@mui/icons-material/Facebook';
+import TelegramIcon from '@mui/icons-material/Telegram';
+import YouTubeIcon from '@mui/icons-material/YouTube';
+import VideoCallIcon from '@mui/icons-material/VideoCall';
+import ChatIcon from '@mui/icons-material/Chat';
+import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import ShareIcon from '@mui/icons-material/Share';
+import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import StorefrontIcon from '@mui/icons-material/Storefront';
+import LocalFloristIcon from '@mui/icons-material/LocalFlorist';
+import HomeIcon from '@mui/icons-material/Home';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import DeliveryDiningIcon from '@mui/icons-material/DeliveryDining';
+import RestaurantIcon from '@mui/icons-material/Restaurant';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
+import IconButton from '@mui/material/IconButton';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import AddIcon from '@mui/icons-material/Add';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import Stack from '@mui/material/Stack';
+
+function EditCardPage() {
+    const [formData, setFormData] = useState({
+        cardName: '',
+        name: '',
+        title: '',
+        company: '',
+        bio: '',
+        phone: '',
+        email: '',
+        website: '',
+        address: '',
+        profileImageUrl: '',
+        coverImageUrl: '',
+        customSlug: '',
+        theme: 'light',
+        isActive: true,
+        linkedinUrl: '',
+        twitterUrl: '',
+        instagramUrl: '',
+        // Yeni sosyal medya alanları
+        whatsappUrl: '',
+        facebookUrl: '',
+        telegramUrl: '',
+        youtubeUrl: '',
+        skypeUrl: '',
+        wechatUrl: '',
+        snapchatUrl: '',
+        pinterestUrl: '',
+        tiktokUrl: '',
+        // Pazaryeri alanları
+        trendyolUrl: '',
+        hepsiburadaUrl: '',
+        ciceksepeti: '',
+        sahibindenUrl: '',
+        hepsiemlakUrl: '',
+        gittigidiyorUrl: '',
+        n11Url: '',
+        amazonTrUrl: '',
+        getirUrl: '',
+        yemeksepetiUrl: '',
+        // Yeni pazaryeri alanları
+        arabamUrl: '',
+        letgoUrl: '',
+        pttAvmUrl: '',
+        ciceksepetiUrl: '',
+        websiteUrl: '',
+        whatsappBusinessUrl: '',
+        videoUrl: '',
+        documents: [],
+        profileImage: null,
+        coverImage: null,
+    });
+    const [pageLoading, setPageLoading] = useState(true);
+    const [formLoading, setFormLoading] = useState(false);
+    const [profilePreview, setProfilePreview] = useState(null);
+    const [coverPreview, setCoverPreview] = useState(null);
+    const [tabValue, setTabValue] = useState(0);
+    
+    // Banka hesap bilgileri state'leri
+    const [bankAccounts, setBankAccounts] = useState([]);
+    const [bankAccountsLoading, setBankAccountsLoading] = useState(false);
+    const [bankDialogOpen, setBankDialogOpen] = useState(false);
+    const [editingBankAccount, setEditingBankAccount] = useState(null);
+    const [bankFormData, setBankFormData] = useState({
+        bankName: '',
+        iban: '',
+        accountName: ''
+    });
+    const [bankFormLoading, setBankFormLoading] = useState(false);
+    
+    const { id: cardId } = useParams();
+    const navigate = useNavigate();
+    const { showNotification } = useNotification();
+
+    const profileInputRef = useRef(null);
+    const coverInputRef = useRef(null);
+
+    // Kart bilgilerini çekmek için useEffect
+    useEffect(() => {
+        const fetchCardData = async () => {
+            setPageLoading(true);
+            try {
+                const card = await cardService.getCardById(cardId); 
+                setFormData({
+                    cardName: card.cardName || '',
+                    name: card.name || '',
+                    title: card.title || '',
+                    company: card.company || '',
+                    bio: card.bio || '',
+                    phone: card.phone || '',
+                    email: card.email || '',
+                    website: card.website || '',
+                    address: card.address || '',
+                    isActive: card.isActive ?? true, 
+                    profileImageUrl: card.profileImageUrl || '',
+                    coverImageUrl: card.coverImageUrl || '', 
+                    customSlug: card.customSlug || '',
+                    theme: card.theme || 'light',
+                    linkedinUrl: card.linkedinUrl || '',
+                    twitterUrl: card.twitterUrl || '',
+                    instagramUrl: card.instagramUrl || '',
+                    // Yeni sosyal medya alanları
+                    whatsappUrl: card.whatsappUrl || '',
+                    facebookUrl: card.facebookUrl || '',
+                    telegramUrl: card.telegramUrl || '',
+                    youtubeUrl: card.youtubeUrl || '',
+                    skypeUrl: card.skypeUrl || '',
+                    wechatUrl: card.wechatUrl || '',
+                    snapchatUrl: card.snapchatUrl || '',
+                    pinterestUrl: card.pinterestUrl || '',
+                    tiktokUrl: card.tiktokUrl || '',
+                    // Pazaryeri alanları
+                    trendyolUrl: card.trendyolUrl || '',
+                    hepsiburadaUrl: card.hepsiburadaUrl || '',
+                    ciceksepeti: card.ciceksepeti || '',
+                    sahibindenUrl: card.sahibindenUrl || '',
+                    hepsiemlakUrl: card.hepsiemlakUrl || '',
+                    gittigidiyorUrl: card.gittigidiyorUrl || '',
+                    n11Url: card.n11Url || '',
+                    amazonTrUrl: card.amazonTrUrl || '',
+                    getirUrl: card.getirUrl || '',
+                    yemeksepetiUrl: card.yemeksepetiUrl || '',
+                    // Yeni pazaryeri alanları
+                    arabamUrl: card.arabamUrl || '',
+                    letgoUrl: card.letgoUrl || '',
+                    pttAvmUrl: card.pttAvmUrl || '',
+                    ciceksepetiUrl: card.ciceksepetiUrl || '',
+                    websiteUrl: card.websiteUrl || '',
+            whatsappBusinessUrl: card.whatsappBusinessUrl || '',
+            videoUrl: card.videoUrl || '',
+            documents: card.documents || [],
+            profileImage: null, 
+            coverImage: null,
+                });
+                // Önizlemeleri ayarla
+                if (card.profileImageUrl) setProfilePreview(card.profileImageUrl);
+                else setProfilePreview(null); 
+                if (card.coverImageUrl) setCoverPreview(card.coverImageUrl);
+                else setCoverPreview(null);
+                
+            } catch (err) { // Hata durumları (404, 500 vb.) buraya düşecek
+                console.error("Kart bilgisi getirilirken hata:", err);
+                // API'den gelen hata mesajını kullan (örn: "Kartvizit bulunamadı")
+                showNotification(err.response?.data?.message || err.message || 'Kart bilgileri yüklenemedi.', 'error');
+                navigate('/cards'); 
+            } finally {
+                setPageLoading(false);
+            }
+        };
+
+        const fetchBankAccounts = async () => {
+            if (cardId) {
+                setBankAccountsLoading(true);
+                try {
+                    const accounts = await cardService.getCardBankAccounts(cardId);
+                    setBankAccounts(accounts);
+                } catch (err) {
+                    console.error("Banka hesapları getirilirken hata:", err);
+                } finally {
+                    setBankAccountsLoading(false);
+                }
+            }
+        };
+
+        if (cardId) {
+            fetchCardData();
+            fetchBankAccounts();
+        } else {
+            showNotification('Kart ID bulunamadı.', 'error');
+            setPageLoading(false);
+            navigate('/cards');
+        }
+    }, [cardId, navigate, showNotification]);
+
+    const onChange = async (e) => {
+        if (e.target.type === 'file') {
+            const file = e.target.files[0];
+            const name = e.target.name;
+            
+            if (!file) {
+                if (name === 'profileImage') setProfilePreview(formData.profileImageUrl || null);
+                else if (name === 'coverImage') setCoverPreview(formData.coverImageUrl || null);
+                return;
+            }
+            
+            try {
+                // Dosya boyutu kontrolü ve sıkıştırma
+                const originalSizeInMB = file.size / (1024 * 1024);
+                console.log(`Orijinal dosya boyutu: ${originalSizeInMB.toFixed(2)}MB`);
+                
+                let optimizedFile = file;
+                
+                // Eğer dosya 10MB'dan büyükse sıkıştır
+                if (originalSizeInMB > 10) {
+                    showNotification('Dosya sıkıştırılıyor, lütfen bekleyin...', 'info');
+                    
+                    optimizedFile = await optimizeImageForUpload(file, 10);
+                    
+                    const optimizedSizeInMB = optimizedFile.size / (1024 * 1024);
+                    const compressionRatio = ((originalSizeInMB - optimizedSizeInMB) / originalSizeInMB * 100).toFixed(1);
+                    
+                    showNotification(
+                        `Dosya sıkıştırıldı: ${originalSizeInMB.toFixed(1)}MB → ${optimizedSizeInMB.toFixed(1)}MB (${compressionRatio}% azaltıldı)`, 
+                        'success'
+                    );
+                }
+                
+                setFormData((prevState) => ({ ...prevState, [name]: optimizedFile }));
+
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    if (name === 'profileImage') setProfilePreview(reader.result);
+                    else if (name === 'coverImage') setCoverPreview(reader.result);
+                };
+                reader.readAsDataURL(optimizedFile);
+                
+            } catch (error) {
+                console.error('Dosya işleme hatası:', error);
+                showNotification('Dosya işlenirken hata oluştu. Lütfen başka bir dosya seçin.', 'error');
+            }
+        } else {
+            const { name, value, type, checked } = e.target;
+            setFormData((prevState) => ({
+                ...prevState,
+                [name]: type === 'switch' ? checked : value,
+            }));
+        }
+    };
+
+    const onSubmit = async (e) => {
+        e.preventDefault();
+        setFormLoading(true);
+
+        const uploadPromises = [];
+        let profileImagePath = formData.profileImageUrl;
+        let coverImagePath = formData.coverImageUrl;
+        
+        if (formData.profileImage instanceof File) {
+            const profileFormData = new FormData();
+            profileFormData.append('image', formData.profileImage);
+            uploadPromises.push(
+                axios.post(API_ENDPOINTS.UPLOAD, profileFormData, { headers: { 'Content-Type': 'multipart/form-data' } })
+                     .then(res => { profileImagePath = res.data.filePath; })
+                     .catch(err => { 
+                         console.error("Profil resmi yükleme hatası:", err);
+                         throw new Error(`Profil resmi yüklenemedi: ${err.response?.data?.message || err.message}`);
+                     })
+            );
+        }
+        if (formData.coverImage instanceof File) {
+            const coverFormData = new FormData();
+            coverFormData.append('image', formData.coverImage);
+            uploadPromises.push(
+                axios.post(API_ENDPOINTS.UPLOAD, coverFormData, { headers: { 'Content-Type': 'multipart/form-data' } })
+                     .then(res => { coverImagePath = res.data.filePath; })
+                     .catch(err => { 
+                         console.error("Kapak resmi yükleme hatası:", err);
+                         throw new Error(`Kapak resmi yüklenemedi: ${err.response?.data?.message || err.message}`);
+                     })
+            );
+        }
+
+        try {
+            await Promise.all(uploadPromises);
+
+            const updateData = { ...formData };
+            delete updateData.profileImage;
+            delete updateData.coverImage;
+            updateData.profileImageUrl = profileImagePath;
+            updateData.coverImageUrl = coverImagePath;
+
+            console.log('[EditCardPage] Güncelleme için gönderilen data:', updateData);
+
+            await cardService.updateCard(cardId, updateData);
+            showNotification('Kart başarıyla güncellendi!', 'success');
+            navigate('/cards');
+
+        } catch (err) {
+             console.error('Kart güncelleme/yükleme hatası:', err);
+             let errorMsg = 'Kart güncellenirken bir hata oluştu.';
+
+             if (err.message.startsWith('Profil resmi yüklenemedi') || err.message.startsWith('Kapak resmi yüklenemedi')) {
+                 errorMsg = err.message;
+             } else if (err.response?.data?.message) {
+                 errorMsg = err.response.data.message;
+                 if (errorMsg.toLowerCase().includes('slug already exists')) {
+                     errorMsg = 'Girdiğiniz özel URL zaten başka bir kart tarafından kullanılıyor.';
+                 } else if (errorMsg.toLowerCase().includes('file too large')) {
+                     errorMsg = 'Dosya boyutu çok büyük. Lütfen 10MB\'dan küçük bir dosya seçin.';
+                 } else if (errorMsg.toLowerCase().includes('desteklenmeyen dosya türü')) {
+                     errorMsg = 'Desteklenmeyen dosya türü. Lütfen sadece resim dosyaları (JPG, PNG, GIF) yükleyin.';
+                 }
+             } else if (axios.isCancel(err)) { 
+                 errorMsg = 'İşlem iptal edildi.';
+             } else if (err.message.includes('Network Error')) {
+                 errorMsg = 'Sunucuya bağlanılamadı. İnternet bağlantınızı kontrol edin.';
+             } else if (err.code === 'ECONNREFUSED') {
+                 errorMsg = 'Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.';
+             }
+
+            showNotification(errorMsg, 'error');
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
+    if (pageLoading) {
+        return (
+            <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 'calc(100vh - 64px)' }}>
+                <CircularProgress />
+            </Container>
+        );
+    }
+
+    // Banka hesap yönetimi fonksiyonları
+    const handleTabChange = (event, newValue) => {
+        setTabValue(newValue);
+    };
+
+    const handleBankDialogOpen = (account = null) => {
+        setEditingBankAccount(account);
+        setBankFormData(account ? {
+            bankName: account.bankName,
+            iban: formatIban(account.iban),
+            accountName: account.accountName
+        } : {
+            bankName: '',
+            iban: '',
+            accountName: ''
+        });
+        setBankDialogOpen(true);
+    };
+
+    const handleBankDialogClose = () => {
+        setBankDialogOpen(false);
+        setEditingBankAccount(null);
+        setBankFormData({ bankName: '', iban: '', accountName: '' });
+    };
+
+    const handleBankFormChange = (e) => {
+        const { name, value } = e.target;
+        if (name === 'iban') {
+            const formattedIban = formatIban(value);
+            setBankFormData(prev => ({ ...prev, [name]: formattedIban }));
+        } else {
+            setBankFormData(prev => ({ ...prev, [name]: value }));
+        }
+    };
+
+    const handleBankSave = async () => {
+        const validation = validateTurkishIban(bankFormData.iban);
+        if (!validation.isValid) {
+            showNotification(validation.message, 'error');
+            return;
+        }
+
+        if (!bankFormData.bankName || !bankFormData.accountName) {
+            showNotification('Lütfen tüm alanları doldurun.', 'error');
+            return;
+        }
+
+        setBankFormLoading(true);
+        try {
+            if (editingBankAccount) {
+                await cardService.updateCardBankAccount(cardId, editingBankAccount.id, bankFormData);
+                showNotification('Banka hesabı başarıyla güncellendi.', 'success');
+            } else {
+                await cardService.addCardBankAccount(cardId, bankFormData);
+                showNotification('Banka hesabı başarıyla eklendi.', 'success');
+            }
+            
+            // Banka hesaplarını yeniden çek
+            const accounts = await cardService.getCardBankAccounts(cardId);
+            setBankAccounts(accounts);
+            handleBankDialogClose();
+        } catch (err) {
+            console.error('Banka hesabı kaydetme hatası:', err);
+            showNotification(err.response?.data?.message || 'Banka hesabı kaydedilirken hata oluştu.', 'error');
+        } finally {
+            setBankFormLoading(false);
+        }
+    };
+
+    const handleBankDelete = async (accountId) => {
+        if (window.confirm('Bu banka hesabını silmek istediğinizden emin misiniz?')) {
+            try {
+                await cardService.deleteCardBankAccount(cardId, accountId);
+                showNotification('Banka hesabı başarıyla silindi.', 'success');
+                
+                // Banka hesaplarını yeniden çek
+                const accounts = await cardService.getCardBankAccounts(cardId);
+                setBankAccounts(accounts);
+            } catch (err) {
+                console.error('Banka hesabı silme hatası:', err);
+                showNotification(err.response?.data?.message || 'Banka hesabı silinirken hata oluştu.', 'error');
+            }
+        }
+    };
+
+    return (
+        <Box>
+            <Container component="main" maxWidth="lg" sx={{ py: 3 }}>
+                <Paper sx={{ p: 3 }}>
+                <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
+                    Kartviziti Düzenle
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                    Dijital kartvizitinizin bilgilerini güncelleyin
+                </Typography>
+                
+                {/* Tab Navigation */}
+                <Tabs value={tabValue} onChange={handleTabChange} sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+                    <Tab label="Kart Bilgileri" />
+                    <Tab label="Banka Hesapları" />
+                </Tabs>
+
+                {/* Tab 0: Kart Bilgileri */}
+                {tabValue === 0 && (
+                    <Box component="form" noValidate onSubmit={onSubmit}>
+                        <Grid container spacing={3} alignItems="flex-start">
+                            <Grid item xs={12} md={8}>
+                                <Stack spacing={3}>
+                                    <Paper sx={{ p: 3, borderRadius: 2, border: '1px solid', borderColor: 'divider', backgroundColor: 'background.paper' }}>
+                                        <Stack spacing={2}>
+                                            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between', gap: 2 }}>
+                                                <Box>
+                                                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                                        Kart Ayarları
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        Kartvizit adını ve paylaşım bağlantısını düzenleyin.
+                                                    </Typography>
+                                                </Box>
+                                                <FormControlLabel
+                                                    control={<Switch checked={formData.isActive} onChange={onChange} name="isActive" />}
+                                                    label="Aktif"
+                                                    labelPlacement="start"
+                                                    disabled={formLoading}
+                                                    sx={{ m: 0 }}
+                                                />
+                                            </Box>
+                                            <Grid container spacing={2}>
+                                                <Grid item xs={12} sm={6}>
+                                                    <TextField
+                                                        name="cardName"
+                                                        required
+                                                        fullWidth
+                                                        label="Kartvizit Adı"
+                                                        value={formData.cardName}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                    />
+                                                </Grid>
+                                                <Grid item xs={12} sm={6}>
+                                                    <TextField
+                                                        name="customSlug"
+                                                        fullWidth
+                                                        label="Özel URL"
+                                                        value={formData.customSlug}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                        helperText="Boş bırakırsanız mevcut bağlantı korunur."
+                                                    />
+                                                </Grid>
+                                            </Grid>
+                                        </Stack>
+                                    </Paper>
+                                    <Paper sx={{ p: 3, borderRadius: 2, border: '1px solid', borderColor: 'divider', backgroundColor: 'background.paper' }}>
+                                        <Stack spacing={2}>
+                                            <Box>
+                                                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                                    Kişisel Bilgiler
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    Kartvizitte öne çıkan bilgilerinizi güncelleyin.
+                                                </Typography>
+                                            </Box>
+                                            <Grid container spacing={2}>
+                                                <Grid item xs={12} sm={6}>
+                                                    <TextField name="name" fullWidth label="İsim Soyisim" value={formData.name} onChange={onChange} disabled={formLoading} />
+                                                </Grid>
+                                                <Grid item xs={12} sm={6}>
+                                                    <TextField name="title" fullWidth label="Ünvan" value={formData.title} onChange={onChange} disabled={formLoading} />
+                                                </Grid>
+                                                <Grid item xs={12} sm={6}>
+                                                    <TextField name="company" fullWidth label="Şirket" value={formData.company} onChange={onChange} disabled={formLoading} />
+                                                </Grid>
+                                                <Grid item xs={12}>
+                                                    <TextField
+                                                        name="bio"
+                                                        fullWidth
+                                                        label="Biyografi"
+                                                        multiline
+                                                        minRows={3}
+                                                        value={formData.bio}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                    />
+                                                </Grid>
+                                            </Grid>
+                                        </Stack>
+                                    </Paper>
+                                    <Paper sx={{ p: 3, borderRadius: 2, border: '1px solid', borderColor: 'divider', backgroundColor: 'background.paper' }}>
+                                        <Stack spacing={2}>
+                                            <Box>
+                                                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                                    İletişim Bilgileri
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    Telefon, e-posta ve konum bilgilerini eksiksiz doldurun.
+                                                </Typography>
+                                            </Box>
+                                            <Grid container spacing={2}>
+                                                <Grid item xs={12} sm={6}>
+                                                    <TextField name="phone" fullWidth label="Telefon" type="tel" value={formData.phone} onChange={onChange} disabled={formLoading} />
+                                                </Grid>
+                                                <Grid item xs={12} sm={6}>
+                                                    <TextField name="email" fullWidth label="E-posta" type="email" value={formData.email} onChange={onChange} disabled={formLoading} />
+                                                </Grid>
+                                                <Grid item xs={12} sm={6}>
+                                                    <TextField name="website" fullWidth label="Web Sitesi" type="url" value={formData.website} onChange={onChange} disabled={formLoading} />
+                                                </Grid>
+                                                <Grid item xs={12}>
+                                                    <TextField
+                                                        name="address"
+                                                        fullWidth
+                                                        label="Adres"
+                                                        multiline
+                                                        minRows={2}
+                                                        value={formData.address}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                    />
+                                                </Grid>
+                                            </Grid>
+                                        </Stack>
+                                    </Paper>
+                                    <Paper sx={{ p: 3, borderRadius: 2, border: '1px solid', borderColor: 'divider', backgroundColor: 'background.paper' }}>
+                                        <Stack spacing={2}>
+                                            <Box>
+                                                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                                    Sosyal Medya
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    Ziyaretçilerin sizi kolayca bulması için sosyal bağlantılarınızı ekleyin.
+                                                </Typography>
+                                            </Box>
+                                            <Grid container spacing={2}>
+                                                <Grid item xs={12} sm={4}>
+                                                    <TextField
+                                                        name="linkedinUrl"
+                                                        fullWidth
+                                                        label="LinkedIn"
+                                                        value={formData.linkedinUrl}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                        InputProps={{ startAdornment: <InputAdornment position="start"><LinkedInIcon fontSize="small" /></InputAdornment> }}
+                                                    />
+                                                </Grid>
+                                                <Grid item xs={12} sm={4}>
+                                                    <TextField
+                                                        name="twitterUrl"
+                                                        fullWidth
+                                                        label="Twitter"
+                                                        value={formData.twitterUrl}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                        InputProps={{ startAdornment: <InputAdornment position="start"><TwitterIcon fontSize="small" /></InputAdornment> }}
+                                                    />
+                                                </Grid>
+                                                <Grid item xs={12} sm={4}>
+                                                    <TextField
+                                                        name="instagramUrl"
+                                                        fullWidth
+                                                        label="Instagram"
+                                                        value={formData.instagramUrl}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                        InputProps={{ startAdornment: <InputAdornment position="start"><InstagramIcon fontSize="small" /></InputAdornment> }}
+                                                    />
+                                                </Grid>
+                                                <Grid item xs={12} sm={4}>
+                                                    <TextField
+                                                        name="whatsappUrl"
+                                                        fullWidth
+                                                        label="WhatsApp"
+                                                        value={formData.whatsappUrl}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                        InputProps={{ startAdornment: <InputAdornment position="start"><WhatsAppIcon fontSize="small" /></InputAdornment> }}
+                                                    />
+                                                </Grid>
+                                                <Grid item xs={12} sm={4}>
+                                                    <TextField
+                                                        name="facebookUrl"
+                                                        fullWidth
+                                                        label="Facebook"
+                                                        value={formData.facebookUrl}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                        InputProps={{ startAdornment: <InputAdornment position="start"><FacebookIcon fontSize="small" /></InputAdornment> }}
+                                                    />
+                                                </Grid>
+                                                <Grid item xs={12} sm={4}>
+                                                    <TextField
+                                                        name="telegramUrl"
+                                                        fullWidth
+                                                        label="Telegram"
+                                                        value={formData.telegramUrl}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                        InputProps={{ startAdornment: <InputAdornment position="start"><TelegramIcon fontSize="small" /></InputAdornment> }}
+                                                    />
+                                                </Grid>
+                                                <Grid item xs={12} sm={4}>
+                                                    <TextField
+                                                        name="youtubeUrl"
+                                                        fullWidth
+                                                        label="YouTube"
+                                                        value={formData.youtubeUrl}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                        InputProps={{ startAdornment: <InputAdornment position="start"><YouTubeIcon fontSize="small" /></InputAdornment> }}
+                                                    />
+                                                </Grid>
+                                                <Grid item xs={12} sm={4}>
+                                                    <TextField
+                                                        name="skypeUrl"
+                                                        fullWidth
+                                                        label="Skype"
+                                                        value={formData.skypeUrl}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                        InputProps={{ startAdornment: <InputAdornment position="start"><VideoCallIcon fontSize="small" /></InputAdornment> }}
+                                                    />
+                                                </Grid>
+                                                <Grid item xs={12} sm={4}>
+                                                    <TextField
+                                                        name="wechatUrl"
+                                                        fullWidth
+                                                        label="WeChat"
+                                                        value={formData.wechatUrl}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                        InputProps={{ startAdornment: <InputAdornment position="start"><ChatIcon fontSize="small" /></InputAdornment> }}
+                                                    />
+                                                </Grid>
+                                                <Grid item xs={12} sm={4}>
+                                                    <TextField
+                                                        name="snapchatUrl"
+                                                        fullWidth
+                                                        label="Snapchat"
+                                                        value={formData.snapchatUrl}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                        InputProps={{ startAdornment: <InputAdornment position="start"><CameraAltIcon fontSize="small" /></InputAdornment> }}
+                                                    />
+                                                </Grid>
+                                                <Grid item xs={12} sm={4}>
+                                                    <TextField
+                                                        name="pinterestUrl"
+                                                        fullWidth
+                                                        label="Pinterest"
+                                                        value={formData.pinterestUrl}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                        InputProps={{ startAdornment: <InputAdornment position="start"><ShareIcon fontSize="small" /></InputAdornment> }}
+                                                    />
+                                                </Grid>
+                                                <Grid item xs={12} sm={4}>
+                                                    <TextField
+                                                        name="tiktokUrl"
+                                                        fullWidth
+                                                        label="TikTok"
+                                                        value={formData.tiktokUrl}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                        InputProps={{ startAdornment: <InputAdornment position="start"><MusicNoteIcon fontSize="small" /></InputAdornment> }}
+                                                    />
+                                                </Grid>
+                                            </Grid>
+                                        </Stack>
+                                    </Paper>
+                                    <Paper sx={{ p: 3, borderRadius: 2, border: '1px solid', borderColor: 'divider', backgroundColor: 'background.paper' }}>
+                                        <Stack spacing={2}>
+                                            <Box>
+                                                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                                    E-ticaret Bağlantıları
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    Mağaza ve yemek platformu linklerinizi paylaşın.
+                                                </Typography>
+                                            </Box>
+                                            <Grid container spacing={2}>
+                                                <Grid item xs={12} sm={6} md={4}>
+                                                    <TextField
+                                                        name="trendyolUrl"
+                                                        fullWidth
+                                                        label="Trendyol"
+                                                        value={formData.trendyolUrl}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                        InputProps={{ startAdornment: <InputAdornment position="start"><StorefrontIcon fontSize="small" /></InputAdornment> }}
+                                                    />
+                                                </Grid>
+                                                <Grid item xs={12} sm={6} md={4}>
+                                                    <TextField
+                                                        name="hepsiburadaUrl"
+                                                        fullWidth
+                                                        label="Hepsiburada"
+                                                        value={formData.hepsiburadaUrl}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                        InputProps={{ startAdornment: <InputAdornment position="start"><StorefrontIcon fontSize="small" /></InputAdornment> }}
+                                                    />
+                                                </Grid>
+                                                <Grid item xs={12} sm={6} md={4}>
+                                                    <TextField
+                                                        name="n11Url"
+                                                        fullWidth
+                                                        label="N11"
+                                                        value={formData.n11Url}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                        InputProps={{ startAdornment: <InputAdornment position="start"><StorefrontIcon fontSize="small" /></InputAdornment> }}
+                                                    />
+                                                </Grid>
+                                                <Grid item xs={12} sm={6} md={4}>
+                                                    <TextField
+                                                        name="getirUrl"
+                                                        fullWidth
+                                                        label="Getir"
+                                                        value={formData.getirUrl}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                        InputProps={{ startAdornment: <InputAdornment position="start"><DeliveryDiningIcon fontSize="small" /></InputAdornment> }}
+                                                    />
+                                                </Grid>
+                                                <Grid item xs={12} sm={6} md={4}>
+                                                    <TextField
+                                                        name="yemeksepetiUrl"
+                                                        fullWidth
+                                                        label="Yemeksepeti"
+                                                        value={formData.yemeksepetiUrl}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                        InputProps={{ startAdornment: <InputAdornment position="start"><RestaurantIcon fontSize="small" /></InputAdornment> }}
+                                                    />
+                                                </Grid>
+                                                <Grid item xs={12} sm={6} md={4}>
+                                                    <TextField
+                                                        name="arabamUrl"
+                                                        fullWidth
+                                                        label="Arabam"
+                                                        value={formData.arabamUrl}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                        InputProps={{ startAdornment: <InputAdornment position="start"><AccountBalanceIcon fontSize="small" /></InputAdornment> }}
+                                                    />
+                                                </Grid>
+                                                <Grid item xs={12} sm={6} md={4}>
+                                                    <TextField
+                                                        name="letgoUrl"
+                                                        fullWidth
+                                                        label="Letgo"
+                                                        value={formData.letgoUrl}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                        InputProps={{ startAdornment: <InputAdornment position="start"><StorefrontIcon fontSize="small" /></InputAdornment> }}
+                                                    />
+                                                </Grid>
+                                                <Grid item xs={12} sm={6} md={4}>
+                                                    <TextField
+                                                        name="pttAvmUrl"
+                                                        fullWidth
+                                                        label="PTT AVM"
+                                                        value={formData.pttAvmUrl}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                        InputProps={{ startAdornment: <InputAdornment position="start"><StorefrontIcon fontSize="small" /></InputAdornment> }}
+                                                    />
+                                                </Grid>
+                                                <Grid item xs={12} sm={6} md={4}>
+                                                    <TextField
+                                                        name="ciceksepetiUrl"
+                                                        fullWidth
+                                                        label="Çiçek Sepeti"
+                                                        value={formData.ciceksepetiUrl}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                        InputProps={{ startAdornment: <InputAdornment position="start"><LocalFloristIcon fontSize="small" /></InputAdornment> }}
+                                                    />
+                                                </Grid>
+                                                <Grid item xs={12} sm={6} md={4}>
+                                                    <TextField
+                                                        name="websiteUrl"
+                                                        fullWidth
+                                                        label="Website"
+                                                        value={formData.websiteUrl}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                        InputProps={{ startAdornment: <InputAdornment position="start"><HomeIcon fontSize="small" /></InputAdornment> }}
+                                                    />
+                                                </Grid>
+                                                <Grid item xs={12} sm={6} md={4}>
+                                                    <TextField
+                                                        name="whatsappBusinessUrl"
+                                                        fullWidth
+                                                        label="WhatsApp Business"
+                                                        value={formData.whatsappBusinessUrl}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                        InputProps={{ startAdornment: <InputAdornment position="start"><WhatsAppIcon fontSize="small" /></InputAdornment> }}
+                                                    />
+                                                </Grid>
+                                                <Grid item xs={12} sm={6} md={4}>
+                                                    <TextField
+                                                        name="videoUrl"
+                                                        fullWidth
+                                                        label="Tanıtım Videosu"
+                                                        value={formData.videoUrl}
+                                                        onChange={onChange}
+                                                        disabled={formLoading}
+                                                        placeholder="https://www.youtube.com/watch?v=..."
+                                                        InputProps={{ startAdornment: <InputAdornment position="start"><PlayArrowIcon fontSize="small" /></InputAdornment> }}
+                                                    />
+                                                </Grid>
+                                            </Grid>
+                                        </Box>
+                                    </AccordionDetails>
+                                </Accordion>
+
+                                {/* Dökümanlar */}
+                                <Accordion expanded={expanded === 'documents'} onChange={handleChange('documents')}>
+                                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                        <Typography variant="h6">Dökümanlar</Typography>
+                                    </AccordionSummary>
+                                    <AccordionDetails>
+                                        <Box sx={{ mb: 3 }}>
+                                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                                Dökümanlarınızı yükleyin (PDF, Word, Excel, vb.)
+                                            </Typography>
+                                            <Button
+                                                variant="outlined"
+                                                startIcon={<AddIcon />}
+                                                onClick={() => {
+                                                    // Döküman ekleme işlemi
+                                                    const input = document.createElement('input');
+                                                    input.type = 'file';
+                                                    input.accept = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt';
+                                                    input.onchange = (e) => {
+                                                        const file = e.target.files[0];
+                                                        if (file) {
+                                                            const newDocument = {
+                                                                name: file.name,
+                                                                file: file,
+                                                                description: ''
+                                                            };
+                                                            setFormData(prev => ({
+                                                                ...prev,
+                                                                documents: [...prev.documents, newDocument]
+                                                            }));
+                                                        }
+                                                    };
+                                                    input.click();
+                                                }}
+                                                sx={{ mb: 2 }}
+                                            >
+                                                Döküman Ekle
+                                            </Button>
+                                            
+                                            {formData.documents && formData.documents.length > 0 && (
+                                                <List>
+                                                    {formData.documents.map((document, index) => (
+                                                        <ListItem key={index} sx={{ border: '1px solid #e0e0e0', borderRadius: 1, mb: 1 }}>
+                                                            <ListItemIcon>
+                                                                <BusinessIcon />
+                                                            </ListItemIcon>
+                                                            <ListItemText
+                                                                primary={document.name}
+                                                                secondary={document.description}
+                                                            />
+                                                            <ListItemSecondaryAction>
+                                                                <IconButton 
+                                                                    onClick={() => {
+                                                                        const newDocuments = formData.documents.filter((_, i) => i !== index);
+                                                                        setFormData(prev => ({ ...prev, documents: newDocuments }));
+                                                                    }}
+                                                                    color="error"
+                                                                >
+                                                                    <DeleteIcon />
+                                                                </IconButton>
+                                                            </ListItemSecondaryAction>
+                                                        </ListItem>
+                                                    ))}
+                                                </List>
+                                            )}
+                                        </Box>
+                                    </AccordionDetails>
+                                </Accordion>
+                                        </Stack>
+                                    </Paper>
+                                </Stack>
+                            </Grid>
+                            <Grid item xs={12} md={4}>
+                                <Stack spacing={3} sx={{ position: { md: 'sticky' }, top: { md: 24 } }}>
+                                    <Paper sx={{ p: 3, borderRadius: 2, border: '1px solid', borderColor: 'divider', backgroundColor: 'background.paper' }}>
+                                        <Stack spacing={3}>
+                                            <Box>
+                                                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                                    Görsel Yönetimi
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    Profil ve kapak görsellerinizi güncelleyin.
+                                                </Typography>
+                                            </Box>
+                                            <Stack spacing={2}>
+                                                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2 }}>
+                                                    <Avatar src={profilePreview || '/placeholder-avatar.png'} sx={{ width: 80, height: 80 }} />
+                                                    <Box sx={{ flex: 1 }}>
+                                                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                                                            Profil Fotoğrafı
+                                                        </Typography>
+                                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                                            Kare formatta görseller en iyi sonucu verir.
+                                                        </Typography>
+                                                        <Button variant="outlined" onClick={() => profileInputRef.current?.click()} disabled={formLoading} size="small">
+                                                            {formData.profileImageUrl || profilePreview ? 'Değiştir' : 'Yükle'}
+                                                        </Button>
+                                                        <input type="file" name="profileImage" ref={profileInputRef} onChange={onChange} style={{ display: 'none' }} accept="image/*" />
+                                                    </Box>
+                                                </Box>
+                                                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2 }}>
+                                                    <Box sx={{ flexShrink: 0, width: { xs: '100%', sm: 180 }, borderRadius: 1, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
+                                                        <CardMedia component="img" image={coverPreview || '/placeholder-cover.png'} alt="Kapak" sx={{ width: '100%', height: 120, objectFit: 'cover' }} />
+                                                    </Box>
+                                                    <Box sx={{ flex: 1 }}>
+                                                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                                                            Kapak Fotoğrafı
+                                                        </Typography>
+                                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                                            Geniş formatta ve yüksek çözünürlüklü görseller seçin.
+                                                        </Typography>
+                                                        <Button variant="outlined" onClick={() => coverInputRef.current?.click()} disabled={formLoading} size="small">
+                                                            {formData.coverImageUrl || coverPreview ? 'Değiştir' : 'Yükle'}
+                                                        </Button>
+                                                        <input type="file" name="coverImage" ref={coverInputRef} onChange={onChange} style={{ display: 'none' }} accept="image/*" />
+                                                    </Box>
+                                                </Box>
+                                            </Stack>
+                                        </Stack>
+                                    </Paper>
+                                    <Paper sx={{ p: 3, borderRadius: 2, border: '1px solid', borderColor: 'divider', backgroundColor: 'background.paper' }}>
+                                        <Stack spacing={2}>
+                                            <Box>
+                                                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                                    Tema ve Önizleme
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    Temayı seçin ve kartvizitinizin canlı önizlemesini görün.
+                                                </Typography>
+                                            </Box>
+                                            <FormControl fullWidth disabled={formLoading}>
+                                                <InputLabel id="theme-select-label">Kartvizit Teması</InputLabel>
+                                                <Select
+                                                    labelId="theme-select-label"
+                                                    id="theme-select"
+                                                    value={formData.theme}
+                                                    label="Kartvizit Teması"
+                                                    name="theme"
+                                                    onChange={onChange}
+                                                >
+                                                    <MenuItem value="light">Varsayılan (Açık)</MenuItem>
+                                                    <MenuItem value="modern">Modern</MenuItem>
+                                                    <MenuItem value="icongrid">İkon Grid</MenuItem>
+                                                    <MenuItem value="business">İş</MenuItem>
+                                    <MenuItem value="creative">Yaratıcı</MenuItem>
+                                    <MenuItem value="carousel">3D Carousel (Dönen İkonlar)</MenuItem>
+                                    <MenuItem value="ovalcarousel">Oval Carousel</MenuItem>
+                                    <MenuItem value="dark">Koyu</MenuItem>
+                                </Select>
+                            </FormControl>
+                                            <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, overflow: 'hidden', backgroundColor: 'background.default' }}>
+                                                <ThemePreview formData={formData} />
+                                            </Box>
+                                        </Stack>
+                                    </Paper>
+                                    <Paper sx={{ p: 3, borderRadius: 2, border: '1px solid', borderColor: 'divider', backgroundColor: 'background.paper' }}>
+                                        <Stack spacing={2}>
+                                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                                İşlemler
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                Değişiklikleri kaydedebilir veya iptal ederek kart listesine dönebilirsiniz.
+                                            </Typography>
+                                            <Stack spacing={1.5}>
+                                                <Button type="submit" fullWidth variant="contained" size="large" disabled={formLoading}>
+                                                    {formLoading ? <CircularProgress size={24} /> : 'Değişiklikleri Kaydet'}
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    disabled={formLoading}
+                                                    onClick={() => navigate('/cards')}
+                                                >
+                                                    İptal Et
+                                                </Button>
+                                            </Stack>
+                                        </Stack>
+                                    </Paper>
+                                </Stack>
+                            </Grid>
+                        </Grid>
+                    </Box>
+                )}
+
+                {/* Tab 1: Banka Hesapları */}
+                {tabValue === 1 && (
+                    <Box sx={{ mt: 1 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                            <Box>
+                                <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                                    Banka Hesapları
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    Kartınızda görünecek banka hesap bilgilerinizi yönetin
+                                </Typography>
+                            </Box>
+                            <Button
+                                variant="contained"
+                                startIcon={<AddIcon />}
+                                onClick={() => handleBankDialogOpen()}
+                                disabled={bankAccountsLoading}
+                                sx={{ fontWeight: 500 }}
+                            >
+                                Hesap Ekle
+                            </Button>
+                        </Box>
+
+                        {bankAccountsLoading ? (
+                            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                                <CircularProgress />
+                            </Box>
+                        ) : bankAccounts.length === 0 ? (
+                            <Paper sx={{ 
+                              p: 4, 
+                              textAlign: 'center', 
+                              border: '2px dashed', 
+                              borderColor: 'divider',
+                              backgroundColor: 'background.paper'
+                            }}>
+                                <AccountBalanceIcon sx={{ fontSize: 48, color: 'grey.400', mb: 2 }} />
+                                <Typography variant="h6" sx={{ mb: 1, fontWeight: 600, color: 'text.primary' }}>
+                                    Henüz banka hesabı eklenmemiş
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                    Kartvizitinizde gösterilecek banka hesap bilgilerini ekleyebilirsiniz
+                                </Typography>
+                                <Button
+                                    variant="outlined"
+                                    startIcon={<AddIcon />}
+                                    onClick={() => handleBankDialogOpen()}
+                                    sx={{ fontWeight: 500 }}
+                                >
+                                    İlk Hesabı Ekle
+                                </Button>
+                            </Paper>
+                        ) : (
+                            <List sx={{ '& .MuiListItem-root': { px: 0 } }}>
+                                {bankAccounts.map((account) => (
+                                    <ListItem 
+                                        key={account.id} 
+                                        sx={{ 
+                                            p: 3, 
+                                            mb: 2, 
+                                            border: '1px solid', 
+                                            borderColor: 'divider',
+                                            borderRadius: 2,
+                                            backgroundColor: 'background.paper',
+                                            '&:hover': {
+                                                borderColor: 'primary.main',
+                                                boxShadow: 1
+                                            }
+                                        }}
+                                    >
+                                        <ListItemText
+                                            primary={
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                                    <AccountBalanceIcon color="primary" />
+                                                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                                                        {account.bankName}
+                                                    </Typography>
+                                                </Box>
+                                            }
+                                            secondary={
+                                                <Box>
+                                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                                                        <strong>IBAN:</strong> {formatIban(account.iban)}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        <strong>Hesap Sahibi:</strong> {account.accountName}
+                                                    </Typography>
+                                                </Box>
+                                            }
+                                        />
+                                        <ListItemSecondaryAction>
+                                            <IconButton
+                                                edge="end"
+                                                aria-label="düzenle"
+                                                onClick={() => handleBankDialogOpen(account)}
+                                                sx={{ mr: 1, color: 'primary.main' }}
+                                            >
+                                                <EditIcon />
+                                            </IconButton>
+                                            <IconButton
+                                                edge="end"
+                                                aria-label="sil"
+                                                onClick={() => handleBankDelete(account.id)}
+                                                color="error"
+                                            >
+                                                <DeleteIcon />
+                                            </IconButton>
+                                        </ListItemSecondaryAction>
+                                    </ListItem>
+                                ))}
+                            </List>
+                        )}
+                    </Box>
+                )}
+
+                {/* Banka Hesabı Ekleme/Düzenleme Modalı */}
+                <Dialog open={bankDialogOpen} onClose={handleBankDialogClose} maxWidth="sm" fullWidth>
+                    <DialogTitle sx={{ pb: 1 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                            {editingBankAccount ? 'Banka Hesabını Düzenle' : 'Yeni Banka Hesabı Ekle'}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            {editingBankAccount ? 'Banka hesap bilgilerini güncelleyin' : 'Kartınızda görünecek banka hesap bilgilerini ekleyin'}
+                        </Typography>
+                    </DialogTitle>
+                    <DialogContent>
+                        <Grid container spacing={2} sx={{ mt: 1 }}>
+                            <Grid item xs={12}>
+                                <FormControl fullWidth>
+                                    <InputLabel>Banka</InputLabel>
+                                    <Select
+                                        name="bankName"
+                                        value={bankFormData.bankName}
+                                        onChange={handleBankFormChange}
+                                        label="Banka"
+                                        disabled={bankFormLoading}
+                                    >
+                                        {TURKISH_BANKS.map((bank) => (
+                                            <MenuItem key={bank.name} value={bank.name}>
+                                                {bank.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField
+                                    name="iban"
+                                    label="IBAN"
+                                    value={bankFormData.iban}
+                                    onChange={handleBankFormChange}
+                                    fullWidth
+                                    placeholder="TR00 0000 0000 0000 0000 0000 00"
+                                    disabled={bankFormLoading}
+                                    helperText="IBAN numaranızı boşluklarla veya boşluksuz girebilirsiniz"
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField
+                                    name="accountName"
+                                    label="Hesap Sahibi Adı"
+                                    value={bankFormData.accountName}
+                                    onChange={handleBankFormChange}
+                                    fullWidth
+                                    disabled={bankFormLoading}
+                                />
+                            </Grid>
+                        </Grid>
+                    </DialogContent>
+                    <DialogActions sx={{ p: 3, pt: 1 }}>
+                        <Button 
+                            onClick={handleBankDialogClose} 
+                            disabled={bankFormLoading}
+                            sx={{ fontWeight: 500 }}
+                        >
+                            İptal
+                        </Button>
+                        <Button 
+                            onClick={handleBankSave} 
+                            variant="contained" 
+                            disabled={bankFormLoading}
+                            sx={{ fontWeight: 500 }}
+                        >
+                            {bankFormLoading ? <CircularProgress size={20} /> : 'Kaydet'}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+             </Paper>
+            </Container>
+        </Box>
+    );
+}
+
+export default EditCardPage; 

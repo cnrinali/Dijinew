@@ -120,29 +120,14 @@ function CorporateLayout({ children }) {
           gap: 1.5,
           cursor: 'pointer'
         }}>
-          <Box
-            sx={{
-              p: 1,
-              borderRadius: 1.5,
-              backgroundColor: 'primary.main',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <BusinessIcon sx={{ fontSize: 20, color: 'white' }} />
-          </Box>
-          <Typography
-            variant="h6"
-            sx={{
-              fontWeight: 700,
-              fontSize: '1.1rem',
-              color: 'text.primary',
-              letterSpacing: '-0.01em'
-            }}
-          >
-            Dijinew
-          </Typography>
+          <img 
+            src={theme.palette.mode === 'dark' ? "/img/dijinew_logo_light.png" : "/img/dijinew_logo_dark.png"} 
+            alt="Dijinew Logo" 
+            style={{ 
+              height: '40px', 
+              width: 'auto'
+            }} 
+          />
         </Box>
       </Box>
 

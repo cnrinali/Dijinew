@@ -109,17 +109,14 @@ function UserLayout({ children }) {
                     minHeight: 64
                 }}
             >
-                <BusinessIcon sx={{ color: 'primary.main', fontSize: 20 }} />
-                <Typography
-                    variant="h6"
-                    sx={{
-                        fontWeight: 700,
-                        fontSize: '1.1rem',
-                        color: 'text.primary'
-                    }}
-                >
-                    Dijinew
-                </Typography>
+                <img 
+                    src={theme.palette.mode === 'dark' ? "/img/dijinew_logo_light.png" : "/img/dijinew_logo_dark.png"} 
+                    alt="Dijinew Logo" 
+                    style={{ 
+                        height: '40px', 
+                        width: 'auto'
+                    }} 
+                />
             </Box>
 
             {/* Navigation Menu */}

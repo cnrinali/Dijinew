@@ -102,18 +102,14 @@ function AdminLayout({ children }) {
       {/* Header */}
       <Box sx={{ p: 3, backgroundColor: 'primary.main', color: 'white' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-          <Box
-            sx={{
-              p: 1.5,
-              borderRadius: 2,
-              backgroundColor: 'rgba(255, 255, 255, 0.2)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <SettingsIcon sx={{ fontSize: 24 }} />
-          </Box>
+          <img 
+            src="/img/dijinew_logo_light.png" 
+            alt="Dijinew Logo" 
+            style={{ 
+              height: '32px', 
+              width: 'auto'
+            }} 
+          />
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.25rem' }}>
               Admin Panel

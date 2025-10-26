@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNotification } from '../context/NotificationContext.jsx';
+import { useTheme } from '../context/ThemeContext.jsx';
 
 // MUI Imports
 import {
@@ -30,6 +31,7 @@ function LoginPage() {
     const location = useLocation();
     const { login } = useAuth();
     const { showNotification } = useNotification();
+    const { isDarkMode } = useTheme();
 
     const { email, password } = formData;
 
@@ -83,25 +85,43 @@ function LoginPage() {
                 minHeight: '100vh',
                 display: 'flex',
                 alignItems: 'center',
-                bgcolor: '#f5f5f5'
+                background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                position: 'relative'
             }}
         >
             <Container maxWidth="xs">
                 <Paper
-                    elevation={3}
+                    elevation={8}
                     sx={{
                         p: 4,
-                        borderRadius: 2
+                        borderRadius: 3,
+                        backgroundColor: '#1a1a1a',
+                        border: '2px solid #FFD700',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
                     }}
                 >
                     {/* Header */}
                     <Box sx={{ textAlign: 'center', mb: 4 }}>
-                        <CardIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
-                        <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-                            Dijinew
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            Dijital Kartvizit Platformu
+                        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                            <img 
+                                src="/img/dijinew_logo_light.png" 
+                                alt="Dijinew Logo" 
+                                style={{ 
+                                    height: '60px', 
+                                    width: 'auto',
+                                    filter: 'brightness(0) invert(1)'
+                                }} 
+                            />
+                        </Box>
+                        <Typography 
+                            variant="body2" 
+                            sx={{ 
+                                color: '#FFD700',
+                                fontWeight: 500,
+                                fontSize: '1.1rem'
+                            }}
+                        >
+                            Dijinew Creative Agency
                         </Typography>
                     </Box>
 
@@ -119,6 +139,26 @@ function LoginPage() {
                                 value={email}
                                 onChange={onChange}
                                 disabled={loading}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        backgroundColor: '#2a2a2a',
+                                        '& fieldset': {
+                                            borderColor: '#FFD700',
+                                        },
+                                        '&:hover fieldset': {
+                                            borderColor: '#FFA500',
+                                        },
+                                        '&.Mui-focused fieldset': {
+                                            borderColor: '#FFD700',
+                                        },
+                                    },
+                                    '& .MuiInputLabel-root': {
+                                        color: '#FFD700',
+                                    },
+                                    '& .MuiInputBase-input': {
+                                        color: '#ffffff',
+                                    }
+                                }}
                             />
                             <TextField
                                 required
@@ -131,6 +171,26 @@ function LoginPage() {
                                 value={password}
                                 onChange={onChange}
                                 disabled={loading}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        backgroundColor: '#2a2a2a',
+                                        '& fieldset': {
+                                            borderColor: '#FFD700',
+                                        },
+                                        '&:hover fieldset': {
+                                            borderColor: '#FFA500',
+                                        },
+                                        '&.Mui-focused fieldset': {
+                                            borderColor: '#FFD700',
+                                        },
+                                    },
+                                    '& .MuiInputLabel-root': {
+                                        color: '#FFD700',
+                                    },
+                                    '& .MuiInputBase-input': {
+                                        color: '#ffffff',
+                                    }
+                                }}
                             />
                             
                             <Button
@@ -140,7 +200,23 @@ function LoginPage() {
                                 size="large"
                                 disabled={loading}
                                 startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <LoginIcon />}
-                                sx={{ mt: 2, py: 1.5 }}
+                                sx={{ 
+                                    mt: 2, 
+                                    py: 1.5,
+                                    backgroundColor: '#FFD700',
+                                    color: '#1a1a1a',
+                                    fontWeight: 'bold',
+                                    fontSize: '1.1rem',
+                                    '&:hover': {
+                                        backgroundColor: '#FFA500',
+                                        transform: 'translateY(-2px)',
+                                        boxShadow: '0 4px 12px rgba(255, 215, 0, 0.4)'
+                                    },
+                                    '&:active': {
+                                        transform: 'translateY(0px)'
+                                    },
+                                    transition: 'all 0.3s ease'
+                                }}
                             >
                                 {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
                             </Button>
@@ -150,6 +226,15 @@ function LoginPage() {
                                     component={RouterLink}
                                     to="/forgot-password"
                                     variant="body2"
+                                    sx={{
+                                        color: '#FFD700',
+                                        textDecoration: 'none',
+                                        fontWeight: 500,
+                                        '&:hover': {
+                                            color: '#FFA500',
+                                            textDecoration: 'underline'
+                                        }
+                                    }}
                                 >
                                     Şifremi Unuttum
                                 </Link>

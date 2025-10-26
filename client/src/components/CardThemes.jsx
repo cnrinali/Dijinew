@@ -10,6 +10,7 @@ import {
     ListItem,
     ListItemIcon,
     ListItemText,
+    ListItemSecondaryAction,
     Divider,
     Link,
     IconButton,
@@ -23,7 +24,8 @@ import {
     Button,
     Snackbar,
     Alert,
-    Grid
+    Grid,
+    CircularProgress
 } from '@mui/material';
 import analyticsService, { trackClick } from '../services/analyticsService';
 import { QRCodeSVG } from 'qrcode.react';
@@ -38,16 +40,30 @@ import InfoIcon from '@mui/icons-material/Info';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import InstagramIcon from '@mui/icons-material/Instagram';
+// Yeni sosyal medya icon'ları
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import FacebookIcon from '@mui/icons-material/Facebook';
+import TelegramIcon from '@mui/icons-material/Telegram';
+import YouTubeIcon from '@mui/icons-material/YouTube';
+import VideoCallIcon from '@mui/icons-material/VideoCall';
+import ChatIcon from '@mui/icons-material/Chat';
+import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import ShareIcon from '@mui/icons-material/Share';
+import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import StorefrontIcon from '@mui/icons-material/Storefront';
+import StoreIcon from '@mui/icons-material/Store';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import LocalFloristIcon from '@mui/icons-material/LocalFlorist';
 import HomeIcon from '@mui/icons-material/Home';
 import DeliveryDiningIcon from '@mui/icons-material/DeliveryDining';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 import QrCodeIcon from '@mui/icons-material/QrCode';
-import ShareIcon from '@mui/icons-material/Share';
 import CloseIcon from '@mui/icons-material/Close';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import DescriptionIcon from '@mui/icons-material/Description';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import DownloadIcon from '@mui/icons-material/Download';
 import { formatIban, getBankLogo } from '../constants/turkishBanks';
 
 // Pazaryeri ikonları ve isimleri
@@ -87,6 +103,7 @@ const getMarketplaceName = (marketplace) => {
 const useCardActions = (cardData) => {
     const [qrModalOpen, setQrModalOpen] = useState(false);
     const [shareSnackbarOpen, setShareSnackbarOpen] = useState(false);
+    const [videoModalOpen, setVideoModalOpen] = useState(false);
 
     const cardUrl = `${window.location.origin}/card/${cardData?.customSlug || cardData?.id}`;
 
@@ -160,18 +177,101 @@ const useCardActions = (cardData) => {
         </Snackbar>
     );
 
+    const handleVideoClick = () => {
+        if (cardData?.videoUrl) {
+            setVideoModalOpen(true);
+        }
+    };
+
+    const VideoModal = () => {
+        const getEmbedUrl = (url) => {
+            if (!url || typeof url !== 'string') {
+                return '';
+            }
+            
+            if (url.includes('youtube.com/watch')) {
+                const videoId = url.split('v=')[1]?.split('&')[0];
+                return `https://www.youtube.com/embed/${videoId}`;
+            } else if (url.includes('youtu.be/')) {
+                const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+                return `https://www.youtube.com/embed/${videoId}`;
+            } else if (url.includes('vimeo.com/')) {
+                const videoId = url.split('vimeo.com/')[1]?.split('?')[0];
+                return `https://player.vimeo.com/video/${videoId}`;
+            }
+            return url;
+        };
+
+        return (
+            <Dialog 
+                open={videoModalOpen} 
+                onClose={() => setVideoModalOpen(false)} 
+                maxWidth="md" 
+                fullWidth
+                PaperProps={{
+                    sx: { borderRadius: 2 }
+                }}
+            >
+                <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    Tanıtım Videosu
+                    <IconButton onClick={() => setVideoModalOpen(false)} size="small">
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent sx={{ p: 0 }}>
+                    <Box sx={{ position: 'relative', width: '100%', height: '400px' }}>
+                        {cardData?.videoUrl ? (
+                            <iframe
+                                src={getEmbedUrl(cardData.videoUrl)}
+                                width="100%"
+                                height="100%"
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                style={{ borderRadius: '8px' }}
+                            />
+                        ) : (
+                            <Box sx={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center', 
+                                height: '100%',
+                                backgroundColor: '#f5f5f5',
+                                color: '#666'
+                            }}>
+                                <Typography variant="body1">
+                                    Video URL bulunamadı
+                                </Typography>
+                            </Box>
+                        )}
+                    </Box>
+                </DialogContent>
+                <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
+                    <Button variant="outlined" onClick={() => setVideoModalOpen(false)}>
+                        Kapat
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        );
+    };
+
     return {
         handleQrClick,
         handleShareClick,
+        handleVideoClick,
         QrModal,
         ShareSnackbar,
+        VideoModal,
         cardUrl
     };
 };
 
 // Default tema (şu anki)
 export const DefaultTheme = ({ cardData }) => {
-    const { handleQrClick, handleShareClick, QrModal, ShareSnackbar } = useCardActions(cardData);
+    const { handleQrClick, handleShareClick, handleVideoClick, QrModal, ShareSnackbar, VideoModal } = useCardActions(cardData);
+    
+    // Döküman modal state'i
+    const [documentsModalOpen, setDocumentsModalOpen] = useState(false);
 
     // Kart görüntülenmesini kaydet
     useEffect(() => {
@@ -190,6 +290,7 @@ export const DefaultTheme = ({ cardData }) => {
             console.log(`DefaultTheme - cardData.id bulunamadı:`, cardData);
         }
     };
+
 
     return (
         <Card sx={{ maxWidth: 500, width: '100%', mt: 2 }}>
@@ -346,7 +447,8 @@ export const DefaultTheme = ({ cardData }) => {
             {/* Pazaryeri Linkleri */}
             {(cardData.trendyolUrl || cardData.hepsiburadaUrl || cardData.ciceksepeti || cardData.sahibindenUrl || 
               cardData.hepsiemlakUrl || cardData.gittigidiyorUrl || cardData.n11Url || cardData.amazonTrUrl || 
-              cardData.getirUrl || cardData.yemeksepetiUrl) && (
+              cardData.getirUrl || cardData.yemeksepetiUrl || cardData.arabamUrl || cardData.letgoUrl || 
+              cardData.pttAvmUrl || cardData.ciceksepetiUrl || cardData.websiteUrl || cardData.whatsappBusinessUrl) && (
                 <>
                     <Divider />
                     <CardContent sx={{ pt: 1, pb: 1 }}>
@@ -462,12 +564,51 @@ export const DefaultTheme = ({ cardData }) => {
                                     <ListItemText primary={getMarketplaceName('yemeksepeti')} />
                                 </ListItem>
                             )}
+                            {cardData.arabamUrl && (
+                                <ListItem component={Link} href={cardData.arabamUrl} target="_blank" rel="noopener noreferrer">
+                                    <ListItemIcon><BusinessIcon /></ListItemIcon>
+                                    <ListItemText primary="Arabam" />
+                                </ListItem>
+                            )}
+                            {cardData.letgoUrl && (
+                                <ListItem component={Link} href={cardData.letgoUrl} target="_blank" rel="noopener noreferrer">
+                                    <ListItemIcon><StoreIcon /></ListItemIcon>
+                                    <ListItemText primary="Letgo" />
+                                </ListItem>
+                            )}
+                            {cardData.pttAvmUrl && (
+                                <ListItem component={Link} href={cardData.pttAvmUrl} target="_blank" rel="noopener noreferrer">
+                                    <ListItemIcon><StoreIcon /></ListItemIcon>
+                                    <ListItemText primary="PTT AVM" />
+                                </ListItem>
+                            )}
+                            {cardData.ciceksepetiUrl && (
+                                <ListItem component={Link} href={cardData.ciceksepetiUrl} target="_blank" rel="noopener noreferrer">
+                                    <ListItemIcon><LocalFloristIcon /></ListItemIcon>
+                                    <ListItemText primary="Çiçek Sepeti" />
+                                </ListItem>
+                            )}
+                            {cardData.websiteUrl && (
+                                <ListItem component={Link} href={cardData.websiteUrl} target="_blank" rel="noopener noreferrer">
+                                    <ListItemIcon><LanguageIcon /></ListItemIcon>
+                                    <ListItemText primary="Web Sitesi" />
+                                </ListItem>
+                            )}
+                            {cardData.whatsappBusinessUrl && (
+                                <ListItem component={Link} href={cardData.whatsappBusinessUrl} target="_blank" rel="noopener noreferrer">
+                                    <ListItemIcon><WhatsAppIcon /></ListItemIcon>
+                                    <ListItemText primary="WhatsApp Business" />
+                                </ListItem>
+                            )}
                         </List>
                     </CardContent>
                 </>
             )}
 
-            {(cardData.linkedinUrl || cardData.twitterUrl || cardData.instagramUrl) && (
+            {(cardData.linkedinUrl || cardData.twitterUrl || cardData.instagramUrl || 
+              cardData.whatsappUrl || cardData.facebookUrl || cardData.telegramUrl || 
+              cardData.youtubeUrl || cardData.skypeUrl || cardData.wechatUrl || 
+              cardData.snapchatUrl || cardData.pinterestUrl || cardData.tiktokUrl) && (
                 <>
                     <Divider variant="middle" />
                     <CardContent sx={{ py: 1, textAlign: 'center' }}>
@@ -511,6 +652,123 @@ export const DefaultTheme = ({ cardData }) => {
                                     <InstagramIcon />
                                 </IconButton>
                             )}
+                            {cardData.whatsappUrl && (
+                                <IconButton 
+                                    component="a" 
+                                    href={cardData.whatsappUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    aria-label="WhatsApp" 
+                                    sx={{ color: '#25D366' }}
+                                    onClick={() => handleLinkClick('whatsapp')}
+                                >
+                                    <WhatsAppIcon />
+                                </IconButton>
+                            )}
+                            {cardData.facebookUrl && (
+                                <IconButton 
+                                    component="a" 
+                                    href={cardData.facebookUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    aria-label="Facebook" 
+                                    sx={{ color: '#1877F2' }}
+                                    onClick={() => handleLinkClick('facebook')}
+                                >
+                                    <FacebookIcon />
+                                </IconButton>
+                            )}
+                            {cardData.telegramUrl && (
+                                <IconButton 
+                                    component="a" 
+                                    href={cardData.telegramUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    aria-label="Telegram" 
+                                    sx={{ color: '#0088CC' }}
+                                    onClick={() => handleLinkClick('telegram')}
+                                >
+                                    <TelegramIcon />
+                                </IconButton>
+                            )}
+                            {cardData.youtubeUrl && (
+                                <IconButton 
+                                    component="a" 
+                                    href={cardData.youtubeUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    aria-label="YouTube" 
+                                    sx={{ color: '#FF0000' }}
+                                    onClick={() => handleLinkClick('youtube')}
+                                >
+                                    <YouTubeIcon />
+                                </IconButton>
+                            )}
+                            {cardData.skypeUrl && (
+                                <IconButton 
+                                    component="a" 
+                                    href={cardData.skypeUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    aria-label="Skype" 
+                                    sx={{ color: '#00AFF0' }}
+                                    onClick={() => handleLinkClick('skype')}
+                                >
+                                    <VideoCallIcon />
+                                </IconButton>
+                            )}
+                            {cardData.wechatUrl && (
+                                <IconButton 
+                                    component="a" 
+                                    href={cardData.wechatUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    aria-label="WeChat" 
+                                    sx={{ color: '#07C160' }}
+                                    onClick={() => handleLinkClick('wechat')}
+                                >
+                                    <ChatIcon />
+                                </IconButton>
+                            )}
+                            {cardData.snapchatUrl && (
+                                <IconButton 
+                                    component="a" 
+                                    href={cardData.snapchatUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    aria-label="Snapchat" 
+                                    sx={{ color: '#FFFC00' }}
+                                    onClick={() => handleLinkClick('snapchat')}
+                                >
+                                    <CameraAltIcon />
+                                </IconButton>
+                            )}
+                            {cardData.pinterestUrl && (
+                                <IconButton 
+                                    component="a" 
+                                    href={cardData.pinterestUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    aria-label="Pinterest" 
+                                    sx={{ color: '#E60023' }}
+                                    onClick={() => handleLinkClick('pinterest')}
+                                >
+                                    <ShareIcon />
+                                </IconButton>
+                            )}
+                            {cardData.tiktokUrl && (
+                                <IconButton 
+                                    component="a" 
+                                    href={cardData.tiktokUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    aria-label="TikTok" 
+                                    sx={{ color: '#000000' }}
+                                    onClick={() => handleLinkClick('tiktok')}
+                                >
+                                    <MusicNoteIcon />
+                                </IconButton>
+                            )}
                         </Stack>
                     </CardContent>
                 </>
@@ -545,7 +803,46 @@ export const DefaultTheme = ({ cardData }) => {
                     >
                         <ShareIcon />
                     </IconButton>
+                    {cardData?.videoUrl && (
+                        <IconButton
+                            onClick={handleVideoClick}
+                            sx={{
+                                backgroundColor: 'error.main',
+                                color: 'white',
+                                '&:hover': {
+                                    backgroundColor: 'error.dark',
+                                },
+                            }}
+                        >
+                            <PlayArrowIcon />
+                        </IconButton>
+                    )}
                 </Stack>
+                
+                {/* Dökümanlar - Tek İkon */}
+                {cardData.documents && Array.isArray(cardData.documents) && cardData.documents.length > 0 && (
+                    <Box sx={{ mt: 2, textAlign: 'center' }}>
+                        <IconButton
+                            onClick={() => setDocumentsModalOpen(true)}
+                            sx={{
+                                backgroundColor: '#d32f2f',
+                                color: 'white',
+                                '&:hover': {
+                                    backgroundColor: '#b71c1c',
+                                    transform: 'scale(1.05)'
+                                },
+                                transition: 'all 0.3s ease',
+                                boxShadow: '0 4px 12px rgba(211, 47, 47, 0.3)'
+                            }}
+                        >
+                            <DescriptionIcon sx={{ fontSize: 28 }} />
+                        </IconButton>
+                        <Typography variant="caption" sx={{ display: 'block', mt: 1, color: 'text.secondary' }}>
+                            {cardData.documents.length} Döküman
+                        </Typography>
+                    </Box>
+                )}
+                
                 <Typography variant="caption" color="text.secondary">
                     {cardData.cardName}
                 </Typography>
@@ -553,6 +850,101 @@ export const DefaultTheme = ({ cardData }) => {
             
             <QrModal />
             <ShareSnackbar />
+            <VideoModal />
+            
+            {/* Dökümanlar Modal */}
+            <Dialog 
+                open={documentsModalOpen} 
+                onClose={() => setDocumentsModalOpen(false)}
+                maxWidth="sm"
+                fullWidth
+                aria-labelledby="documents-modal-title"
+                aria-describedby="documents-modal-description"
+            >
+                <DialogTitle id="documents-modal-title" sx={{ textAlign: 'center', pb: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                        <DescriptionIcon sx={{ color: '#1976d2' }} />
+                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            Dökümanlar ({cardData.documents?.length || 0})
+                        </Typography>
+                    </Box>
+                </DialogTitle>
+                <DialogContent id="documents-modal-description">
+                    <List>
+                        {cardData.documents?.map((document, index) => {
+                            return (
+                            <ListItem 
+                                key={index}
+                                onClick={() => {
+                                    try {
+                                        // PDF'i yeni sekmede aç
+                                        if (document.url) {
+                                            console.log('Döküman URL açılıyor:', document.url);
+                                            window.open(document.url, '_blank');
+                                        } else {
+                                            console.warn('Döküman URL\'i bulunamadı:', document);
+                                            alert(`"${document.name}" dökümanı için URL bulunamadı. Lütfen dökümanı tekrar ekleyin.`);
+                                        }
+                                    } catch (error) {
+                                        console.error('PDF açma hatası:', error);
+                                        alert('PDF açılamadı. Lütfen URL\'yi kontrol edin.');
+                                    }
+                                    setDocumentsModalOpen(false);
+                                }}
+                                sx={{
+                                    borderRadius: 2,
+                                    mb: 1,
+                                    cursor: 'pointer',
+                                    '&:hover': {
+                                        backgroundColor: '#f5f5f5'
+                                    }
+                                }}
+                            >
+                                <ListItemIcon>
+                                    <DescriptionIcon sx={{ color: '#d32f2f' }} />
+                                </ListItemIcon>
+                                <ListItemText 
+                                    primary={document.name}
+                                    secondary={document.type || 'Döküman'}
+                                />
+                                <ListItemSecondaryAction>
+                                    <IconButton 
+                                        edge="end" 
+                                        size="small"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            try {
+                                                // PDF'i indir
+                                                if (document.url) {
+                                                    const a = document.createElement('a');
+                                                    a.href = document.url;
+                                                    a.download = document.name;
+                                                    a.click();
+                                                } else {
+                                                    console.warn('İndirilecek URL bulunamadı:', document);
+                                                    alert(`"${document.name}" dökümanı için URL bulunamadı. Lütfen dökümanı tekrar ekleyin.`);
+                                                }
+                                            } catch (error) {
+                                                console.error('PDF indirme hatası:', error);
+                                                alert('PDF indirilemedi. Lütfen URL\'yi kontrol edin.');
+                                            }
+                                        }}
+                                    >
+                                        <DownloadIcon />
+                                    </IconButton>
+                                </ListItemSecondaryAction>
+                            </ListItem>
+                            );
+                        })}
+                    </List>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDocumentsModalOpen(false)}>
+                        Kapat
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            
         </Card>
     );
 };
@@ -685,7 +1077,10 @@ export const ModernTheme = ({ cardData }) => {
                         </>
                     )}
 
-                    {(cardData.linkedinUrl || cardData.twitterUrl || cardData.instagramUrl) && (
+                    {(cardData.linkedinUrl || cardData.twitterUrl || cardData.instagramUrl || 
+              cardData.whatsappUrl || cardData.facebookUrl || cardData.telegramUrl || 
+              cardData.youtubeUrl || cardData.skypeUrl || cardData.wechatUrl || 
+              cardData.snapchatUrl || cardData.pinterestUrl || cardData.tiktokUrl) && (
                         <>
                             <Divider sx={{ my: 2 }} />
                             <Stack direction="row" spacing={1} justifyContent="center">
@@ -704,6 +1099,47 @@ export const ModernTheme = ({ cardData }) => {
                                         <InstagramIcon />
                                     </IconButton>
                                 )}
+                            </Stack>
+                        </>
+                    )}
+                    
+                    {/* Dökümanlar */}
+                    {cardData.documents && Array.isArray(cardData.documents) && cardData.documents.length > 0 && (
+                        <>
+                            <Divider sx={{ my: 2 }} />
+                            <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', color: 'primary.main', fontWeight: 'bold' }}>
+                                <DescriptionIcon sx={{ mr: 1 }} /> Dökümanlar
+                            </Typography>
+                            <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
+                                {cardData.documents.map((document, index) => (
+                                    <Box 
+                                        key={index}
+                                        sx={{ 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            gap: 1,
+                                            p: 1,
+                                            backgroundColor: '#f5f5f5',
+                                            borderRadius: 1,
+                                            border: '1px solid #e0e0e0',
+                                            cursor: 'pointer',
+                                            '&:hover': {
+                                                backgroundColor: '#e3f2fd',
+                                                borderColor: '#1976d2'
+                                            }
+                                        }}
+                                        onClick={() => {
+                                            if (document.url) {
+                                                window.open(document.url, '_blank');
+                                            }
+                                        }}
+                                    >
+                                        <DescriptionIcon sx={{ color: '#1976d2', fontSize: 20 }} />
+                                        <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.primary' }}>
+                                            {document.name}
+                                        </Typography>
+                                    </Box>
+                                ))}
                             </Stack>
                         </>
                     )}
@@ -890,7 +1326,10 @@ export const IconGridTheme = ({ cardData }) => {
                     )}
 
                     {/* Sosyal Medya Satırı */}
-                    {(cardData.linkedinUrl || cardData.twitterUrl || cardData.instagramUrl) && (
+                    {(cardData.linkedinUrl || cardData.twitterUrl || cardData.instagramUrl || 
+              cardData.whatsappUrl || cardData.facebookUrl || cardData.telegramUrl || 
+              cardData.youtubeUrl || cardData.skypeUrl || cardData.wechatUrl || 
+              cardData.snapchatUrl || cardData.pinterestUrl || cardData.tiktokUrl) && (
                         <Stack direction="row" spacing={1} justifyContent="space-around">
                             {cardData.linkedinUrl && (
                                 <Box 
@@ -934,6 +1373,45 @@ export const IconGridTheme = ({ cardData }) => {
                         </Stack>
                     )}
                 </Stack>
+
+                {/* Dökümanlar Satırı */}
+                {cardData.documents && Array.isArray(cardData.documents) && cardData.documents.length > 0 && (
+                    <Stack direction="row" spacing={1} justifyContent="flex-start" sx={{ flexWrap: 'wrap', gap: 1 }}>
+                        {console.log('[CardThemes] Rendering documents:', cardData.documents)}
+                        {cardData.documents.map((document, index) => (
+                            <Box 
+                                key={index}
+                                onClick={() => {
+                                    if (document.url) {
+                                        window.open(document.url, '_blank');
+                                    }
+                                }}
+                                sx={{ 
+                                    textAlign: 'center', 
+                                    cursor: 'pointer', 
+                                    p: 1, 
+                                    borderRadius: 2, 
+                                    backgroundColor: 'grey.50', 
+                                    minWidth: 120,
+                                    border: '1px solid',
+                                    borderColor: 'grey.200',
+                                    '&:hover': {
+                                        backgroundColor: 'grey.100',
+                                        borderColor: 'primary.main'
+                                    }
+                                }}
+                            >
+                                <DescriptionIcon sx={{ fontSize: 28, color: 'grey.main', mb: 0.5 }} />
+                                <Typography variant="caption" display="block" sx={{ fontWeight: 'bold' }}>
+                                    {document.name.length > 15 ? document.name.substring(0, 15) + '...' : document.name}
+                                </Typography>
+                                <Typography variant="caption" display="block" sx={{ fontSize: '0.7rem', color: 'text.secondary' }}>
+                                    DÖKÜMAN
+                                </Typography>
+                            </Box>
+                        ))}
+                    </Stack>
+                )}
 
                 {/* Alt Bilgi */}
                 <Box sx={{ textAlign: 'center', mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'grey.200' }}>
@@ -1028,6 +1506,47 @@ export const BusinessTheme = ({ cardData }) => {
                             </Box>
                         )}
 
+                        {/* Dökümanlar */}
+                        {cardData.documents && Array.isArray(cardData.documents) && cardData.documents.length > 0 && (
+                            <Box sx={{ mt: 2 }}>
+                                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600, color: 'text.primary' }}>
+                                    Dökümanlar
+                                </Typography>
+                                <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
+                                    {cardData.documents.map((document, index) => (
+                                        <Box 
+                                            key={index}
+                                            sx={{ 
+                                                display: 'flex', 
+                                                alignItems: 'center', 
+                                                gap: 1,
+                                                p: 1,
+                                                backgroundColor: '#f5f5f5',
+                                                borderRadius: 1,
+                                                border: '1px solid #e0e0e0',
+                                                cursor: 'pointer',
+                                                '&:hover': {
+                                                    backgroundColor: '#e3f2fd',
+                                                    borderColor: '#1976d2'
+                                                }
+                                            }}
+                                            onClick={() => {
+                                                // Döküman indirme veya görüntüleme
+                                                if (document.url) {
+                                                    window.open(document.url, '_blank');
+                                                }
+                                            }}
+                                        >
+                                            <DescriptionIcon sx={{ color: '#1976d2', fontSize: 20 }} />
+                                            <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.primary' }}>
+                                                {document.name}
+                                            </Typography>
+                                        </Box>
+                                    ))}
+                                </Stack>
+                            </Box>
+                        )}
+
                         {/* Banka Hesapları */}
                         {cardData.bankAccounts && cardData.bankAccounts.length > 0 && (
                             <>
@@ -1070,7 +1589,10 @@ export const BusinessTheme = ({ cardData }) => {
                         )}
                     </Stack>
 
-                    {(cardData.linkedinUrl || cardData.twitterUrl || cardData.instagramUrl) && (
+                    {(cardData.linkedinUrl || cardData.twitterUrl || cardData.instagramUrl || 
+              cardData.whatsappUrl || cardData.facebookUrl || cardData.telegramUrl || 
+              cardData.youtubeUrl || cardData.skypeUrl || cardData.wechatUrl || 
+              cardData.snapchatUrl || cardData.pinterestUrl || cardData.tiktokUrl) && (
                         <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid', borderColor: 'grey.200' }}>
                             <Stack direction="row" spacing={1} justifyContent="center">
                                 {cardData.linkedinUrl && (
@@ -1090,6 +1612,47 @@ export const BusinessTheme = ({ cardData }) => {
                                 )}
                             </Stack>
                         </Box>
+                    )}
+                    
+                    {/* Dökümanlar */}
+                    {cardData.documents && Array.isArray(cardData.documents) && cardData.documents.length > 0 && (
+                        <>
+                            <Divider sx={{ my: 2 }} />
+                            <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', color: 'primary.main', fontWeight: 'bold' }}>
+                                <DescriptionIcon sx={{ mr: 1 }} /> Dökümanlar
+                            </Typography>
+                            <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
+                                {cardData.documents.map((document, index) => (
+                                    <Box 
+                                        key={index}
+                                        sx={{ 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            gap: 1,
+                                            p: 1,
+                                            backgroundColor: '#f5f5f5',
+                                            borderRadius: 1,
+                                            border: '1px solid #e0e0e0',
+                                            cursor: 'pointer',
+                                            '&:hover': {
+                                                backgroundColor: '#e3f2fd',
+                                                borderColor: '#1976d2'
+                                            }
+                                        }}
+                                        onClick={() => {
+                                            if (document.url) {
+                                                window.open(document.url, '_blank');
+                                            }
+                                        }}
+                                    >
+                                        <DescriptionIcon sx={{ color: '#1976d2', fontSize: 20 }} />
+                                        <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.primary' }}>
+                                            {document.name}
+                                        </Typography>
+                                    </Box>
+                                ))}
+                            </Stack>
+                        </>
                     )}
 
                     <Box sx={{ textAlign: 'center', mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'grey.200' }}>
@@ -1245,7 +1808,10 @@ export const CreativeTheme = ({ cardData }) => {
                             )}
                         </Stack>
 
-                        {(cardData.linkedinUrl || cardData.twitterUrl || cardData.instagramUrl) && (
+                        {(cardData.linkedinUrl || cardData.twitterUrl || cardData.instagramUrl || 
+              cardData.whatsappUrl || cardData.facebookUrl || cardData.telegramUrl || 
+              cardData.youtubeUrl || cardData.skypeUrl || cardData.wechatUrl || 
+              cardData.snapchatUrl || cardData.pinterestUrl || cardData.tiktokUrl) && (
                             <Box sx={{ mt: 3, textAlign: 'center' }}>
                                 <Stack direction="row" spacing={1} justifyContent="center">
                                     {cardData.linkedinUrl && (
@@ -1293,6 +1859,49 @@ export const CreativeTheme = ({ cardData }) => {
                                             <InstagramIcon />
                                         </IconButton>
                                     )}
+                                </Stack>
+                            </Box>
+                        )}
+                        
+                        {/* Dökümanlar */}
+                        {cardData.documents && Array.isArray(cardData.documents) && cardData.documents.length > 0 && (
+                            <Box sx={{ mt: 2 }}>
+                                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600, color: 'text.primary' }}>
+                                    📄 Dökümanlar
+                                </Typography>
+                                <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
+                                    {cardData.documents.map((document, index) => (
+                                        <Box 
+                                            key={index}
+                                            sx={{ 
+                                                display: 'flex', 
+                                                alignItems: 'center', 
+                                                gap: 1,
+                                                p: 1,
+                                                backgroundColor: 'rgba(255,255,255,0.1)',
+                                                borderRadius: 2,
+                                                border: '1px solid rgba(255,255,255,0.2)',
+                                                cursor: 'pointer',
+                                                backdropFilter: 'blur(10px)',
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(255,255,255,0.2)',
+                                                    borderColor: 'rgba(255,255,255,0.4)',
+                                                    transform: 'translateY(-2px)'
+                                                },
+                                                transition: 'all 0.3s ease'
+                                            }}
+                                            onClick={() => {
+                                                if (document.url) {
+                                                    window.open(document.url, '_blank');
+                                                }
+                                            }}
+                                        >
+                                            <DescriptionIcon sx={{ color: '#4ECDC4', fontSize: 20 }} />
+                                            <Typography variant="body2" sx={{ fontWeight: 500, color: 'white' }}>
+                                                {document.name}
+                                            </Typography>
+                                        </Box>
+                                    ))}
                                 </Stack>
                             </Box>
                         )}
@@ -1451,7 +2060,10 @@ export const DarkTheme = ({ cardData }) => {
                 </>
             )}
 
-            {(cardData.linkedinUrl || cardData.twitterUrl || cardData.instagramUrl) && (
+            {(cardData.linkedinUrl || cardData.twitterUrl || cardData.instagramUrl || 
+              cardData.whatsappUrl || cardData.facebookUrl || cardData.telegramUrl || 
+              cardData.youtubeUrl || cardData.skypeUrl || cardData.wechatUrl || 
+              cardData.snapchatUrl || cardData.pinterestUrl || cardData.tiktokUrl) && (
                 <>
                     <Divider variant="middle" sx={{ backgroundColor: '#333' }} />
                     <CardContent sx={{ py: 1, textAlign: 'center', backgroundColor: '#1a1a1a' }}>
@@ -1471,6 +2083,51 @@ export const DarkTheme = ({ cardData }) => {
                                     <InstagramIcon />
                                 </IconButton>
                             )}
+                        </Stack>
+                    </CardContent>
+                </>
+            )}
+            
+            {/* Dökümanlar */}
+            {cardData.documents && Array.isArray(cardData.documents) && cardData.documents.length > 0 && (
+                <>
+                    <Divider variant="middle" sx={{ backgroundColor: '#333' }} />
+                    <CardContent sx={{ py: 2, backgroundColor: '#1a1a1a' }}>
+                        <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600, color: 'white', textAlign: 'center' }}>
+                            📄 Dökümanlar
+                        </Typography>
+                        <Stack direction="row" spacing={1} flexWrap="wrap" gap={1} justifyContent="center">
+                            {cardData.documents.map((document, index) => (
+                                <Box 
+                                    key={index}
+                                    sx={{ 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        gap: 1,
+                                        p: 1.5,
+                                        backgroundColor: '#333',
+                                        borderRadius: 2,
+                                        border: '1px solid #555',
+                                        cursor: 'pointer',
+                                        '&:hover': {
+                                            backgroundColor: '#444',
+                                            borderColor: '#666',
+                                            transform: 'translateY(-2px)'
+                                        },
+                                        transition: 'all 0.3s ease'
+                                    }}
+                                    onClick={() => {
+                                        if (document.url) {
+                                            window.open(document.url, '_blank');
+                                        }
+                                    }}
+                                >
+                                    <DescriptionIcon sx={{ color: '#4ECDC4', fontSize: 20 }} />
+                                    <Typography variant="body2" sx={{ fontWeight: 500, color: 'white' }}>
+                                        {document.name}
+                                    </Typography>
+                                </Box>
+                            ))}
                         </Stack>
                     </CardContent>
                 </>
@@ -2302,6 +2959,60 @@ export const OvalCarouselTheme = ({ cardData }) => {
                                     </Box>
                                 );
                             })}
+                        </Stack>
+                    </Box>
+                )}
+                
+                {/* Dökümanlar */}
+                {cardData.documents && Array.isArray(cardData.documents) && cardData.documents.length > 0 && (
+                    <Box sx={{ backgroundColor: '#f7fafc', p: 2.5 }}>
+                        <Typography 
+                            variant="subtitle2" 
+                            sx={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center',
+                                color: '#667eea',
+                                fontWeight: 700,
+                                mb: 2,
+                            }}
+                        >
+                            <DescriptionIcon sx={{ mr: 1 }} /> Dökümanlar
+                        </Typography>
+                        <Stack direction="row" spacing={1} flexWrap="wrap" gap={1} justifyContent="center">
+                            {cardData.documents.map((document, index) => (
+                                <Box 
+                                    key={index}
+                                    onClick={() => {
+                                        if (document.url) {
+                                            window.open(document.url, '_blank');
+                                        }
+                                    }}
+                                    sx={{ 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        gap: 1,
+                                        p: 1.5,
+                                        backgroundColor: 'white',
+                                        borderRadius: 2,
+                                        border: '2px solid #e2e8f0',
+                                        cursor: 'pointer',
+                                        minWidth: 120,
+                                        '&:hover': {
+                                            backgroundColor: '#f8fafc',
+                                            borderColor: '#667eea',
+                                            transform: 'translateY(-2px)',
+                                            boxShadow: '0 4px 12px rgba(102, 126, 234, 0.15)'
+                                        },
+                                        transition: 'all 0.3s ease'
+                                    }}
+                                >
+                                    <DescriptionIcon sx={{ color: '#667eea', fontSize: 20 }} />
+                                    <Typography variant="body2" sx={{ fontWeight: 500, color: '#2d3748' }}>
+                                        {document.name.length > 12 ? document.name.substring(0, 12) + '...' : document.name}
+                                    </Typography>
+                                </Box>
+                            ))}
                         </Stack>
                     </Box>
                 )}

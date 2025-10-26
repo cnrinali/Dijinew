@@ -100,15 +100,17 @@ function CardListPage() {
 
     const handleToggleStatus = async (cardId, currentStatus) => {
         const newStatus = !currentStatus;
+        console.log('Toggle Status - CardId:', cardId, 'Current:', currentStatus, 'New:', newStatus);
         setError('');
         setCardProcessing(cardId, true);
         try {
             const result = await cardService.toggleCardStatus(cardId, newStatus);
+            console.log('Toggle Status Response:', result);
             // State'i güncelle
             setCards(prevCards =>
                 prevCards.map(c => c.id === cardId ? { ...c, isActive: result.card.isActive } : c)
             );
-            // İsteğe bağlı: Başarı mesajı gösterilebilir
+            console.log('State updated - New isActive:', result.card.isActive);
         } catch (err) {
             console.error("Kart durumu değiştirilirken hata:", err);
             const errorMsg = err.response?.data?.message || 'Kart durumu değiştirilemedi.';

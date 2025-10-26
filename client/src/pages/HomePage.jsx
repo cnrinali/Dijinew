@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useTheme } from '../context/ThemeContext.jsx';
 
 // MUI imports
 import {
@@ -23,6 +24,7 @@ import {
 
 function HomePage() {
     const { isLoggedIn, user } = useAuth();
+    const { isDarkMode } = useTheme();
 
     const features = [
         {
@@ -69,16 +71,16 @@ function HomePage() {
             >
                 <Container maxWidth="md">
                     <Box sx={{ textAlign: 'center' }}>
-                        <Typography
-                            variant="h3"
-                            sx={{ 
-                                fontWeight: 700, 
-                                mb: 2,
-                                color: 'white'
-                            }}
-                        >
-                            Dijinew
-                        </Typography>
+                        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+                            <img 
+                                src={isDarkMode ? "/img/dijinew_logo_light.png" : "/img/dijinew_logo_dark.png"} 
+                                alt="Dijinew Logo" 
+                                style={{ 
+                                    height: '80px', 
+                                    width: 'auto'
+                                }} 
+                            />
+                        </Box>
                         <Typography
                             variant="h6"
                             sx={{ 
@@ -87,7 +89,7 @@ function HomePage() {
                                 color: 'white'
                             }}
                         >
-                            Modern Dijital Kartvizit Platformu
+                            Dijinew Creative Agency
                         </Typography>
                         <Typography
                             variant="body1"

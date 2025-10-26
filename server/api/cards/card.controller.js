@@ -87,6 +87,16 @@ const createCard = async (req, res) => {
         linkedinUrl = null,
         twitterUrl = null,
         instagramUrl = null,
+        // Ek sosyal medya alanları
+        whatsappUrl = null,
+        facebookUrl = null,
+        telegramUrl = null,
+        youtubeUrl = null,
+        skypeUrl = null,
+        wechatUrl = null,
+        snapchatUrl = null,
+        pinterestUrl = null,
+        tiktokUrl = null,
         // Pazaryeri alanları
         trendyolUrl = null,
         hepsiburadaUrl = null,
@@ -98,6 +108,13 @@ const createCard = async (req, res) => {
         amazonTrUrl = null,
         getirUrl = null,
         yemeksepetiUrl = null,
+        // Ek pazaryeri alanları
+        arabamUrl = null,
+        letgoUrl = null,
+        pttAvmUrl = null,
+        ciceksepetiUrl = null,
+        websiteUrl = null,
+        whatsappBusinessUrl = null,
         // Kurumsal kullanıcı için seçilen kullanıcı ID'si
         userId: selectedUserId = null
     } = req.body;
@@ -188,11 +205,28 @@ const createCard = async (req, res) => {
             .input('amazonTrUrl', sql.NVarChar, amazonTrUrl)
             .input('getirUrl', sql.NVarChar, getirUrl)
             .input('yemeksepetiUrl', sql.NVarChar, yemeksepetiUrl)
+            // Yeni sosyal medya parametreleri
+            .input('whatsappUrl', sql.NVarChar, whatsappUrl)
+            .input('facebookUrl', sql.NVarChar, facebookUrl)
+            .input('telegramUrl', sql.NVarChar, telegramUrl)
+            .input('youtubeUrl', sql.NVarChar, youtubeUrl)
+            .input('skypeUrl', sql.NVarChar, skypeUrl)
+            .input('wechatUrl', sql.NVarChar, wechatUrl)
+            .input('snapchatUrl', sql.NVarChar, snapchatUrl)
+            .input('pinterestUrl', sql.NVarChar, pinterestUrl)
+            .input('tiktokUrl', sql.NVarChar, tiktokUrl)
+            // Yeni pazaryeri parametreleri
+            .input('arabamUrl', sql.NVarChar, arabamUrl)
+            .input('letgoUrl', sql.NVarChar, letgoUrl)
+            .input('pttAvmUrl', sql.NVarChar, pttAvmUrl)
+            .input('ciceksepetiUrl', sql.NVarChar, ciceksepetiUrl)
+            .input('websiteUrl', sql.NVarChar, websiteUrl)
+            .input('whatsappBusinessUrl', sql.NVarChar, whatsappBusinessUrl)
             .query(`
                 INSERT INTO Cards 
-                (userId, cardName, profileImageUrl, coverImageUrl, name, title, company, bio, phone, email, website, address, theme, customSlug, isActive, linkedinUrl, twitterUrl, instagramUrl, trendyolUrl, hepsiburadaUrl, ciceksepeti, sahibindenUrl, hepsiemlakUrl, gittigidiyorUrl, n11Url, amazonTrUrl, getirUrl, yemeksepetiUrl)
+                (userId, cardName, profileImageUrl, coverImageUrl, name, title, company, bio, phone, email, website, address, theme, customSlug, isActive, linkedinUrl, twitterUrl, instagramUrl, trendyolUrl, hepsiburadaUrl, ciceksepeti, sahibindenUrl, hepsiemlakUrl, gittigidiyorUrl, n11Url, amazonTrUrl, getirUrl, yemeksepetiUrl, whatsappUrl, facebookUrl, telegramUrl, youtubeUrl, skypeUrl, wechatUrl, snapchatUrl, pinterestUrl, tiktokUrl, arabamUrl, letgoUrl, pttAvmUrl, ciceksepetiUrl, websiteUrl, whatsappBusinessUrl)
                 VALUES 
-                (@userId, @cardName, @profileImageUrl, @coverImageUrl, @name, @title, @company, @bio, @phone, @email, @website, @address, @theme, @customSlug, 1, @linkedinUrl, @twitterUrl, @instagramUrl, @trendyolUrl, @hepsiburadaUrl, @ciceksepeti, @sahibindenUrl, @hepsiemlakUrl, @gittigidiyorUrl, @n11Url, @amazonTrUrl, @getirUrl, @yemeksepetiUrl);
+                (@userId, @cardName, @profileImageUrl, @coverImageUrl, @name, @title, @company, @bio, @phone, @email, @website, @address, @theme, @customSlug, 1, @linkedinUrl, @twitterUrl, @instagramUrl, @trendyolUrl, @hepsiburadaUrl, @ciceksepeti, @sahibindenUrl, @hepsiemlakUrl, @gittigidiyorUrl, @n11Url, @amazonTrUrl, @getirUrl, @yemeksepetiUrl, @whatsappUrl, @facebookUrl, @telegramUrl, @youtubeUrl, @skypeUrl, @wechatUrl, @snapchatUrl, @pinterestUrl, @tiktokUrl, @arabamUrl, @letgoUrl, @pttAvmUrl, @ciceksepetiUrl, @websiteUrl, @whatsappBusinessUrl);
             `);
 
         // 3. Son eklenen kartı al
@@ -264,7 +298,23 @@ const getCardById = async (req, res) => {
             return res.status(404).json({ message: 'Kartvizit bulunamadı' });
         }
 
-        res.status(200).json(result.recordset[0]); // Bulunan kartviziti dön
+        const card = result.recordset[0];
+        
+        // Documents parse et (JSON string ise)
+        console.log('getCardById - Raw documents from DB:', card.documents);
+        if (card.documents && typeof card.documents === 'string') {
+            try {
+                card.documents = JSON.parse(card.documents);
+                console.log('getCardById - Documents parsed:', card.documents);
+            } catch (e) {
+                console.error('getCardById - Documents parse error:', e);
+                card.documents = [];
+            }
+        } else if (!Array.isArray(card.documents)) {
+            card.documents = [];
+        }
+
+        res.status(200).json(card); // Bulunan kartviziti dön
 
     } catch (error) {
         console.error("Kartvizit getirme hatası (ID):". error);
@@ -277,6 +327,8 @@ const getCardById = async (req, res) => {
 // @access  Private
 const updateCard = async (req, res) => {
     console.log('[updateCard] İstek gövdesi (req.body):', req.body); // Log eklendi
+    console.log('[updateCard] Documents:', req.body.documents); // Documents log
+    console.log('[updateCard] Documents JSON:', JSON.stringify(req.body.documents)); // Documents JSON log
     const userId = req.user.id;
     const cardId = req.params.id;
     const {
@@ -298,6 +350,16 @@ const updateCard = async (req, res) => {
         linkedinUrl,
         twitterUrl,
         instagramUrl,
+        // Ek sosyal medya alanları
+        whatsappUrl,
+        facebookUrl,
+        telegramUrl,
+        youtubeUrl,
+        skypeUrl,
+        wechatUrl,
+        snapchatUrl,
+        pinterestUrl,
+        tiktokUrl,
         // Pazaryeri alanları
         trendyolUrl,
         hepsiburadaUrl,
@@ -308,7 +370,16 @@ const updateCard = async (req, res) => {
         n11Url,
         amazonTrUrl,
         getirUrl,
-        yemeksepetiUrl
+        yemeksepetiUrl,
+        // Ek pazaryeri alanları
+        arabamUrl,
+        letgoUrl,
+        pttAvmUrl,
+        ciceksepetiUrl,
+        websiteUrl,
+        whatsappBusinessUrl,
+        // Döküman alanı
+        documents
     } = req.body;
 
     if (isNaN(parseInt(cardId))) {
@@ -384,6 +455,24 @@ const updateCard = async (req, res) => {
             .input('amazonTrUrl', sql.NVarChar, amazonTrUrl)
             .input('getirUrl', sql.NVarChar, getirUrl)
             .input('yemeksepetiUrl', sql.NVarChar, yemeksepetiUrl)
+            // Yeni sosyal medya parametreleri
+            .input('whatsappUrl', sql.NVarChar, whatsappUrl)
+            .input('facebookUrl', sql.NVarChar, facebookUrl)
+            .input('telegramUrl', sql.NVarChar, telegramUrl)
+            .input('youtubeUrl', sql.NVarChar, youtubeUrl)
+            .input('skypeUrl', sql.NVarChar, skypeUrl)
+            .input('wechatUrl', sql.NVarChar, wechatUrl)
+            .input('snapchatUrl', sql.NVarChar, snapchatUrl)
+            .input('pinterestUrl', sql.NVarChar, pinterestUrl)
+            .input('tiktokUrl', sql.NVarChar, tiktokUrl)
+            // Yeni pazaryeri parametreleri
+            .input('arabamUrl', sql.NVarChar, arabamUrl)
+            .input('letgoUrl', sql.NVarChar, letgoUrl)
+            .input('pttAvmUrl', sql.NVarChar, pttAvmUrl)
+            .input('ciceksepetiUrl', sql.NVarChar, ciceksepetiUrl)
+            .input('websiteUrl', sql.NVarChar, websiteUrl)
+            .input('whatsappBusinessUrl', sql.NVarChar, whatsappBusinessUrl)
+            .input('documents', sql.NVarChar, documents ? JSON.stringify(documents) : '[]')
             .query(`
                 UPDATE Cards SET 
                     cardName = @cardName,
@@ -412,7 +501,23 @@ const updateCard = async (req, res) => {
                     n11Url = @n11Url,
                     amazonTrUrl = @amazonTrUrl,
                     getirUrl = @getirUrl,
-                    yemeksepetiUrl = @yemeksepetiUrl
+                    yemeksepetiUrl = @yemeksepetiUrl,
+                    whatsappUrl = @whatsappUrl,
+                    facebookUrl = @facebookUrl,
+                    telegramUrl = @telegramUrl,
+                    youtubeUrl = @youtubeUrl,
+                    skypeUrl = @skypeUrl,
+                    wechatUrl = @wechatUrl,
+                    snapchatUrl = @snapchatUrl,
+                    pinterestUrl = @pinterestUrl,
+                    tiktokUrl = @tiktokUrl,
+                    arabamUrl = @arabamUrl,
+                    letgoUrl = @letgoUrl,
+                    pttAvmUrl = @pttAvmUrl,
+                    ciceksepetiUrl = @ciceksepetiUrl,
+                    websiteUrl = @websiteUrl,
+                    whatsappBusinessUrl = @whatsappBusinessUrl,
+                    documents = @documents
                 WHERE id = @cardId;
             `);
 
@@ -586,6 +691,45 @@ const getPublicCard = async (req, res) => {
 
         const card = result.recordset[0];
 
+        // Documents parse et (JSON string ise)
+        console.log('Raw documents from DB:', card.documents);
+        if (card.documents && typeof card.documents === 'string') {
+            try {
+                card.documents = JSON.parse(card.documents);
+                console.log('Public card documents parsed:', card.documents);
+                
+                // Dökümanları temizle - file objesi olanları kaldır
+                const originalCount = card.documents.length;
+                card.documents = card.documents.filter(doc => {
+                    // file objesi olan dökümanları kaldır
+                    if (doc.file) {
+                        console.log('Removing document with file object:', doc);
+                        return false;
+                    }
+                    return true;
+                });
+                
+                console.log(`Cleaned documents: ${originalCount} -> ${card.documents.length}`);
+                console.log('Final documents:', card.documents);
+                
+                // Eğer dökümanlar temizlendiyse, veritabanını güncelle
+                if (originalCount > card.documents.length) {
+                    console.log('Updating database with cleaned documents...');
+                    const pool = await getPool();
+                    await pool.request()
+                        .input('cardId', sql.Int, card.id)
+                        .input('documents', sql.NVarChar, JSON.stringify(card.documents))
+                        .query('UPDATE Cards SET documents = @documents WHERE id = @cardId');
+                    console.log('Database updated with cleaned documents');
+                }
+            } catch (e) {
+                console.error('Public card documents parse error:', e);
+                card.documents = [];
+            }
+        } else if (!Array.isArray(card.documents)) {
+            card.documents = [];
+        }
+
         // Kartın banka hesap bilgilerini de çek
         const bankAccountsResult = await pool.request()
             .input('cardId', sql.Int, card.id)
@@ -609,6 +753,8 @@ const toggleCardStatus = async (req, res) => {
     const userId = req.user.id;
     const cardId = req.params.id;
     const { isActive } = req.body; // Yeni durumu body'den al (true/false)
+
+    console.log('Toggle Card Status - UserId:', userId, 'CardId:', cardId, 'isActive:', isActive);
 
     // ID'nin geçerli bir sayı olup olmadığını kontrol et
     if (isNaN(parseInt(cardId))) {
@@ -648,6 +794,8 @@ const toggleCardStatus = async (req, res) => {
             ...selectResult.recordset[0],
             isActive: selectResult.recordset[0].status === 1 || selectResult.recordset[0].status === '1' || selectResult.recordset[0].status === true
         };
+
+        console.log('Toggle Status Response - Card:', cardWithMappedStatus);
 
         res.status(200).json({
             message: `Kartvizit başarıyla ${isActive ? 'aktif' : 'pasif'} hale getirildi.`,
