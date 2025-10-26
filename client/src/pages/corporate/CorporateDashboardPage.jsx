@@ -76,23 +76,13 @@ export default function CorporateDashboardPage() {
         {/* Header Section */}
         <Box sx={{ mb: 4 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <img 
-                src="/img/dijinew_logo_light.png" 
-                alt="Dijinew Logo" 
-                style={{ 
-                  height: '36px', 
-                  width: 'auto'
-                }} 
-              />
-              <Box>
-                <Typography variant="h4" component="h1" sx={{ fontWeight: 700, color: 'text.primary' }}>
-                  Kurumsal Panel
-                </Typography>
-                <Typography variant="body1" sx={{ color: 'text.secondary', mt: 0.5 }}>
-                  Şirketinizin dijital kartvizit yönetimi
-                </Typography>
-              </Box>
+            <Box>
+              <Typography variant="h4" component="h1" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                Genel Bakış
+              </Typography>
+              <Typography variant="body1" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                Şirketinizin dijital kartvizit durumu ve istatistikleri
+              </Typography>
             </Box>
             
             <Tooltip title="Verileri Yenile">

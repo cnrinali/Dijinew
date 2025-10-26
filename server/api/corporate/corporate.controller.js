@@ -466,6 +466,51 @@ const getCompanyInfo = async (req, res) => {
     }
 };
 
+// @desc    Update company information for logged-in corporate user
+// @route   PUT /api/corporate/company
+// @access  Private/Corporate
+const updateCompanyInfo = async (req, res) => {
+    const companyId = req.user.companyId;
+    const { name, phone, website, address } = req.body;
+
+    if (!companyId) {
+        return res.status(403).json({ message: 'Bu işlem için bir şirkete atanmış olmanız gerekmektedir.' });
+    }
+
+    try {
+        const pool = await getPool();
+        
+        // Şirketin varlığını kontrol et
+        const checkResult = await pool.request()
+            .input('companyId', sql.Int, companyId)
+            .query('SELECT id FROM Companies WHERE id = @companyId');
+
+        if (checkResult.recordset.length === 0) {
+            return res.status(404).json({ message: 'Şirket bulunamadı.' });
+        }
+
+        // Şirket bilgilerini güncelle
+        await pool.request()
+            .input('companyId', sql.Int, companyId)
+            .input('name', sql.NVarChar, name)
+            .input('phone', sql.NVarChar, phone || null)
+            .input('website', sql.NVarChar, website || null)
+            .input('address', sql.NVarChar, address || null)
+            .input('updatedAt', sql.DateTime2, new Date())
+            .query('UPDATE Companies SET name = @name, phone = @phone, website = @website, address = @address, updatedAt = @updatedAt WHERE id = @companyId');
+
+        // Güncellenmiş şirket bilgilerini getir
+        const updatedResult = await pool.request()
+            .input('companyId', sql.Int, companyId)
+            .query('SELECT id, name, userLimit, cardLimit, status, phone, website, address, language, createdAt, updatedAt FROM Companies WHERE id = @companyId');
+
+        res.status(200).json(updatedResult.recordset[0]);
+    } catch (error) {
+        console.error("Şirket bilgileri güncelleme hatası (Corporate):", error);
+        res.status(500).json({ message: 'Sunucu hatası oluştu.' });
+    }
+};
+
 // @desc    Update company language for logged-in corporate user
 // @route   PUT /api/corporate/company/language
 // @access  Private/Corporate
@@ -520,5 +565,6 @@ module.exports = {
     createCompanyUser,
     getCompanyUsers,
     getCompanyInfo,
+    updateCompanyInfo,
     updateCompanyLanguage
 }; 

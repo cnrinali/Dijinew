@@ -71,13 +71,14 @@ const CorporateHomePage = () => {
       description: "Detaylı analiz raporlarınız",
       color: "#000000"
     },
-    {
-      title: "AYARLAR",
-      icon: <SettingsIcon />,
-      path: "/profile",
-      description: "Hesap ve sistem ayarlarınız",
-      color: "#F4C734"
-    },
+    // Geçici olarak gizlendi - dil desteği için gelecek versiyonlarda eklenecek
+    // {
+    //   title: "AYARLAR",
+    //   icon: <SettingsIcon />,
+    //   path: "/profile",
+    //   description: "Hesap ve sistem ayarlarınız",
+    //   color: "#F4C734"
+    // },
     {
       title: "GÜVENLİK",
       icon: <SecurityIcon />,

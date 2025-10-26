@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import userService from '../services/userService';
 import { useAuth } from '../context/AuthContext.jsx'; // Auth context'i import et
 import { useNotification } from '../context/NotificationContext.jsx'; // Eklendi
-import LanguageSelector from '../components/LanguageSelector'; // Dil seçici
+// Geçici olarak gizlendi - dil desteği için gelecek versiyonlarda eklenecek
+// import LanguageSelector from '../components/LanguageSelector'; // Dil seçici
 
 // MUI Imports
 import Box from '@mui/material/Box';
@@ -21,7 +22,7 @@ function ProfilePage() {
     const { updateAuthUser } = useAuth(); // Context'teki kullanıcıyı güncellemek için (updateUserContext -> updateAuthUser)
     const { showNotification } = useNotification(); // Eklendi
     
-    const [profileData, setProfileData] = useState({ name: '', email: '', language: 'tr' });
+    const [profileData, setProfileData] = useState({ name: '', email: '' });
     const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
     const [tabIndex, setTabIndex] = useState(0); // Aktif sekme state'i
     
@@ -37,8 +38,7 @@ function ProfilePage() {
                 const data = await userService.getUserProfile();
                 setProfileData({ 
                     name: data.name, 
-                    email: data.email,
-                    language: data.language || 'tr' 
+                    email: data.email
                 });
             } catch (err) {
                 console.error("Profil bilgisi getirilirken hata:", err);
@@ -73,14 +73,12 @@ function ProfilePage() {
             const updatedUser = await userService.updateUserProfile(profileData);
             setProfileData({ 
                 name: updatedUser.name, 
-                email: updatedUser.email,
-                language: updatedUser.language || 'tr'
+                email: updatedUser.email
             });
             // Sadece güncellenen alanları context'e gönder
             updateAuthUser({ 
                 name: updatedUser.name, 
-                email: updatedUser.email,
-                language: updatedUser.language 
+                email: updatedUser.email
             }); 
             showNotification('Profil bilgileri başarıyla güncellendi.', 'success');
         } catch (err) {
@@ -220,7 +218,8 @@ function ProfilePage() {
                                         disabled={updateLoading}
                                     />
                                 </Grid>
-                                <Grid item xs={12}>
+                                {/* Geçici olarak gizlendi - dil desteği için gelecek versiyonlarda eklenecek */}
+                                {/* <Grid item xs={12}>
                                     <LanguageSelector
                                         value={profileData.language}
                                         onChange={(newLang) => setProfileData({ ...profileData, language: newLang })}
@@ -229,7 +228,7 @@ function ProfilePage() {
                                         showFlag={true}
                                         size="medium"
                                     />
-                                </Grid>
+                                </Grid> */}
                             </Grid>
                             <Button
                                 type="submit"

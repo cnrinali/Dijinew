@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link as RouterLink, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link as RouterLink, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Button, Container, Box, IconButton, Menu, MenuItem, Avatar, Divider } from '@mui/material';
 import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -24,11 +24,13 @@ import CorporateLayout from './components/corporate/CorporateLayout';
 import UserLayout from './components/user/UserLayout';
 import CorporateActivitiesPage from './components/corporate/CorporateActivitiesPage';
 import UserProfilePage from './pages/ProfilePage';
+import CorporateProfilePage from './pages/corporate/CorporateProfilePage';
 import CorporateDashboardPage from './pages/corporate/CorporateDashboardPage';
 import CorporateHomePage from './pages/corporate/CorporateHomePage';
 import CorporateCardsPage from './pages/corporate/CorporateCardsPage';
 import CorporateUserManagementPage from './pages/corporate/CorporateUserManagementPage';
-import CorporateSettingsPage from './pages/corporate/CorporateSettingsPage';
+// Geçici olarak gizlendi - dil desteği için gelecek versiyonlarda eklenecek
+// import CorporateSettingsPage from './pages/corporate/CorporateSettingsPage';
 import { NotificationProvider } from './context/NotificationContext.jsx';
 import ThemeToggle from './components/ThemeToggle';
 import QrCardPage from './pages/QrCardPage';
@@ -54,6 +56,7 @@ function AppContent() {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Sayfa başlığını ve favicon'u dinamik olarak değiştir
   useEffect(() => {
@@ -138,7 +141,7 @@ function AppContent() {
         {/* All other routes with navbar */}
         <Route path="*" element={
           <>
-                    {!location.pathname.startsWith('/admin') && !location.pathname.startsWith('/cards') && !location.pathname.startsWith('/login') && !(user?.role === 'user' && (location.pathname === '/profile' || location.pathname === '/analytics')) && (
+                    {!location.pathname.startsWith('/admin') && !location.pathname.startsWith('/cards') && !location.pathname.startsWith('/login') && !(user?.role === 'user' && (location.pathname === '/profile' || location.pathname === '/analytics')) && !(user?.role === 'corporate' && location.pathname.startsWith('/corporate')) && (
                       <AppBar position="static" sx={{ boxShadow: 2 }}>
               <Container maxWidth="xl">
                 <Toolbar disableGutters sx={{ minHeight: { xs: 56, sm: 64 }, justifyContent: 'space-between' }}>
@@ -342,6 +345,7 @@ function AppContent() {
                           anchorEl={anchorElUser}
                           open={Boolean(anchorElUser)}
                           onClose={handleCloseUserMenu}
+                          disablePortal={false}
                           PaperProps={{
                             sx: {
                               mt: 1.5,
@@ -365,7 +369,7 @@ function AppContent() {
                           <MenuItem
                             onClick={() => {
                               handleCloseUserMenu();
-                              // Navigate to profile
+                              navigate('/profile');
                             }}
                             sx={{ py: 1.5, px: 2 }}
                           >
@@ -472,7 +476,7 @@ function AppContent() {
                     user.role === 'admin' ? (
                       <AdminLayout><UserProfilePage /></AdminLayout>
                     ) : user.role === 'corporate' ? (
-                      <CorporateLayout><UserProfilePage /></CorporateLayout>
+                      <CorporateLayout><CorporateProfilePage /></CorporateLayout>
                     ) : (
                       <UserLayout><UserProfilePage /></UserLayout>
                     )
@@ -496,7 +500,8 @@ function AppContent() {
                 <Route path="/corporate/cards" element={user && user.role === 'corporate' && user.companyId ? <CorporateLayout><CorporateCardsPage /></CorporateLayout> : <Navigate to="/login" />} />
                 <Route path="/corporate/users" element={user && user.role === 'corporate' && user.companyId ? <CorporateLayout><CorporateUserManagementPage /></CorporateLayout> : <Navigate to="/login" />} />
                 <Route path="/corporate/activities" element={user && user.role === 'corporate' && user.companyId ? <CorporateLayout><CorporateActivitiesPage /></CorporateLayout> : <Navigate to="/login" />} />
-                <Route path="/corporate/settings" element={user && user.role === 'corporate' && user.companyId ? <CorporateLayout><CorporateSettingsPage /></CorporateLayout> : <Navigate to="/login" />} />
+                {/* Geçici olarak gizlendi - dil desteği için gelecek versiyonlarda eklenecek */}
+                {/* <Route path="/corporate/settings" element={user && user.role === 'corporate' && user.companyId ? <CorporateLayout><CorporateSettingsPage /></CorporateLayout> : <Navigate to="/login" />} /> */}
 
                 {/* User Routes */}
                 <Route path="/" element={user && user.role === 'user' ? <UserLayout><UserDashboardPage /></UserLayout> : <Navigate to="/login" />} />

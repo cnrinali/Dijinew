@@ -6,6 +6,7 @@ const {
     createCompanyUser,
     getCompanyUsers,
     getCompanyInfo,
+    updateCompanyInfo,
     updateCompanyLanguage
 } = require('./corporate.controller');
 const { protect, authorize } = require('../../middleware/authMiddleware');
@@ -20,9 +21,10 @@ router.route('/users')
     .get(protect, authorize('corporate'), getCompanyUsers)
     .post(protect, authorize('corporate'), createCompanyUser);
 
-// Şirket bilgilerini getirme
+// Şirket bilgilerini getirme ve güncelleme
 router.route('/company')
-    .get(protect, authorize('corporate'), getCompanyInfo);
+    .get(protect, authorize('corporate'), getCompanyInfo)
+    .put(protect, authorize('corporate'), updateCompanyInfo);
 
 // Şirket dili güncelleme
 router.route('/company/language')

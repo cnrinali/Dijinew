@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Drawer, AppBar, Toolbar, List, Typography, Divider, IconButton, ListItemButton, ListItemIcon, ListItemText, useMediaQuery, Chip, Avatar, Button } from '@mui/material';
+import { Box, Drawer, AppBar, Toolbar, List, Typography, Divider, IconButton, ListItemButton, ListItemIcon, ListItemText, useMediaQuery, Chip, Avatar, Button, Menu, MenuItem, Container } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -15,6 +15,8 @@ import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import HistoryIcon from '@mui/icons-material/History';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import SettingsIcon from '@mui/icons-material/Settings';
+import PersonIcon from '@mui/icons-material/Person';
+import ThemeToggle from '../ThemeToggle';
 
 const drawerWidth = 280;
 
@@ -61,25 +63,35 @@ const menuItems = [
     path: '/corporate/activities',
     description: 'Şirket aktivitelerini görüntüle'
   },
-  {
-    id: 'settings',
-    label: 'Ayarlar',
-    icon: <SettingsIcon />,
-    path: '/corporate/settings',
-    description: 'Kurumsal ayarlar ve dil seçimi'
-  },
+  // Geçici olarak gizlendi - dil desteği için gelecek versiyonlarda eklenecek
+  // {
+  //   id: 'settings',
+  //   label: 'Ayarlar',
+  //   icon: <SettingsIcon />,
+  //   path: '/corporate/settings',
+  //   description: 'Kurumsal ayarlar ve dil seçimi'
+  // },
 ];
 
 function CorporateLayout({ children }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [anchorElUser, setAnchorElUser] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  const handleOpenUserMenu = (event) => {
+    setAnchorElUser(event.currentTarget);
+  };
+
+  const handleCloseUserMenu = () => {
+    setAnchorElUser(null);
   };
 
   const handleNavigation = (path) => {
@@ -97,7 +109,7 @@ function CorporateLayout({ children }) {
     if (currentPath.includes('/corporate/users')) return 'users';
     if (currentPath === '/analytics') return 'analytics';
     if (currentPath.includes('/corporate/activities')) return 'activities';
-    if (currentPath.includes('/corporate/settings')) return 'settings';
+    // Geçici olarak gizlendi - settings kontrolü kaldırıldı
     return 'home';
   };
 
@@ -192,7 +204,7 @@ function CorporateLayout({ children }) {
           sx={{
             width: '100%',
             zIndex: theme.zIndex.drawer + 1,
-            backgroundColor: 'white',
+            backgroundColor: 'background.paper',
             color: 'text.primary',
             boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)',
           }}
@@ -215,7 +227,90 @@ function CorporateLayout({ children }) {
             <Typography variant="h6" noWrap component="div" sx={{ ml: 2, fontWeight: 600 }}>
               Kurumsal Panel
             </Typography>
+            
+            {/* Mobile User Menu */}
+            <Box sx={{ flexGrow: 1 }} />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <ThemeToggle />
+              <IconButton
+                onClick={handleOpenUserMenu}
+                sx={{
+                  p: 0,
+                  '&:hover': {
+                    backgroundColor: 'transparent'
+                  }
+                }}
+              >
+                <Avatar
+                  sx={{
+                    width: 28,
+                    height: 28,
+                    backgroundColor: '#000000',
+                    color: '#FFFFFF',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    border: '2px solid #FFD700'
+                  }}
+                >
+                  {user?.name ? user.name.charAt(0).toUpperCase() : user?.email?.charAt(0).toUpperCase()}
+                </Avatar>
+              </IconButton>
+            </Box>
           </Toolbar>
+        </AppBar>
+      )}
+
+      {/* Desktop Header */}
+      {!isMobile && (
+        <AppBar
+          position="fixed"
+          sx={{
+            width: `calc(100% - ${drawerWidth}px)`,
+            ml: `${drawerWidth}px`,
+            zIndex: theme.zIndex.drawer,
+            backgroundColor: 'background.paper',
+            color: 'text.primary',
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)',
+          }}
+        >
+          <Container maxWidth="xl">
+            <Toolbar disableGutters sx={{ minHeight: { xs: 56, sm: 64 }, justifyContent: 'space-between' }}>
+              {/* Sol taraf - Boş alan */}
+              <Box sx={{ flex: 1 }} />
+              
+              {/* Sağ taraf - User Menu */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <ThemeToggle />
+                
+                {/* User Profile Dropdown */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <IconButton
+                    onClick={handleOpenUserMenu}
+                    sx={{
+                      p: 0,
+                      '&:hover': {
+                        backgroundColor: 'transparent'
+                      }
+                    }}
+                  >
+                    <Avatar
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        backgroundColor: '#000000',
+                        color: '#FFFFFF',
+                        fontSize: '0.875rem',
+                        fontWeight: 600,
+                        border: '2px solid #FFD700'
+                      }}
+                    >
+                      {user?.name ? user.name.charAt(0).toUpperCase() : user?.email?.charAt(0).toUpperCase()}
+                    </Avatar>
+                  </IconButton>
+                </Box>
+              </Box>
+            </Toolbar>
+          </Container>
         </AppBar>
       )}
 
@@ -259,6 +354,62 @@ function CorporateLayout({ children }) {
         </Drawer>
       )}
 
+      {/* User Dropdown Menu */}
+      <Menu
+        anchorEl={anchorElUser}
+        open={Boolean(anchorElUser)}
+        onClose={handleCloseUserMenu}
+        disablePortal={false}
+        PaperProps={{
+          sx: {
+            mt: 1.5,
+            minWidth: 200,
+            borderRadius: 2,
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+            border: '1px solid',
+            borderColor: 'divider'
+          }
+        }}
+      >
+        <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+          <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+            {user?.name || 'Kurumsal Kullanıcı'}
+          </Typography>
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+            {user?.email}
+          </Typography>
+        </Box>
+
+        <MenuItem
+          onClick={() => {
+            handleCloseUserMenu();
+            navigate('/profile');
+          }}
+          sx={{ py: 1.5, px: 2 }}
+        >
+          <PersonIcon sx={{ mr: 1.5, fontSize: 20 }} />
+          Profil
+        </MenuItem>
+
+        <MenuItem
+          onClick={() => {
+            handleCloseUserMenu();
+            logout();
+          }}
+          sx={{
+            py: 1.5,
+            px: 2,
+            color: 'error.main',
+            '&:hover': {
+              backgroundColor: 'error.50'
+            }
+          }}
+        >
+          <ExitToAppIcon sx={{ mr: 1.5, fontSize: 20 }} />
+          Çıkış
+        </MenuItem>
+      </Menu>
+
       {/* Main Content */}
       <Box
         component="main"
@@ -267,7 +418,7 @@ function CorporateLayout({ children }) {
           backgroundColor: 'grey.50',
           minHeight: '100vh',
           ml: isMobile ? 0 : 0,
-          mt: isMobile ? 8 : 0,
+          mt: isMobile ? 8 : 8, // Desktop için de header yüksekliği kadar margin
         }}
       >
         {children}
