@@ -7,6 +7,7 @@ import { useNotification } from '../context/NotificationContext.jsx';
 import ThemePreview from '../components/ThemePreview';
 import { TURKISH_BANKS, formatIban, validateTurkishIban } from '../constants/turkishBanks';
 import { optimizeImageForUpload } from '../utils/imageCompression.jsx';
+import { compressProfileImage, compressCoverImage } from '../utils/imageCompression';
 
 // MUI Imports
 import Box from '@mui/material/Box';
@@ -281,19 +282,31 @@ function EditCardPage() {
                 
                 let optimizedFile = file;
                 
-                // Eğer dosya 10MB'dan büyükse sıkıştır
-                if (originalSizeInMB > 10) {
-                    showNotification('Dosya sıkıştırılıyor, lütfen bekleyin...', 'info');
+                // Tüm resimleri sıkıştır (daha iyi performans için)
+                if (file.type.startsWith('image/')) {
+                    showNotification('Resim optimize ediliyor, lütfen bekleyin...', 'info');
                     
-                    optimizedFile = await optimizeImageForUpload(file, 10);
+                    // Profil ve kapak resmi için farklı sıkıştırma ayarları
+                    if (name === 'profileImage') {
+                        optimizedFile = await compressProfileImage(file);
+                    } else if (name === 'coverImage') {
+                        optimizedFile = await compressCoverImage(file);
+                    } else {
+                        // Diğer resimler için genel sıkıştırma
+                        optimizedFile = await optimizeImageForUpload(file, 5);
+                    }
                     
                     const optimizedSizeInMB = optimizedFile.size / (1024 * 1024);
                     const compressionRatio = ((originalSizeInMB - optimizedSizeInMB) / originalSizeInMB * 100).toFixed(1);
                     
-                    showNotification(
-                        `Dosya sıkıştırıldı: ${originalSizeInMB.toFixed(1)}MB → ${optimizedSizeInMB.toFixed(1)}MB (${compressionRatio}% azaltıldı)`, 
-                        'success'
-                    );
+                    if (compressionRatio > 0) {
+                        showNotification(
+                            `Resim optimize edildi: ${originalSizeInMB.toFixed(1)}MB → ${optimizedSizeInMB.toFixed(1)}MB (${compressionRatio}% azaltıldı)`, 
+                            'success'
+                        );
+                    } else {
+                        showNotification('Resim yüklendi', 'success');
+                    }
                 }
                 
                 setFormData((prevState) => ({ ...prevState, [name]: optimizedFile }));
@@ -331,7 +344,7 @@ function EditCardPage() {
             profileFormData.append('image', formData.profileImage);
             uploadPromises.push(
                 axios.post(API_ENDPOINTS.UPLOAD, profileFormData, { headers: { 'Content-Type': 'multipart/form-data' } })
-                     .then(res => { profileImagePath = res.data.filePath; })
+                     .then(res => { profileImagePath = res.data.data.filePath; })
                      .catch(err => { 
                          console.error("Profil resmi yükleme hatası:", err);
                          throw new Error(`Profil resmi yüklenemedi: ${err.response?.data?.message || err.message}`);
@@ -343,7 +356,7 @@ function EditCardPage() {
             coverFormData.append('image', formData.coverImage);
             uploadPromises.push(
                 axios.post(API_ENDPOINTS.UPLOAD, coverFormData, { headers: { 'Content-Type': 'multipart/form-data' } })
-                     .then(res => { coverImagePath = res.data.filePath; })
+                     .then(res => { coverImagePath = res.data.data.filePath; })
                      .catch(err => { 
                          console.error("Kapak resmi yükleme hatası:", err);
                          throw new Error(`Kapak resmi yüklenemedi: ${err.response?.data?.message || err.message}`);
@@ -361,6 +374,8 @@ function EditCardPage() {
             updateData.coverImageUrl = coverImagePath;
 
             console.log('[EditCardPage] Güncelleme için gönderilen data:', updateData);
+            console.log('[EditCardPage] ProfileImageUrl:', profileImagePath);
+            console.log('[EditCardPage] CoverImageUrl:', coverImagePath);
 
             await cardService.updateCard(cardId, updateData);
             showNotification('Kart başarıyla güncellendi!', 'success');

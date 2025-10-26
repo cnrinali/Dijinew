@@ -13,10 +13,10 @@ const ThemeToggle = ({ size = 'medium', sx = {} }) => {
         onClick={toggleTheme}
         size={size}
         sx={{
-          color: 'text.secondary',
+          color: '#000000', // Siyah renk - sarı arka planda görünür
           '&:hover': {
-            color: 'primary.main',
-            backgroundColor: 'primary.50',
+            color: '#000000',
+            backgroundColor: 'rgba(0, 0, 0, 0.1)', // Hafif siyah arka plan
           },
           ...sx
         }}

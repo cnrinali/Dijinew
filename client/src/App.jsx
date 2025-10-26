@@ -327,9 +327,11 @@ function AppContent() {
                             sx={{
                               width: 32,
                               height: 32,
-                              backgroundColor: 'primary.main',
+                              backgroundColor: '#000000', // Siyah arka plan
+                              color: '#FFFFFF', // Beyaz metin - daha iyi kontrast
                               fontSize: '0.875rem',
-                              fontWeight: 600
+                              fontWeight: 600,
+                              border: '2px solid #FFD700' // Altın çerçeve
                             }}
                           >
                             {user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
@@ -418,9 +420,11 @@ function AppContent() {
                           sx={{
                             width: 28,
                             height: 28,
-                            backgroundColor: 'primary.main',
+                            backgroundColor: '#000000', // Siyah arka plan
+                            color: '#FFFFFF', // Beyaz metin
                             fontSize: '0.75rem',
-                            fontWeight: 600
+                            fontWeight: 600,
+                            border: '2px solid #FFD700' // Altın çerçeve
                           }}
                         >
                           {user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}

@@ -235,7 +235,17 @@ function UserDashboardPage() {
                         </Card>
                         
                         <Card
-                            onClick={() => navigate('/cards')}
+                            onClick={() => {
+                                if (userCards.length === 0) {
+                                    alert('Görüntülenecek kart bulunamadı. Önce bir kart oluşturun.');
+                                    return;
+                                }
+                                
+                                // İlk kartın public URL'sine git
+                                const firstCard = userCards[0];
+                                const publicUrl = `/card/${firstCard.customSlug || firstCard.id}`;
+                                window.open(publicUrl, '_blank');
+                            }}
                             sx={cardStyle(true)}
                         >
                             <Box sx={iconContainerStyle()}>
@@ -249,7 +259,7 @@ function UserDashboardPage() {
                                     Görüntüle
                                 </Typography>
                                 <Typography variant="body2" sx={subtitleStyle()}>
-                                    Kartları görüntüle
+                                    Kartviziti görüntüle
                                 </Typography>
                             </Box>
                         </Card>
