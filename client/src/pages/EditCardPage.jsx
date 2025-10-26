@@ -507,7 +507,7 @@ function EditCardPage() {
         <Container component="main" maxWidth="lg" sx={{ px: { xs: 0.5, sm: 1, md: 2 } }}>
              <Paper sx={{ 
                p: { xs: 1.5, sm: 2.5, md: 4 }, 
-               mt: { xs: 1, sm: 2, md: 3 }, 
+               mt: { xs: 0.5, sm: 1, md: 2 }, 
                mb: { xs: 1, sm: 2, md: 3 }, 
                boxShadow: { xs: 1, sm: 2, md: 3 },
                mx: { xs: 0.5, sm: 0 }

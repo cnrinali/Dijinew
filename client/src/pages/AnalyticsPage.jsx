@@ -125,8 +125,8 @@ const AnalyticsPage = () => {
     }
 
     return (
-        <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-            <Typography variant="h4" gutterBottom>
+        <Container maxWidth="lg" sx={{ mt: 2, mb: 4 }}>
+            <Typography variant="h4" gutterBottom sx={{ mt: 2 }}>
                 📊 İstatistikler
             </Typography>
 
