@@ -175,7 +175,7 @@ function AppContent() {
                   {/* Sağ taraf - boş alan */}
                   <Box sx={{ flex: 1 }} />
 
-                  <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
+                  <Box sx={{ flexGrow: 1, display: { xs: user?.role === 'user' ? 'none' : 'flex', md: 'none' } }}>
                     <IconButton
                       size="large"
                       aria-label="account of current user"

@@ -53,7 +53,8 @@ const getCards = async (req, res) => {
         // Status kolonunu isActive olarak map et
         const cardsWithMappedStatus = result.recordset.map(card => ({
             ...card,
-            isActive: card.status === 1 || card.status === '1' || card.status === true
+            isActive: card.isActive === 1 || card.isActive === '1' || card.isActive === true || 
+                     card.status === 1 || card.status === '1' || card.status === true
         }));
         
         res.status(200).json(cardsWithMappedStatus); // Kullanıcının kartlarını dizi olarak dön
@@ -774,9 +775,10 @@ const toggleCardStatus = async (req, res) => {
             .input('cardId', sql.Int, parseInt(cardId))
             .input('userId', sql.Int, userId)
             .input('status', sql.Bit, isActive) // SQL Server'da boolean için BIT kullanılır
+            .input('isActive', sql.Bit, isActive) // isActive alanını da güncelle
             .query(`
                 UPDATE Cards 
-                SET status = @status 
+                SET status = @status, isActive = @isActive 
                 WHERE id = @cardId AND userId = @userId;
             `);
 
@@ -788,11 +790,12 @@ const toggleCardStatus = async (req, res) => {
         // Güncellenmiş kartı al
         const selectResult = await pool.request()
             .input('cardId', sql.Int, parseInt(cardId))
-            .query('SELECT id, status FROM Cards WHERE id = @cardId');
+            .query('SELECT id, status, isActive FROM Cards WHERE id = @cardId');
 
         const cardWithMappedStatus = {
             ...selectResult.recordset[0],
-            isActive: selectResult.recordset[0].status === 1 || selectResult.recordset[0].status === '1' || selectResult.recordset[0].status === true
+            isActive: selectResult.recordset[0].isActive === 1 || selectResult.recordset[0].isActive === '1' || selectResult.recordset[0].isActive === true || 
+                     selectResult.recordset[0].status === 1 || selectResult.recordset[0].status === '1' || selectResult.recordset[0].status === true
         };
 
         console.log('Toggle Status Response - Card:', cardWithMappedStatus);

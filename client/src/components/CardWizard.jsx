@@ -599,14 +599,14 @@ export default function CardWizard() {
                     // Kullanıcı giriş yapmış olduğundan uygun yere yönlendir
                     if (user) {
                         if (user.role === 'admin') {
-                            navigate('/admin/cards');
+                            navigate('/admin/dashboard');
                         } else if (user.role === 'corporate') {
-                            navigate('/corporate/cards');
+                            navigate('/corporate/dashboard');
                         } else {
-                            navigate('/cards');
+                            navigate('/');
                         }
                     } else {
-                        navigate('/cards');
+                        navigate('/');
                     }
                 } else {
                     showNotification('Kartvizit güncellenemedi: ' + (data.message || 'Bilinmeyen hata'), 'error');
@@ -630,14 +630,14 @@ export default function CardWizard() {
                 const user = JSON.parse(localStorage.getItem('user'));
                 if (user) {
                     if (user.role === 'admin') {
-                        navigate('/admin/cards');
+                        navigate('/admin/dashboard');
                     } else if (user.role === 'corporate') {
-                        navigate('/corporate/cards');
+                        navigate('/corporate/dashboard');
                     } else {
-                        navigate('/cards');
+                        navigate('/');
                     }
                 } else {
-                    navigate('/cards');
+                    navigate('/');
                     }
                 } else {
                     showNotification('Kartvizit oluşturulamadı: ' + (data.message || 'Bilinmeyen hata'), 'error');

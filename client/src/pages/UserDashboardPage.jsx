@@ -109,6 +109,29 @@ function UserDashboardPage() {
         setQrModalOpen(true);
     };
 
+    // Aktif/Pasif toggle fonksiyonu
+    const handleToggleStatus = async () => {
+        if (userCards.length === 0) {
+            alert('Durumu değiştirilecek kart bulunamadı.');
+            return;
+        }
+
+        const firstCard = userCards[0];
+        const newStatus = !firstCard.isActive;
+        
+        try {
+            const result = await cardService.toggleCardStatus(firstCard.id, newStatus);
+            alert(result.message);
+            
+            // Kartları yeniden yükle
+            const cards = await cardService.getCards();
+            setUserCards(cards);
+        } catch (error) {
+            console.error('Kart durumu değiştirilirken hata:', error);
+            alert('Kart durumu değiştirilirken bir hata oluştu.');
+        }
+    };
+
     // QR Kod Modal kapatma fonksiyonu
     const handleCloseQrModal = () => {
         setQrModalOpen(false);
@@ -378,9 +401,7 @@ function UserDashboardPage() {
                         </Card>
                         
                         <Card
-                            onClick={() => {
-                                alert('Kart aktif/pasif etme özelliği yakında eklenecek!');
-                            }}
+                            onClick={handleToggleStatus}
                             sx={cardStyle(true)}
                         >
                             <Box sx={iconContainerStyle()}>
@@ -393,10 +414,10 @@ function UserDashboardPage() {
                             </Box>
                             <Box>
                                 <Typography variant="h5" sx={textStyle()}>
-                                    Aktif/Pasif Et
+                                    {userCards.length > 0 && userCards[0].isActive ? 'Pasif Yap' : 'Aktif Yap'}
                                 </Typography>
                                 <Typography variant="body2" sx={subtitleStyle()}>
-                                    Kartı aktif/pasif et
+                                    {userCards.length > 0 && userCards[0].isActive ? 'Kartı pasif yap' : 'Kartı aktif yap'}
                                 </Typography>
                             </Box>
                         </Card>
