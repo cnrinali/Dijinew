@@ -577,16 +577,7 @@ const updateCardByToken = async (req, res) => {
             updatedCard.customSlug = newSlug;
         }
 
-        // Token'ı kullanıldı olarak işaretle (sadece kart aktifleştirildi ise)
-        if (isActiveValue === 1) {
-            await pool.request()
-                .input('token', sql.NVarChar, token)
-                .query(`
-                    UPDATE SimpleWizardTokens 
-                    SET isUsed = 1, updatedAt = GETDATE()
-                    WHERE token = @token
-                `);
-        }
+        // Token'ı kullanıldı olarak işaretleme - bu işlem updateCardOwnership'de yapılacak
 
         res.status(200).json({
             success: true,
@@ -623,40 +614,69 @@ const updateCardOwnership = async (req, res) => {
         const tokenResult = await pool.request()
             .input('token', sql.NVarChar, token)
             .query(`
-                SELECT cardId FROM SimpleWizardTokens 
-                WHERE token = @token AND isUsed = 0
+                SELECT cardId, isUsed FROM SimpleWizardTokens 
+                WHERE token = @token
             `);
 
         if (tokenResult.recordset.length === 0) {
             return res.status(404).json({
                 success: false,
-                message: 'Geçersiz veya kullanılmış token.'
+                message: 'Token bulunamadı veya zaten kullanılmış.'
             });
         }
 
-        const cardId = tokenResult.recordset[0].cardId;
+        const tokenData = tokenResult.recordset[0];
+        const cardId = tokenData.cardId;
 
-        // Kartın userId'sini güncelle
-        const updateResult = await pool.request()
-            .input('cardId', sql.Int, cardId)
-            .input('newUserId', sql.Int, newUserId)
-            .query(`
-                UPDATE Cards 
-                SET userId = @newUserId, updatedAt = GETDATE()
-                WHERE id = @cardId
-            `);
+        // Token zaten kullanılmış olsa bile devam et (çünkü kart güncelleme işlemi tamamlanmış olabilir)
+        console.log('🔍 Token durumu:', { token, isUsed: tokenData.isUsed, cardId });
 
-        if (updateResult.rowsAffected[0] > 0) {
+        // Transaction başlat
+        const transaction = pool.transaction();
+        await transaction.begin();
+
+        try {
+            // Kartın userId'sini güncelle
+            const updateResult = await transaction.request()
+                .input('cardId', sql.Int, cardId)
+                .input('newUserId', sql.Int, newUserId)
+                .query(`
+                    UPDATE Cards 
+                    SET userId = @newUserId, updatedAt = GETDATE()
+                    WHERE id = @cardId
+                `);
+
+            if (updateResult.rowsAffected[0] === 0) {
+                await transaction.rollback();
+                return res.status(400).json({
+                    success: false,
+                    message: 'Kart güncellenemedi.'
+                });
+            }
+
+            // Token'ı kullanıldı olarak işaretle (eğer henüz işaretlenmemişse)
+            if (tokenData.isUsed === 0) {
+                await transaction.request()
+                    .input('token', sql.NVarChar, token)
+                    .query(`
+                        UPDATE SimpleWizardTokens 
+                        SET isUsed = 1, usedAt = GETDATE()
+                        WHERE token = @token
+                    `);
+            }
+
+            // Transaction'ı commit et
+            await transaction.commit();
+
             res.json({
                 success: true,
                 message: 'Kart sahipliği başarıyla güncellendi.',
                 data: { cardId, newUserId }
             });
-        } else {
-            res.status(400).json({
-                success: false,
-                message: 'Kart güncellenemedi.'
-            });
+
+        } catch (error) {
+            await transaction.rollback();
+            throw error;
         }
 
     } catch (error) {

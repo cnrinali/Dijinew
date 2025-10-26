@@ -573,7 +573,7 @@ export default function CardWizard() {
                     const user = JSON.parse(localStorage.getItem('user'));
                     if (user && user.id) {
                         try {
-                            const ownershipResponse = await fetch(`${apiBaseUrl}/api/simple-wizard/use/${simpleWizardToken}`, {
+                            const ownershipResponse = await fetch(`${apiBaseUrl}/api/simple-wizard/update-ownership/${simpleWizardToken}`, {
                                 method: 'PUT',
                                 headers: {
                                     'Content-Type': 'application/json',
