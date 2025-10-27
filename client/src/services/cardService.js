@@ -39,7 +39,12 @@ const createCard = async (cardData) => {
 const getCardById = async (id) => {
     const config = getAuthConfig();
     if (!config.headers) throw new Error("Yetkilendirme token'ı bulunamadı");
-    const response = await axios.get(`${API_URL}/${id}`, config);
+    
+    // Corporate kullanıcıları için özel endpoint kullan
+    const user = JSON.parse(localStorage.getItem('user'));
+    const endpoint = user?.role === 'corporate' ? `/api/corporate/cards/${id}` : `${API_URL}/${id}`;
+    
+    const response = await axios.get(endpoint, config);
     return response.data;
 };
 
@@ -81,7 +86,12 @@ const toggleCardStatus = async (cardId, isActive) => {
 const getCardBankAccounts = async (cardId) => {
     const config = getAuthConfig();
     if (!config.headers) throw new Error("Yetkilendirme token'ı bulunamadı");
-    const response = await axios.get(`${API_URL}/${cardId}/bank-accounts`, config);
+    
+    // Corporate kullanıcıları için özel endpoint kullan
+    const user = JSON.parse(localStorage.getItem('user'));
+    const endpoint = user?.role === 'corporate' ? `/api/corporate/cards/${cardId}/bank-accounts` : `${API_URL}/${cardId}/bank-accounts`;
+    
+    const response = await axios.get(endpoint, config);
     return response.data;
 };
 

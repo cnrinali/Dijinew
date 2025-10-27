@@ -93,5 +93,57 @@ export const createMyCompanyUser = async (userData) => {
 // Modern isim ile aynı fonksiyon
 export const createCompanyUser = createMyCompanyUser;
 
+// @desc    Export company cards to Excel
+// @route   GET /api/corporate/cards/export
+// @access  Private/Corporate
+export const exportCompanyCardsToExcel = async () => {
+    try {
+        const config = getAuthConfig();
+        const response = await axios.get(`${API_BASE_URL}/cards/export`, {
+            ...config,
+            responseType: 'blob' // Excel dosyası için blob response
+        });
+        
+        // Dosyayı indir
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'kurumsal_kartvizit_listesi.xlsx');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+        
+        return { success: true };
+    } catch (error) {
+        console.error('Error exporting company cards to Excel:', error.response?.data || error.message);
+        throw error.response?.data || new Error('Excel dosyası indirilemedi.');
+    }
+};
+
+// @desc    Import company cards from Excel
+// @route   POST /api/corporate/cards/import
+// @access  Private/Corporate
+export const importCompanyCardsFromExcel = async (file) => {
+    try {
+        const config = getAuthConfig();
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const response = await axios.post(`${API_BASE_URL}/cards/import`, formData, {
+            ...config,
+            headers: {
+                ...config.headers,
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        
+        return response.data;
+    } catch (error) {
+        console.error('Error importing company cards from Excel:', error.response?.data || error.message);
+        throw error.response?.data || new Error('Excel dosyası yüklenemedi.');
+    }
+};
+
 // Gelecekteki diğer kurumsal servis fonksiyonları buraya eklenebilir
 // export const addCardToMyCompany = async (cardData) => { ... }; 

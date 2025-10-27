@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
     Box,
     Card,
@@ -48,6 +48,9 @@ import YouTubeIcon from '@mui/icons-material/YouTube';
 import VideoCallIcon from '@mui/icons-material/VideoCall';
 import ChatIcon from '@mui/icons-material/Chat';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import PersonIcon from '@mui/icons-material/Person';
 import ShareIcon from '@mui/icons-material/Share';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
@@ -60,7 +63,6 @@ import DeliveryDiningIcon from '@mui/icons-material/DeliveryDining';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 import QrCodeIcon from '@mui/icons-material/QrCode';
 import CloseIcon from '@mui/icons-material/Close';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import DescriptionIcon from '@mui/icons-material/Description';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -3024,6 +3026,1175 @@ export const OvalCarouselTheme = ({ cardData }) => {
 };
 
 // Tema seçici fonksiyonu
+// Kurumsal Dijital Tema - Resimdeki tasarıma göre
+export const CorporateDigitalTheme = ({ cardData }) => {
+    const { handleQrClick, handleShareClick, QrModal, ShareSnackbar, VideoModal } = useCardActions(cardData);
+
+    // Kart görüntülenmesini kaydet
+    useEffect(() => {
+        if (cardData?.id) {
+            analyticsService.recordCardView(cardData.id);
+        }
+    }, [cardData?.id]);
+
+    // Link tıklama handler'ı
+    const handleLinkClick = (linkType) => {
+        console.log(`CorporateDigitalTheme - handleLinkClick çağrıldı: linkType=${linkType}, cardId=${cardData?.id}`);
+        if (cardData?.id) {
+            console.log(`CorporateDigitalTheme - trackClick çağrılıyor...`);
+            trackClick(cardData.id, linkType);
+        } else {
+            console.log(`CorporateDigitalTheme - cardData.id bulunamadı:`, cardData);
+        }
+    };
+
+    // Sosyal medya linklerini al
+    const socialLinks = [
+        { type: 'phone', icon: <PhoneIcon />, label: 'Ara', value: cardData.phone, color: '#4CAF50' },
+        { type: 'whatsapp', icon: <WhatsAppIcon />, label: 'WhatsApp', value: cardData.whatsappUrl, color: '#25D366' },
+        { type: 'email', icon: <EmailIcon />, label: 'E-posta', value: cardData.email, color: '#FF9800' },
+        { type: 'website', icon: <LanguageIcon />, label: 'Web Sitesi', value: cardData.websiteUrl, color: '#2196F3' },
+        { type: 'location', icon: <LocationOnIcon />, label: 'Konum', value: cardData.address, color: '#F44336' },
+        { type: 'linkedin', icon: <LinkedInIcon />, label: 'LinkedIn', value: cardData.linkedinUrl, color: '#0077B5' },
+        { type: 'instagram', icon: <InstagramIcon />, label: 'Instagram', value: cardData.instagramUrl, color: '#E4405F' },
+        { type: 'twitter', icon: <TwitterIcon />, label: 'Twitter', value: cardData.twitterUrl, color: '#1DA1F2' },
+        { type: 'facebook', icon: <FacebookIcon />, label: 'Facebook', value: cardData.facebookUrl, color: '#1877F2' },
+        { type: 'youtube', icon: <YouTubeIcon />, label: 'YouTube', value: cardData.youtubeUrl, color: '#FF0000' },
+        { type: 'telegram', icon: <TelegramIcon />, label: 'Telegram', value: cardData.telegramUrl, color: '#0088CC' }
+    ].filter(link => link.value);
+
+    // Ana ikonlar (büyük ikonlar)
+    const mainIcons = socialLinks.slice(0, 5);
+
+    return (
+        <Box sx={{ 
+            maxWidth: { xs: '100%', sm: 500 }, 
+            width: '100%', 
+            mt: 2,
+            borderRadius: 3,
+            overflow: 'hidden',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+            position: 'relative',
+            mx: 'auto'
+        }}>
+            {/* Üst Kırmızı Bölüm - 2. görseldeki diyagonal kesim ve çizgili desen */}
+            <Box sx={{
+                background: '#DC2626',
+                position: 'relative',
+                minHeight: { xs: 200, sm: 220 },
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                p: { xs: 2, sm: 3 },
+                clipPath: 'polygon(0 0, 100% 0, 100% 75%, 0 100%)',
+                '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: `
+                        repeating-linear-gradient(
+                            45deg,
+                            transparent,
+                            transparent 8px,
+                            rgba(0,0,0,0.1) 8px,
+                            rgba(0,0,0,0.1) 16px
+                        )
+                    `,
+                    opacity: 0.3
+                }
+            }}>
+                {/* Sol Üst - İletişim Formu Balonu */}
+                <Box sx={{
+                    position: 'absolute',
+                    top: { xs: 12, sm: 16 },
+                    left: { xs: 12, sm: 16 },
+                    backgroundColor: 'white',
+                    borderRadius: 2,
+                    px: { xs: 1.5, sm: 2 },
+                    py: { xs: 0.8, sm: 1 },
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                    zIndex: 2
+                }}>
+                    <Typography variant="caption" sx={{ 
+                        color: '#333',
+                        fontWeight: 500,
+                        fontSize: { xs: '0.7rem', sm: '0.75rem' }
+                    }}>
+                        İletişim Formu
+                    </Typography>
+                </Box>
+
+                {/* Sağ Üst - Küresel Bağlantı İkonu */}
+                <Box sx={{
+                    position: 'absolute',
+                    top: { xs: 12, sm: 16 },
+                    right: { xs: 12, sm: 16 },
+                    width: { xs: 32, sm: 36 },
+                    height: { xs: 32, sm: 36 },
+                    backgroundColor: 'white',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                    zIndex: 2
+                }}>
+                    <BusinessIcon sx={{ 
+                        color: '#DC2626',
+                        fontSize: { xs: 18, sm: 20 }
+                    }} />
+                </Box>
+
+                {/* Sağ Taraf - KURUMSAL TEMA Metni */}
+                <Box sx={{
+                    position: 'absolute',
+                    right: { xs: 16, sm: 20 },
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    textAlign: 'right',
+                    zIndex: 2
+                }}>
+                    <Typography variant="h4" sx={{ 
+                        color: 'white', 
+                        fontWeight: 700,
+                        fontSize: { xs: '1.2rem', sm: '1.5rem' },
+                        mb: 1,
+                        textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                    }}>
+                        KURUMSAL TEMA
+                    </Typography>
+                    <Typography variant="body2" sx={{ 
+                        color: 'white', 
+                        opacity: 0.9,
+                        fontSize: { xs: '0.7rem', sm: '0.8rem' },
+                        lineHeight: 1.3,
+                        maxWidth: { xs: 120, sm: 150 },
+                        textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+                    }}>
+                        Firmanıza göre ikonlarınızı özelleştirebilirsiniz.
+                    </Typography>
+                </Box>
+
+                {/* Profil Fotoğrafı */}
+                {cardData.profileImageUrl && (
+                    <Avatar
+                        alt={cardData.name || 'Profil'}
+                        src={cardData.profileImageUrl}
+                        sx={{
+                            width: { xs: 70, sm: 80 },
+                            height: { xs: 70, sm: 80 },
+                            border: '4px solid white',
+                            mb: 2,
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                        }}
+                    />
+                )}
+
+                {/* İsim ve Başlık */}
+                <Typography variant="h5" sx={{ 
+                    color: 'white', 
+                    fontWeight: 700, 
+                    mb: 0.5,
+                    textAlign: 'center',
+                    textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                    fontSize: { xs: '1.3rem', sm: '1.5rem' }
+                }}>
+                    {cardData.name || 'İsim'}
+                </Typography>
+                
+                <Typography variant="body1" sx={{ 
+                    color: 'white', 
+                    opacity: 0.9,
+                    textAlign: 'center',
+                    mb: 2,
+                    textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                    fontSize: { xs: '0.9rem', sm: '1rem' }
+                }}>
+                    {cardData.title || 'Dijital Kartvizit'}
+                </Typography>
+
+                {/* Alt Kısım - Sayfalama Noktaları */}
+                <Box sx={{
+                    position: 'absolute',
+                    bottom: { xs: 12, sm: 16 },
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    display: 'flex',
+                    gap: 1,
+                    zIndex: 2
+                }}>
+                    {[1, 2, 3, 4, 5, 6, 7].map((dot, index) => (
+                        <Box
+                            key={dot}
+                            sx={{
+                                width: { xs: 6, sm: 8 },
+                                height: { xs: 6, sm: 8 },
+                                borderRadius: '50%',
+                                backgroundColor: index === 0 ? 'white' : 'rgba(255,255,255,0.4)',
+                                transition: 'all 0.3s ease'
+                            }}
+                        />
+                    ))}
+                </Box>
+            </Box>
+
+            {/* Alt Beyaz Bölüm */}
+            <Box sx={{
+                backgroundColor: 'white',
+                p: { xs: 2, sm: 3 },
+                minHeight: 300,
+                position: 'relative'
+            }}>
+                {/* Ana İkonlar - Görseldeki yan yana düzen (kaymalı değil) */}
+                <Box sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: { xs: 0.8, sm: 1 },
+                    mb: 3,
+                    px: { xs: 1, sm: 0 },
+                    flexWrap: 'wrap'
+                }}>
+                    {mainIcons.map((link) => (
+                        <Box
+                            key={link.type}
+                            onClick={() => handleLinkClick(link.type)}
+                            sx={{
+                                width: { xs: 50, sm: 60 },
+                                height: { xs: 50, sm: 60 },
+                                borderRadius: { xs: 1.5, sm: 2 },
+                                backgroundColor: link.color,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                '&:hover': {
+                                    transform: 'scale(1.05)',
+                                    boxShadow: '0 6px 20px rgba(0,0,0,0.2)'
+                                },
+                                '& svg': {
+                                    color: 'white',
+                                    fontSize: { xs: 20, sm: 24 }
+                                }
+                            }}
+                        >
+                            {link.icon}
+                        </Box>
+                    ))}
+                </Box>
+
+                {/* Rehbere Ekle Metni */}
+                <Typography variant="body2" sx={{ 
+                    textAlign: 'center', 
+                    color: '#333',
+                    mb: 2,
+                    fontWeight: 500,
+                    fontSize: { xs: '0.9rem', sm: '1rem' }
+                }}>
+                    Rehbere Ekle
+                </Typography>
+
+                {/* Görseldeki büyük ikonlar - Fan-out efekti ile geçiş */}
+                <Box sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    mb: 3,
+                    px: { xs: 1, sm: 0 },
+                    position: 'relative',
+                    height: { xs: 80, sm: 90 }
+                }}>
+                    {[
+                        { icon: <PhoneIcon />, color: '#4CAF50', label: 'Ara' },
+                        { icon: <BusinessIcon />, color: '#2196F3', label: 'Kişi' },
+                        { icon: <QrCodeIcon />, color: '#FF9800', label: 'QR' },
+                        { icon: <QrCodeIcon />, color: '#F44336', label: 'QR' },
+                        { icon: <FacebookIcon />, color: '#1DA1F2', label: 'Facebook' }
+                    ].map((item, index) => {
+                        // Ortadaki ikon (index 2) en önde, diğerleri geriye doğru kayıyor
+                        const centerIndex = 2;
+                        const distanceFromCenter = Math.abs(index - centerIndex);
+                        const isCenter = index === centerIndex;
+                        
+                        return (
+                            <Box
+                                key={index}
+                                sx={{
+                                    width: { xs: 50, sm: 60 },
+                                    height: { xs: 50, sm: 60 },
+                                    borderRadius: { xs: 1.5, sm: 2 },
+                                    backgroundColor: item.color,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s ease',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                    position: 'absolute',
+                                    // Fan-out efekti: ortadaki en önde, diğerleri geriye doğru
+                                    left: '50%',
+                                    transform: `translateX(-50%) translateX(${(index - centerIndex) * 35}px) scale(${1 - distanceFromCenter * 0.1})`,
+                                    zIndex: isCenter ? 10 : (10 - distanceFromCenter),
+                                    '&:hover': {
+                                        transform: `translateX(-50%) translateX(${(index - centerIndex) * 35}px) scale(${1.1 - distanceFromCenter * 0.1})`,
+                                        boxShadow: '0 6px 20px rgba(0,0,0,0.2)',
+                                        zIndex: 15
+                                    },
+                                    '& svg': {
+                                        color: 'white',
+                                        fontSize: { xs: 20, sm: 24 }
+                                    }
+                                }}
+                            >
+                                {item.icon}
+                            </Box>
+                        );
+                    })}
+                </Box>
+
+                {/* Banka Bilgileri Butonu */}
+                {cardData.bankAccounts && cardData.bankAccounts.length > 0 && (
+                    <Box sx={{ mb: 3, textAlign: 'center' }}>
+                        <Button
+                            variant="outlined"
+                            startIcon={<AccountBalanceIcon />}
+                            onClick={() => handleLinkClick('bank')}
+                            sx={{
+                                borderRadius: 2,
+                                borderColor: '#ddd',
+                                color: '#666',
+                                textTransform: 'none',
+                                px: 3,
+                                py: 1,
+                                '&:hover': {
+                                    borderColor: '#E53E3E',
+                                    color: '#E53E3E',
+                                    backgroundColor: 'rgba(229, 62, 62, 0.04)'
+                                }
+                            }}
+                        >
+                            Banka Bilgileri
+                        </Button>
+                    </Box>
+                )}
+
+                {/* Alt İkonlar Grid - Görseldeki 3x2 grid */}
+                <Box sx={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: { xs: 0.8, sm: 1 },
+                    mt: 2
+                }}>
+                    {[
+                        { icon: <StorefrontIcon />, label: 'Ürünler', color: '#FF5722' },
+                        { icon: <PhoneIcon />, label: 'Özellikler', color: '#2196F3' },
+                        { icon: <BusinessIcon />, label: 'Referanslarımız', color: '#4CAF50' },
+                        { icon: <CameraAltIcon />, label: 'Temalar', color: '#9C27B0' },
+                        { icon: <StoreIcon />, label: 'Bayilik', color: '#FF9800' },
+                        { icon: <DescriptionIcon />, label: 'Kurumsal Takip', color: '#607D8B' }
+                    ].map((item, index) => (
+                        <Box
+                            key={index}
+                            sx={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                p: { xs: 0.8, sm: 1 },
+                                borderRadius: 1,
+                                border: '2px solid #e0e0e0',
+                                backgroundColor: 'white',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease',
+                                minHeight: { xs: 70, sm: 80 },
+                                '&:hover': {
+                                    borderColor: item.color,
+                                    backgroundColor: `${item.color}08`,
+                                    transform: 'translateY(-2px)',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                                }
+                            }}
+                        >
+                            <Box sx={{
+                                width: { xs: 28, sm: 32 },
+                                height: { xs: 28, sm: 32 },
+                                borderRadius: 0.8,
+                                backgroundColor: item.color,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                mb: 0.5,
+                                '& svg': {
+                                    color: 'white',
+                                    fontSize: { xs: 14, sm: 16 }
+                                }
+                            }}>
+                                {item.icon}
+                            </Box>
+                            <Typography variant="caption" sx={{ 
+                                textAlign: 'center',
+                                color: '#666',
+                                fontWeight: 500,
+                                fontSize: { xs: '0.6rem', sm: '0.65rem' },
+                                lineHeight: 1.1
+                            }}>
+                                {item.label}
+                            </Typography>
+                        </Box>
+                    ))}
+                </Box>
+
+                {/* QR Kod ve Paylaşım - Görseldeki alt bar */}
+                <Box sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    gap: 2,
+                    mt: 3,
+                    pt: 2,
+                    borderTop: '1px solid #e0e0e0'
+                }}>
+                    <IconButton
+                        onClick={handleQrClick}
+                        sx={{
+                            backgroundColor: '#f8f8f8',
+                            width: { xs: 40, sm: 44 },
+                            height: { xs: 40, sm: 44 },
+                            '&:hover': {
+                                backgroundColor: '#DC2626',
+                                color: 'white',
+                                transform: 'scale(1.05)'
+                            },
+                            transition: 'all 0.3s ease'
+                        }}
+                    >
+                        <QrCodeIcon sx={{ fontSize: { xs: 20, sm: 22 } }} />
+                    </IconButton>
+                    <IconButton
+                        onClick={handleShareClick}
+                        sx={{
+                            backgroundColor: '#f8f8f8',
+                            width: { xs: 40, sm: 44 },
+                            height: { xs: 40, sm: 44 },
+                            '&:hover': {
+                                backgroundColor: '#DC2626',
+                                color: 'white',
+                                transform: 'scale(1.05)'
+                            },
+                            transition: 'all 0.3s ease'
+                        }}
+                    >
+                        <ShareIcon sx={{ fontSize: { xs: 20, sm: 22 } }} />
+                    </IconButton>
+                </Box>
+            </Box>
+
+            {/* Modals */}
+            <QrModal />
+            <ShareSnackbar />
+            <VideoModal />
+        </Box>
+    );
+};
+
+// Kurumsal Videolu Tema - Resimdeki tasarıma göre
+export const CorporateVideoTheme = ({ cardData }) => {
+    const { handleQrClick, handleShareClick, QrModal, ShareSnackbar, VideoModal } = useCardActions(cardData);
+    const [dragOffset, setDragOffset] = useState(0);
+    const [isDragging, setIsDragging] = useState(false);
+    const [startX, setStartX] = useState(0);
+
+    // Kart görüntülenmesini kaydet
+    useEffect(() => {
+        if (cardData?.id) {
+            analyticsService.recordCardView(cardData.id);
+        }
+    }, [cardData?.id]);
+
+    // Kullanıcının kendi sosyal medya ikonları
+    const userIcons = [
+        { icon: <PhoneIcon />, color: '#4CAF50', label: 'Telefon', type: 'phone', value: cardData.phone },
+        { icon: <EmailIcon />, color: '#FF5722', label: 'E-posta', type: 'email', value: cardData.email },
+        { icon: <WhatsAppIcon />, color: '#25D366', label: 'WhatsApp', type: 'whatsapp', value: cardData.whatsappUrl },
+        { icon: <InstagramIcon />, color: '#E4405F', label: 'Instagram', type: 'instagram', value: cardData.instagramUrl },
+        { icon: <TwitterIcon />, color: '#1DA1F2', label: 'Twitter', type: 'twitter', value: cardData.twitterUrl },
+        { icon: <LinkedInIcon />, color: '#0077B5', label: 'LinkedIn', type: 'linkedin', value: cardData.linkedinUrl },
+        { icon: <FacebookIcon />, color: '#1877F2', label: 'Facebook', type: 'facebook', value: cardData.facebookUrl },
+        { icon: <YouTubeIcon />, color: '#FF0000', label: 'YouTube', type: 'youtube', value: cardData.youtubeUrl },
+        { icon: <TelegramIcon />, color: '#0088CC', label: 'Telegram', type: 'telegram', value: cardData.telegramUrl },
+        { icon: <LanguageIcon />, color: '#607D8B', label: 'Website', type: 'website', value: cardData.websiteUrl },
+        { icon: <LocationOnIcon />, color: '#9C27B0', label: 'Konum', type: 'location', value: cardData.address },
+        { icon: <QrCodeIcon />, color: '#795548', label: 'QR Kod', type: 'qr', value: 'qr' },
+        { icon: <ShareIcon />, color: '#FF9800', label: 'Paylaş', type: 'share', value: 'share' }
+    ].filter(item => item.value); // Sadece değeri olan ikonları göster
+
+    // Eğer hiç ikon yoksa, varsayılan ikonları göster
+    const finalUserIcons = userIcons.length > 0 ? userIcons : [
+        { icon: <PhoneIcon />, color: '#4CAF50', label: 'Telefon', type: 'phone', value: 'phone' },
+        { icon: <EmailIcon />, color: '#FF5722', label: 'E-posta', type: 'email', value: 'email' },
+        { icon: <WhatsAppIcon />, color: '#25D366', label: 'WhatsApp', type: 'whatsapp', value: 'whatsapp' },
+        { icon: <InstagramIcon />, color: '#E4405F', label: 'Instagram', type: 'instagram', value: 'instagram' },
+        { icon: <TwitterIcon />, color: '#1DA1F2', label: 'Twitter', type: 'twitter', value: 'twitter' },
+        { icon: <QrCodeIcon />, color: '#795548', label: 'QR Kod', type: 'qr', value: 'qr' },
+        { icon: <ShareIcon />, color: '#FF9800', label: 'Paylaş', type: 'share', value: 'share' }
+    ];
+
+    // Sonsuz döngü için ikonları çoğalt
+    const allIcons = [];
+    for (let i = 0; i < 100; i++) { // 100 ikon oluştur (sonsuz döngü için)
+        const iconIndex = i % finalUserIcons.length;
+        allIcons.push({
+            ...finalUserIcons[iconIndex],
+            id: i // Benzersiz ID
+        });
+    }
+
+    // Sürükleme fonksiyonları
+    const handleMouseDown = useCallback((e) => {
+        setIsDragging(true);
+        setStartX(e.clientX - dragOffset);
+        e.preventDefault();
+    }, [dragOffset]);
+
+    const handleTouchStart = useCallback((e) => {
+        setIsDragging(true);
+        setStartX(e.touches[0].clientX - dragOffset);
+        e.preventDefault();
+    }, [dragOffset]);
+
+    const handleMouseMove = useCallback((e) => {
+        if (!isDragging) return;
+        const newOffset = e.clientX - startX;
+        // Sonsuz döngü için sınırları kaldır
+        const clampedOffset = newOffset;
+        
+        // Snap-to-grid mantığını sürükleme sırasında da uygula
+        const snapOffset = Math.round(clampedOffset / 70) * 70;
+        setDragOffset(snapOffset);
+    }, [isDragging, startX]);
+
+    const handleTouchMove = useCallback((e) => {
+        if (!isDragging) return;
+        const newOffset = e.touches[0].clientX - startX;
+        // Sonsuz döngü için sınırları kaldır
+        const clampedOffset = newOffset;
+        
+        // Snap-to-grid mantığını sürükleme sırasında da uygula
+        const snapOffset = Math.round(clampedOffset / 70) * 70;
+        setDragOffset(snapOffset);
+    }, [isDragging, startX]);
+
+    const handleMouseUp = useCallback(() => {
+        setIsDragging(false);
+        // Snap-to-grid zaten sürükleme sırasında uygulanıyor
+    }, []);
+
+    const handleTouchEnd = useCallback(() => {
+        setIsDragging(false);
+        // Snap-to-grid zaten sürükleme sırasında uygulanıyor
+    }, []);
+
+    // Global event listener'ları ekle/kaldır
+    useEffect(() => {
+        if (isDragging) {
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+            document.addEventListener('touchmove', handleTouchMove);
+            document.addEventListener('touchend', handleTouchEnd);
+        }
+
+        return () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+            document.removeEventListener('touchmove', handleTouchMove);
+            document.removeEventListener('touchend', handleTouchEnd);
+        };
+    }, [isDragging, startX, handleMouseMove, handleTouchMove, handleMouseUp, handleTouchEnd]);
+
+    // Link tıklama fonksiyonu
+    const trackClick = (cardId, linkType) => {
+        if (cardId) {
+            analyticsService.recordLinkClick(cardId, linkType);
+        }
+    };
+
+    return (
+        <Box sx={{ 
+            maxWidth: { xs: '100%', sm: 500 }, 
+            width: '100%', 
+            mt: 2,
+            borderRadius: 3,
+            overflow: 'hidden',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+            position: 'relative',
+            mx: 'auto',
+            backgroundColor: 'white'
+        }}>
+            {/* Üst Dil Seçimi */}
+            <Box sx={{
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                backgroundColor: '#f5f5f5',
+                borderRadius: 2,
+                px: 2,
+                py: 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                zIndex: 10
+            }}>
+                <Box sx={{
+                    width: 20,
+                    height: 15,
+                    backgroundColor: '#e53e3e',
+                    borderRadius: 0.5,
+                    position: 'relative',
+                    '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 2,
+                        left: 2,
+                        width: 16,
+                        height: 11,
+                        backgroundColor: 'white',
+                        borderRadius: 0.3
+                    },
+                    '&::after': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 3,
+                        left: 3,
+                        width: 14,
+                        height: 9,
+                        backgroundColor: '#e53e3e',
+                        borderRadius: 0.2
+                    }
+                }} />
+                <Typography variant="caption" sx={{ color: '#666', fontSize: '0.75rem' }}>
+                    Türkçe
+                </Typography>
+            </Box>
+
+            {/* Sarı Banner Bölümü */}
+            <Box sx={{
+                backgroundColor: '#FFD700',
+                p: { xs: 2, sm: 3 },
+                position: 'relative',
+                minHeight: { xs: 180, sm: 200 }
+            }}>
+                {/* Sol taraftaki metin */}
+                <Box sx={{
+                    position: 'absolute',
+                    left: { xs: 16, sm: 20 },
+                    top: { xs: 20, sm: 24 },
+                    maxWidth: { xs: 140, sm: 180 },
+                    zIndex: 2
+                }}>
+                    <Typography variant="body2" sx={{ 
+                        color: '#333',
+                        fontWeight: 500,
+                        fontSize: { xs: '0.7rem', sm: '0.8rem' },
+                        lineHeight: 1.3,
+                        mb: 0.5
+                    }}>
+                        Bireysel veya
+                    </Typography>
+                    <Typography variant="body2" sx={{ 
+                        color: '#333',
+                        fontWeight: 600,
+                        fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                        lineHeight: 1.3,
+                        mb: 0.5
+                    }}>
+                        Kurumsal
+                    </Typography>
+                    <Typography variant="body2" sx={{ 
+                        color: '#333',
+                        fontWeight: 500,
+                        fontSize: { xs: '0.7rem', sm: '0.8rem' },
+                        lineHeight: 1.3,
+                        mb: 0.5
+                    }}>
+                        Tema
+                    </Typography>
+                    <Typography variant="body2" sx={{ 
+                        color: '#333',
+                        fontWeight: 500,
+                        fontSize: { xs: '0.7rem', sm: '0.8rem' },
+                        lineHeight: 1.3,
+                        mb: 0.5
+                    }}>
+                        Seçeneklerinden
+                    </Typography>
+                    <Typography variant="body2" sx={{ 
+                        color: '#333',
+                        fontWeight: 500,
+                        fontSize: { xs: '0.7rem', sm: '0.8rem' },
+                        lineHeight: 1.3,
+                        mb: 0.5
+                    }}>
+                        İstediğinizi
+                    </Typography>
+                    <Typography variant="body2" sx={{ 
+                        color: '#333',
+                        fontWeight: 500,
+                        fontSize: { xs: '0.7rem', sm: '0.8rem' },
+                        lineHeight: 1.3,
+                        mb: 0.5
+                    }}>
+                        Tercih
+                    </Typography>
+                    <Typography variant="body2" sx={{ 
+                        color: '#333',
+                        fontWeight: 500,
+                        fontSize: { xs: '0.7rem', sm: '0.8rem' },
+                        lineHeight: 1.3
+                    }}>
+                        Edebilirsiniz
+                    </Typography>
+                </Box>
+
+                {/* Sağ taraftaki telefon mockupları ve play butonu */}
+                <Box sx={{
+                    position: 'absolute',
+                    right: { xs: 16, sm: 20 },
+                    top: { xs: 20, sm: 24 },
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    zIndex: 2
+                }}>
+                    {/* Sol telefon */}
+                    <Box sx={{
+                        width: { xs: 40, sm: 50 },
+                        height: { xs: 60, sm: 75 },
+                        backgroundColor: '#333',
+                        borderRadius: { xs: 2, sm: 2.5 },
+                        position: 'relative',
+                        '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            top: { xs: 4, sm: 5 },
+                            left: { xs: 2, sm: 2.5 },
+                            width: { xs: 36, sm: 45 },
+                            height: { xs: 52, sm: 65 },
+                            backgroundColor: 'white',
+                            borderRadius: { xs: 1.5, sm: 2 }
+                        }
+                    }}>
+                        {/* Telefon içindeki ikon */}
+                        <Box sx={{
+                            position: 'absolute',
+                            top: { xs: 8, sm: 10 },
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            width: { xs: 20, sm: 25 },
+                            height: { xs: 20, sm: 25 },
+                            backgroundColor: '#2196F3',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 3
+                        }}>
+                            <LocationOnIcon sx={{ color: 'white', fontSize: { xs: 12, sm: 15 } }} />
+                        </Box>
+                    </Box>
+
+                    {/* Play butonu */}
+                    <Box sx={{
+                        width: { xs: 24, sm: 30 },
+                        height: { xs: 24, sm: 30 },
+                        backgroundColor: '#FF0000',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        zIndex: 3,
+                        '&:hover': {
+                            backgroundColor: '#CC0000'
+                        }
+                    }}>
+                        <PlayArrowIcon sx={{ color: 'white', fontSize: { xs: 16, sm: 20 }, ml: 0.5 }} />
+                    </Box>
+
+                    {/* Sağ telefon */}
+                    <Box sx={{
+                        width: { xs: 40, sm: 50 },
+                        height: { xs: 60, sm: 75 },
+                        backgroundColor: '#333',
+                        borderRadius: { xs: 2, sm: 2.5 },
+                        position: 'relative',
+                        '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            top: { xs: 4, sm: 5 },
+                            left: { xs: 2, sm: 2.5 },
+                            width: { xs: 36, sm: 45 },
+                            height: { xs: 52, sm: 65 },
+                            backgroundColor: 'white',
+                            borderRadius: { xs: 1.5, sm: 2 }
+                        }
+                    }}>
+                        {/* Telefon içindeki ikon */}
+                        <Box sx={{
+                            position: 'absolute',
+                            top: { xs: 8, sm: 10 },
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            width: { xs: 20, sm: 25 },
+                            height: { xs: 20, sm: 25 },
+                            backgroundColor: '#FF9800',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 3
+                        }}>
+                            <PersonIcon sx={{ color: 'white', fontSize: { xs: 12, sm: 15 } }} />
+                        </Box>
+                    </Box>
+                </Box>
+
+                {/* Alt sol köşe YouTube metni */}
+                <Box sx={{
+                    position: 'absolute',
+                    bottom: { xs: 8, sm: 12 },
+                    left: { xs: 16, sm: 20 },
+                    zIndex: 2
+                }}>
+                    <Typography variant="caption" sx={{ 
+                        color: '#666',
+                        fontSize: { xs: '0.6rem', sm: '0.7rem' }
+                    }}>
+                        İzlemek için YouTube
+                    </Typography>
+                </Box>
+            </Box>
+
+            {/* Logo ve Başlık Bölümü */}
+            <Box sx={{
+                backgroundColor: 'white',
+                p: { xs: 2, sm: 3 },
+                textAlign: 'center'
+            }}>
+                {/* Dijiname Logo */}
+                <Box sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mb: 2
+                }}>
+                    <Box sx={{
+                        width: { xs: 24, sm: 30 },
+                        height: { xs: 24, sm: 30 },
+                        border: '2px solid #333',
+                        borderRadius: 1,
+                        mr: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}>
+                        <Typography sx={{ 
+                            fontWeight: 700,
+                            fontSize: { xs: '1rem', sm: '1.2rem' },
+                            color: '#333'
+                        }}>
+                            d
+                        </Typography>
+                    </Box>
+                    <Typography variant="h4" sx={{ 
+                        fontWeight: 700,
+                        fontSize: { xs: '1.5rem', sm: '2rem' },
+                        color: '#333',
+                        '& .dot': {
+                            color: '#FF0000'
+                        }
+                    }}>
+                        dijiname
+                    </Typography>
+                </Box>
+
+                {/* Alt başlık */}
+                <Typography variant="body2" sx={{ 
+                    color: '#666',
+                    mb: 2,
+                    fontSize: { xs: '0.8rem', sm: '0.9rem' }
+                }}>
+                    the future of business connection
+                </Typography>
+
+                {/* VİDEOLU LIGHT başlığı */}
+                <Box sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mb: 3
+                }}>
+                    <Typography variant="h5" sx={{ 
+                        fontWeight: 700,
+                        fontSize: { xs: '1.2rem', sm: '1.4rem' },
+                        color: '#333',
+                        mr: 1
+                    }}>
+                        VİDEOLU LIGHT
+                    </Typography>
+                    <CheckCircleIcon sx={{ color: '#2196F3', fontSize: { xs: 20, sm: 24 } }} />
+                </Box>
+
+                <Typography variant="body1" sx={{ 
+                    color: '#333',
+                    fontWeight: 500,
+                    mb: 3
+                }}>
+                    Dijiname
+                </Typography>
+            </Box>
+
+            {/* İkonlar Bölümü */}
+            <Box sx={{
+                backgroundColor: 'white',
+                p: { xs: 2, sm: 3 },
+                pb: { xs: 3, sm: 4 }
+            }}>
+                {/* Basit sürüklenebilir ikonlar */}
+                <Box sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    mb: 3,
+                    position: 'relative',
+                    height: { xs: 100, sm: 120 },
+                    overflow: 'hidden',
+                    cursor: isDragging ? 'grabbing' : 'grab',
+                    userSelect: 'none'
+                }}
+                onMouseDown={handleMouseDown}
+                onTouchStart={handleTouchStart}
+                >
+                    <Box                     sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: { xs: 0.8, sm: 1 },
+                        transform: `translateX(${dragOffset}px)`,
+                        transition: isDragging ? 'none' : 'transform 0.3s ease',
+                        width: '100%',
+                        justifyContent: 'center'
+                    }}>
+                        {allIcons.map((item, index) => {
+                            // TÜM İKONLARI GÖSTER - sonsuz döngü için
+                            // Sadece boyutları ayarla, hiçbirini gizleme
+                            
+                            // Ortadaki ikonun pozisyonu
+                            const centerIndex = Math.round(-dragOffset / 70);
+                            const distanceFromCenter = Math.abs(index - centerIndex);
+                            
+                            // Boyutları mesafeye göre ayarla
+                            let iconSize, fontSize, zIndex, scale, opacity;
+                            if (distanceFromCenter === 0) {
+                                // Ortadaki ikon - en büyük
+                                iconSize = { xs: 80, sm: 90 };
+                                fontSize = { xs: 32, sm: 36 };
+                                zIndex = 5;
+                                scale = 1;
+                                opacity = 1;
+                            } else if (distanceFromCenter === 1) {
+                                // Yanındaki ikonlar - küçük
+                                iconSize = { xs: 50, sm: 60 };
+                                fontSize = { xs: 20, sm: 24 };
+                                zIndex = 3;
+                                scale = 0.7;
+                                opacity = 1;
+                            } else if (distanceFromCenter === 2) {
+                                // Uçtaki ikonlar - çok küçük
+                                iconSize = { xs: 40, sm: 50 };
+                                fontSize = { xs: 16, sm: 20 };
+                                zIndex = 1;
+                                scale = 0.6;
+                                opacity = 0.8;
+                            } else {
+                                // Çok uzak ikonlar - görünmez
+                                iconSize = { xs: 30, sm: 40 };
+                                fontSize = { xs: 12, sm: 16 };
+                                zIndex = 0;
+                                scale = 0.4;
+                                opacity = 0;
+                            }
+                            
+                            return (
+                                <Box
+                                    key={index}
+                                    sx={{
+                                        width: iconSize,
+                                        height: iconSize,
+                                        borderRadius: { xs: 1.5, sm: 2 },
+                                        backgroundColor: item.color,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        cursor: 'pointer',
+                                        transition: isDragging ? 'none' : 'all 0.3s ease',
+                                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                        flexShrink: 0,
+                                        zIndex: zIndex,
+                                        transform: `scale(${scale})`,
+                                        opacity: opacity,
+                                        pointerEvents: opacity > 0.5 ? 'auto' : 'none',
+                                        '&:hover': {
+                                            transform: `scale(${scale * 1.05})`,
+                                            boxShadow: '0 6px 20px rgba(0,0,0,0.2)',
+                                            zIndex: 10
+                                        },
+                                        '& svg': {
+                                            color: 'white',
+                                            fontSize: fontSize
+                                        }
+                                    }}
+                                    onClick={() => {
+                                        if (item.type && cardData?.id) {
+                                            trackClick(cardData.id, item.type);
+                                        }
+                                        // İkon tıklama işlemleri
+                                        if (item.type === 'phone' && item.value) {
+                                            window.open(`tel:${item.value}`);
+                                        } else if (item.type === 'email' && item.value) {
+                                            window.open(`mailto:${item.value}`);
+                                        } else if (item.type === 'whatsapp' && item.value) {
+                                            window.open(`https://wa.me/${item.value.replace(/[^0-9]/g, '')}`);
+                                        } else if (item.type === 'website' && item.value) {
+                                            window.open(item.value, '_blank');
+                                        } else if (item.type === 'location' && item.value) {
+                                            window.open(`https://maps.google.com/?q=${encodeURIComponent(item.value)}`);
+                                        } else if (item.value && item.value.startsWith('http')) {
+                                            window.open(item.value, '_blank');
+                                        } else if (item.type === 'qr') {
+                                            handleQrClick();
+                                        } else if (item.type === 'share') {
+                                            handleShareClick();
+                                        }
+                                    }}
+                                >
+                                    {item.icon}
+                                </Box>
+                            );
+                        })}
+                    </Box>
+                </Box>
+
+                {/* Alt butonlar */}
+                <Box sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    gap: 2,
+                    mb: 2
+                }}>
+                    <Box sx={{
+                        flex: 1,
+                        backgroundColor: '#f5f5f5',
+                        borderRadius: 2,
+                        p: 1.5,
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                            backgroundColor: '#e0e0e0'
+                        }
+                    }}>
+                        <Typography variant="body2" sx={{ 
+                            color: '#333',
+                            fontWeight: 500,
+                            fontSize: { xs: '0.8rem', sm: '0.9rem' }
+                        }}>
+                            Banka Bilgileri
+                        </Typography>
+                    </Box>
+                    
+                    <Box sx={{
+                        flex: 1,
+                        backgroundColor: '#f5f5f5',
+                        borderRadius: 2,
+                        p: 1.5,
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                            backgroundColor: '#e0e0e0'
+                        }
+                    }}>
+                        <Typography variant="body2" sx={{ 
+                            color: '#333',
+                            fontWeight: 500,
+                            fontSize: { xs: '0.8rem', sm: '0.9rem' }
+                        }}>
+                            Fatura Bilgileri
+                        </Typography>
+                    </Box>
+                </Box>
+
+                {/* Rehbere Ekle */}
+                <Box sx={{
+                    backgroundColor: '#f5f5f5',
+                    borderRadius: 2,
+                    p: 1.5,
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                        backgroundColor: '#e0e0e0'
+                    }
+                }}>
+                    <Typography variant="body2" sx={{ 
+                        color: '#333',
+                        fontWeight: 500,
+                        fontSize: { xs: '0.8rem', sm: '0.9rem' }
+                    }}>
+                        Rehbere Ekle
+                    </Typography>
+                </Box>
+            </Box>
+
+            {/* QR ve Paylaşım Butonları */}
+            <Box sx={{
+                position: 'absolute',
+                top: 16,
+                left: 16,
+                display: 'flex',
+                gap: 1,
+                zIndex: 10
+            }}>
+                <IconButton
+                    onClick={handleQrClick}
+                    sx={{
+                        backgroundColor: 'rgba(255,255,255,0.9)',
+                        '&:hover': { backgroundColor: 'white' }
+                    }}
+                >
+                    <QrCodeIcon />
+                </IconButton>
+                <IconButton
+                    onClick={handleShareClick}
+                    sx={{
+                        backgroundColor: 'rgba(255,255,255,0.9)',
+                        '&:hover': { backgroundColor: 'white' }
+                    }}
+                >
+                    <ShareIcon />
+                </IconButton>
+            </Box>
+
+            <QrModal />
+            <ShareSnackbar />
+            <VideoModal />
+        </Box>
+    );
+};
+
 export const getThemeComponent = (theme) => {
     switch (theme) {
         case 'modern':
@@ -3040,6 +4211,10 @@ export const getThemeComponent = (theme) => {
             return CarouselTheme;
         case 'ovalcarousel':
             return OvalCarouselTheme;
+        case 'corporatedigital':
+            return CorporateDigitalTheme;
+        case 'corporatevideo':
+            return CorporateVideoTheme;
         case 'light':
         default:
             return DefaultTheme;

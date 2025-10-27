@@ -27,11 +27,11 @@ export default function CorporateDashboardPage() {
     try {
       // Kartvizitleri al
       const cardsResponse = await getCorporateCards();
-      const cards = cardsResponse?.data?.success ? cardsResponse.data.data : [];
+      const cards = cardsResponse?.success ? cardsResponse.data : [];
       
       // Kullanıcıları al
       const usersResponse = await getCorporateUsers({ brief: true });
-      const employees = usersResponse?.data?.success ? usersResponse.data.data : [];
+      const employees = usersResponse?.success ? usersResponse.data : [];
 
       // İstatistikleri hesapla
       const activeCards = cards.filter(card => card.isActive).length;

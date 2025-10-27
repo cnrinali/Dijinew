@@ -724,6 +724,8 @@ function CreateCardPage() {
                                                     <MenuItem value="creative">Yaratıcı</MenuItem>
                                                     <MenuItem value="carousel">3D Carousel (Dönen İkonlar)</MenuItem>
                                                     <MenuItem value="ovalcarousel">Oval Carousel</MenuItem>
+                                                    <MenuItem value="corporatedigital">Kurumsal Dijital</MenuItem>
+                                                    <MenuItem value="corporatevideo">Kurumsal Videolu</MenuItem>
                                                     <MenuItem value="dark">Koyu</MenuItem>
                                                 </Select>
                                             </FormControl>

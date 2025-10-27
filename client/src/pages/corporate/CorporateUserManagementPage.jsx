@@ -71,7 +71,7 @@ function CorporateUserManagementPage() {
         setError('');
         try {
             const response = await getCorporateUsers();
-            const usersData = response?.data?.success ? response.data.data : [];
+            const usersData = response?.success ? response.data : [];
             setUsers(usersData);
         } catch (err) {
             console.error("Şirket kullanıcıları getirilirken hata:", err);

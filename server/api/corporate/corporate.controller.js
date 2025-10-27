@@ -2,6 +2,9 @@ const { getPool, sql } = require('../../config/db');
 const bcrypt = require('bcryptjs');
 const { generateQRCodeDataURL, checkSlugUniqueness } = require('../admin/cards/card.controller');
 const { sendCorporateUserCredentials } = require('../../services/emailService');
+const ExcelJS = require('exceljs');
+const fs = require('fs');
+const path = require('path');
 
 // @desc    Get cards for the logged-in corporate user's company
 // @route   GET /api/corporate/cards
@@ -64,7 +67,7 @@ const getCompanyCards = async (req, res) => {
         let baseQuery = `FROM Cards c 
                         LEFT JOIN Users u ON c.userId = u.id 
                         LEFT JOIN SimpleWizardTokens swt ON c.id = swt.cardId 
-                        WHERE c.companyId = @companyId`;
+                        WHERE (c.companyId = @companyId OR u.companyId = @companyId)`;
         let whereConditions = []; // Temel companyId filtresi zaten baseQuery'de
 
         if (search) {
@@ -559,12 +562,352 @@ const updateCompanyLanguage = async (req, res) => {
     }
 };
 
+// @desc    Delete a card from the logged-in corporate user's company
+// @route   DELETE /api/corporate/cards/:id
+// @access  Private/Corporate
+const deleteCompanyCard = async (req, res) => {
+    const corporateCompanyId = req.user.companyId;
+    const cardId = req.params.id;
+
+    if (!corporateCompanyId) {
+        return res.status(403).json({ message: 'Bu işlem için bir şirkete atanmış olmanız gerekmektedir.' });
+    }
+
+    if (isNaN(parseInt(cardId))) {
+        return res.status(400).json({ message: 'Geçersiz Kart ID' });
+    }
+
+    try {
+        const pool = await getPool();
+
+        // 1. Kartın şirkete ait olup olmadığını kontrol et
+        const checkResult = await pool.request()
+            .input('cardId', sql.Int, parseInt(cardId))
+            .input('companyId', sql.Int, corporateCompanyId)
+            .query('SELECT TOP 1 id, cardName FROM Cards WHERE id = @cardId AND companyId = @companyId');
+        
+        if (checkResult.recordset.length === 0) {
+            return res.status(404).json({ message: 'Silinecek kartvizit bulunamadı veya şirketinize ait değil' });
+        }
+
+        // 2. Silme işlemini yap
+        const deleteResult = await pool.request()
+            .input('cardId', sql.Int, parseInt(cardId))
+            .query('DELETE FROM Cards WHERE id = @cardId');
+
+        if (deleteResult.rowsAffected && deleteResult.rowsAffected[0] > 0) {
+            const deletedCard = checkResult.recordset[0];
+            
+            res.status(200).json({ 
+                message: 'Kartvizit başarıyla silindi', 
+                id: cardId,
+                cardName: deletedCard.cardName
+            });
+        } else {
+            return res.status(404).json({ message: 'Silinecek kartvizit bulunamadı (tekrar kontrol)' });
+        }
+
+    } catch (error) {
+        console.error("Kurumsal kartvizit silme hatası:", error);
+        res.status(500).json({ message: 'Sunucu hatası oluştu' });
+    }
+};
+
+// @desc    Get a card by ID for corporate users (can access any card in their company)
+// @route   GET /api/corporate/cards/:id
+// @access  Private/Corporate
+const getCompanyCardById = async (req, res) => {
+    const corporateCompanyId = req.user.companyId;
+    const cardId = req.params.id;
+
+    if (!corporateCompanyId) {
+        return res.status(403).json({ message: 'Bu işlem için bir şirkete atanmış olmanız gerekmektedir.' });
+    }
+
+    if (isNaN(parseInt(cardId))) {
+        return res.status(400).json({ message: 'Geçersiz Kart ID' });
+    }
+
+    try {
+        const pool = await getPool();
+
+        const result = await pool.request()
+            .input('cardId', sql.Int, parseInt(cardId))
+            .input('companyId', sql.Int, corporateCompanyId)
+            .query(`
+                SELECT c.*, 
+                       COALESCE(u.name, 'Sihirbaz Kartı') as userName, 
+                       COALESCE(u.email, c.email) as userEmail,
+                       CASE 
+                           WHEN swt.cardId IS NOT NULL THEN 'Sihirbaz ile oluşturuldu'
+                           ELSE 'Manuel oluşturuldu'
+                       END as creationType
+                FROM Cards c 
+                LEFT JOIN Users u ON c.userId = u.id 
+                LEFT JOIN SimpleWizardTokens swt ON c.id = swt.cardId 
+                WHERE c.id = @cardId AND (c.companyId = @companyId OR u.companyId = @companyId)
+            `);
+
+        if (result.recordset.length === 0) {
+            return res.status(404).json({ message: 'Kartvizit bulunamadı veya şirketinize ait değil' });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: result.recordset[0]
+        });
+
+    } catch (error) {
+        console.error("Kurumsal kartvizit getirme hatası:", error);
+        res.status(500).json({ message: 'Sunucu hatası oluştu' });
+    }
+};
+
+// @desc    Get bank accounts for a card (corporate users can access any card in their company)
+// @route   GET /api/corporate/cards/:cardId/bank-accounts
+// @access  Private/Corporate
+const getCompanyCardBankAccounts = async (req, res) => {
+    const corporateCompanyId = req.user.companyId;
+    const cardId = req.params.cardId;
+
+    if (!corporateCompanyId) {
+        return res.status(403).json({ message: 'Bu işlem için bir şirkete atanmış olmanız gerekmektedir.' });
+    }
+
+    if (isNaN(parseInt(cardId))) {
+        return res.status(400).json({ message: 'Geçersiz Kart ID' });
+    }
+
+    try {
+        const pool = await getPool();
+
+        // Önce kartın şirkete ait olup olmadığını kontrol et
+        const cardCheck = await pool.request()
+            .input('cardId', sql.Int, parseInt(cardId))
+            .input('companyId', sql.Int, corporateCompanyId)
+            .query('SELECT TOP 1 id FROM Cards c LEFT JOIN Users u ON c.userId = u.id WHERE c.id = @cardId AND (c.companyId = @companyId OR u.companyId = @companyId)');
+
+        if (cardCheck.recordset.length === 0) {
+            return res.status(404).json({ message: 'Kartvizit bulunamadı veya şirketinize ait değil' });
+        }
+
+        // Banka hesaplarını getir
+        const result = await pool.request()
+            .input('cardId', sql.Int, parseInt(cardId))
+            .query('SELECT * FROM CardBankAccounts WHERE cardId = @cardId ORDER BY createdAt DESC');
+
+        res.status(200).json({
+            success: true,
+            data: result.recordset
+        });
+
+    } catch (error) {
+        console.error("Kurumsal kart banka hesapları getirme hatası:", error);
+        res.status(500).json({ message: 'Sunucu hatası oluştu' });
+    }
+};
+
+// @desc    Export company cards to Excel
+// @route   GET /api/corporate/cards/export
+// @access  Private/Corporate
+const exportCompanyCardsToExcel = async (req, res) => {
+    const companyId = req.user.companyId;
+
+    if (!companyId) {
+        return res.status(403).json({ message: 'Bu işlem için bir şirkete atanmış olmanız gerekmektedir.' });
+    }
+
+    try {
+        const pool = await getPool();
+        const request = pool.request();
+        request.input('companyId', sql.Int, companyId);
+
+        const result = await request.query(`
+            SELECT c.*, 
+                   COALESCE(u.name, 'Sihirbaz Kartı') as userName, 
+                   COALESCE(u.email, c.email) as userEmail,
+                   comp.name as companyName
+            FROM Cards c 
+            LEFT JOIN Users u ON c.userId = u.id 
+            LEFT JOIN Companies comp ON c.companyId = comp.id
+            WHERE c.companyId = @companyId
+            ORDER BY c.createdAt DESC
+        `);
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Kartvizitler');
+
+        // Başlık satırı
+        worksheet.columns = [
+            { header: 'ID', key: 'id', width: 10 },
+            { header: 'Kart Adı/Sahibi', key: 'name', width: 25 },
+            { header: 'Özel URL Slug', key: 'customSlug', width: 20 },
+            { header: 'Kart URL', key: 'cardUrl', width: 30 },
+            { header: 'Ünvan', key: 'title', width: 20 },
+            { header: 'Şirket Adı', key: 'companyName', width: 25 },
+            { header: 'Kullanıcı Adı', key: 'userName', width: 20 },
+            { header: 'Kullanıcı Email', key: 'userEmail', width: 25 },
+            { header: 'Durum', key: 'status', width: 15 },
+            { header: 'Email', key: 'email', width: 25 },
+            { header: 'Telefon', key: 'phone', width: 20 },
+            { header: 'Web Sitesi', key: 'website', width: 25 },
+            { header: 'Adres', key: 'address', width: 30 },
+            { header: 'Oluşturulma Tarihi', key: 'createdAt', width: 20 },
+            { header: 'Güncellenme Tarihi', key: 'updatedAt', width: 20 },
+            { header: 'QR Kod Data URL', key: 'qrCodeData', width: 30 }
+        ];
+
+        // Veri satırları
+        result.recordset.forEach(card => {
+            const cardUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/card/${card.customSlug || card.id}`;
+            worksheet.addRow({
+                id: card.id,
+                name: card.name,
+                customSlug: card.customSlug || '-',
+                cardUrl: cardUrl,
+                title: card.title || '-',
+                companyName: card.companyName || '-',
+                userName: card.userName || '-',
+                userEmail: card.userEmail || '-',
+                status: card.isActive ? 'Aktif' : 'Pasif',
+                email: card.email || '-',
+                phone: card.phone || '-',
+                website: card.website || '-',
+                address: card.address || '-',
+                createdAt: new Date(card.createdAt).toLocaleString('tr-TR'),
+                updatedAt: new Date(card.updatedAt).toLocaleString('tr-TR'),
+                qrCodeData: card.qrCodeData || '-'
+            });
+        });
+
+        // Başlık satırını kalın yap
+        worksheet.getRow(1).font = { bold: true };
+        worksheet.getRow(1).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFE0E0E0' }
+        };
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', 'attachment; filename="kurumsal_kartvizit_listesi.xlsx"');
+
+        await workbook.xlsx.write(res);
+        res.end();
+
+    } catch (error) {
+        console.error("Kurumsal kartları Excel'e aktarma hatası:", error);
+        res.status(500).json({ message: 'Excel dosyası oluşturulurken hata oluştu.' });
+    }
+};
+
+// @desc    Import cards from Excel
+// @route   POST /api/corporate/cards/import
+// @access  Private/Corporate
+const importCompanyCardsFromExcel = async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ message: 'Lütfen bir Excel dosyası yükleyin.' });
+    }
+
+    const companyId = req.user.companyId;
+
+    if (!companyId) {
+        return res.status(403).json({ message: 'Bu işlem için bir şirkete atanmış olmanız gerekmektedir.' });
+    }
+
+    try {
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.readFile(req.file.path);
+        const worksheet = workbook.getWorksheet(1);
+
+        const pool = await getPool();
+        const transaction = new sql.Transaction(pool);
+        await transaction.begin();
+
+        try {
+            let successCount = 0;
+            let errorCount = 0;
+            const errors = [];
+
+            // İlk satır başlık olduğu için atla
+            for (let rowNumber = 2; rowNumber <= worksheet.rowCount; rowNumber++) {
+                const row = worksheet.getRow(rowNumber);
+                const cardData = {
+                    name: row.getCell(2).value,
+                    title: row.getCell(4).value,
+                    email: row.getCell(10).value,
+                    phone: row.getCell(11).value,
+                    website: row.getCell(12).value,
+                    address: row.getCell(13).value,
+                    status: row.getCell(9).value === 'Aktif',
+                    customSlug: row.getCell(3).value
+                };
+
+                if (!cardData.name) {
+                    errorCount++;
+                    errors.push(`Satır ${rowNumber}: Kart adı boş olamaz.`);
+                    continue;
+                }
+
+                try {
+                    const insertRequest = new sql.Request(transaction);
+                    insertRequest.input('companyId', sql.Int, companyId);
+                    insertRequest.input('name', sql.NVarChar, cardData.name);
+                    insertRequest.input('title', sql.NVarChar, cardData.title || null);
+                    insertRequest.input('email', sql.NVarChar, cardData.email || null);
+                    insertRequest.input('phone', sql.NVarChar, cardData.phone || null);
+                    insertRequest.input('website', sql.NVarChar, cardData.website || null);
+                    insertRequest.input('address', sql.NVarChar, cardData.address || null);
+                    insertRequest.input('isActive', sql.Bit, cardData.status);
+                    insertRequest.input('customSlug', sql.NVarChar, cardData.customSlug || null);
+
+                    await insertRequest.query(`
+                        INSERT INTO Cards (companyId, name, title, email, phone, website, address, isActive, customSlug)
+                        VALUES (@companyId, @name, @title, @email, @phone, @website, @address, @isActive, @customSlug)
+                    `);
+
+                    successCount++;
+                } catch (insertError) {
+                    errorCount++;
+                    errors.push(`Satır ${rowNumber}: ${insertError.message}`);
+                }
+            }
+
+            await transaction.commit();
+
+            // Geçici dosyayı sil
+            fs.unlinkSync(req.file.path);
+
+            res.status(200).json({
+                success: true,
+                message: `İçeri aktarma tamamlandı. ${successCount} kart başarıyla eklendi, ${errorCount} kart eklenemedi.`,
+                successCount,
+                errorCount,
+                errors: errors.slice(0, 10) // İlk 10 hatayı göster
+            });
+
+        } catch (error) {
+            await transaction.rollback();
+            fs.unlinkSync(req.file.path);
+            throw error;
+        }
+
+    } catch (error) {
+        console.error("Kurumsal kartları Excel'den içeri aktarma hatası:", error);
+        res.status(500).json({ message: 'Excel dosyası işlenirken hata oluştu.' });
+    }
+};
+
 module.exports = {
     getCompanyCards,
     createCompanyCard,
+    getCompanyCardById,
+    deleteCompanyCard,
+    getCompanyCardBankAccounts,
     createCompanyUser,
     getCompanyUsers,
     getCompanyInfo,
     updateCompanyInfo,
-    updateCompanyLanguage
+    updateCompanyLanguage,
+    exportCompanyCardsToExcel,
+    importCompanyCardsFromExcel
 }; 

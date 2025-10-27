@@ -442,18 +442,32 @@ const updateAnyUser = async (req, res) => { // Fonksiyon adı değiştirildi
             }
             if (updateCompanyId) { // CompanyId sadece gönderildiyse güncellenir (null olabilir)
                 setClauses += ', companyId = @companyId';
-                updateRequest.input('companyId', sql.Int, companyIdToSet);
+                if (companyIdToSet === null) {
+                    updateRequest.input('companyId', sql.Int, null);
+                } else {
+                    updateRequest.input('companyId', sql.Int, companyIdToSet);
+                }
             }
             
-            const updateQuery = `UPDATE Users SET ${setClauses} OUTPUT inserted.id, inserted.name, inserted.email, inserted.role, inserted.createdAt, inserted.companyId WHERE id = @userId`;
+            const updateQuery = `UPDATE Users SET ${setClauses} WHERE id = @userId`;
             const updateResult = await updateRequest.query(updateQuery);
 
-            if (updateResult.recordset.length === 0) {
+            if (updateResult.rowsAffected[0] === 0) {
                 await transaction.rollback();
                 return res.status(404).json({ message: 'Güncellenecek kullanıcı bulunamadı.' });
             }
 
-            const updatedUser = updateResult.recordset[0];
+            // Güncellenmiş kullanıcı bilgilerini al
+            const getUserRequest = new sql.Request(transaction);
+            getUserRequest.input('userId', sql.Int, parseInt(userIdToUpdate));
+            const getUserResult = await getUserRequest.query('SELECT id, name, email, role, createdAt, companyId FROM Users WHERE id = @userId');
+            
+            if (getUserResult.recordset.length === 0) {
+                await transaction.rollback();
+                return res.status(404).json({ message: 'Güncellenen kullanıcı bilgileri alınamadı.' });
+            }
+
+            const updatedUser = getUserResult.recordset[0];
 
             // Güncellenen kullanıcıya şirket adını ekle (varsa)
              if (updatedUser.companyId) {
