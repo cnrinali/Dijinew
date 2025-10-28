@@ -116,6 +116,7 @@ const createCard = async (req, res) => {
         ciceksepetiUrl = null,
         websiteUrl = null,
         whatsappBusinessUrl = null,
+        videoUrl = null,
         // Kurumsal kullanıcı için seçilen kullanıcı ID'si
         userId: selectedUserId = null
     } = req.body;
@@ -223,11 +224,12 @@ const createCard = async (req, res) => {
             .input('ciceksepetiUrl', sql.NVarChar, ciceksepetiUrl)
             .input('websiteUrl', sql.NVarChar, websiteUrl)
             .input('whatsappBusinessUrl', sql.NVarChar, whatsappBusinessUrl)
+            .input('videoUrl', sql.NVarChar, videoUrl)
             .query(`
                 INSERT INTO Cards 
-                (userId, cardName, profileImageUrl, coverImageUrl, name, title, company, bio, phone, email, website, address, theme, customSlug, isActive, linkedinUrl, twitterUrl, instagramUrl, trendyolUrl, hepsiburadaUrl, ciceksepeti, sahibindenUrl, hepsiemlakUrl, gittigidiyorUrl, n11Url, amazonTrUrl, getirUrl, yemeksepetiUrl, whatsappUrl, facebookUrl, telegramUrl, youtubeUrl, skypeUrl, wechatUrl, snapchatUrl, pinterestUrl, tiktokUrl, arabamUrl, letgoUrl, pttAvmUrl, ciceksepetiUrl, websiteUrl, whatsappBusinessUrl)
+                (userId, cardName, profileImageUrl, coverImageUrl, name, title, company, bio, phone, email, website, address, theme, customSlug, isActive, linkedinUrl, twitterUrl, instagramUrl, trendyolUrl, hepsiburadaUrl, ciceksepeti, sahibindenUrl, hepsiemlakUrl, gittigidiyorUrl, n11Url, amazonTrUrl, getirUrl, yemeksepetiUrl, whatsappUrl, facebookUrl, telegramUrl, youtubeUrl, skypeUrl, wechatUrl, snapchatUrl, pinterestUrl, tiktokUrl, arabamUrl, letgoUrl, pttAvmUrl, ciceksepetiUrl, websiteUrl, whatsappBusinessUrl, videoUrl)
                 VALUES 
-                (@userId, @cardName, @profileImageUrl, @coverImageUrl, @name, @title, @company, @bio, @phone, @email, @website, @address, @theme, @customSlug, 1, @linkedinUrl, @twitterUrl, @instagramUrl, @trendyolUrl, @hepsiburadaUrl, @ciceksepeti, @sahibindenUrl, @hepsiemlakUrl, @gittigidiyorUrl, @n11Url, @amazonTrUrl, @getirUrl, @yemeksepetiUrl, @whatsappUrl, @facebookUrl, @telegramUrl, @youtubeUrl, @skypeUrl, @wechatUrl, @snapchatUrl, @pinterestUrl, @tiktokUrl, @arabamUrl, @letgoUrl, @pttAvmUrl, @ciceksepetiUrl, @websiteUrl, @whatsappBusinessUrl);
+                (@userId, @cardName, @profileImageUrl, @coverImageUrl, @name, @title, @company, @bio, @phone, @email, @website, @address, @theme, @customSlug, 1, @linkedinUrl, @twitterUrl, @instagramUrl, @trendyolUrl, @hepsiburadaUrl, @ciceksepeti, @sahibindenUrl, @hepsiemlakUrl, @gittigidiyorUrl, @n11Url, @amazonTrUrl, @getirUrl, @yemeksepetiUrl, @whatsappUrl, @facebookUrl, @telegramUrl, @youtubeUrl, @skypeUrl, @wechatUrl, @snapchatUrl, @pinterestUrl, @tiktokUrl, @arabamUrl, @letgoUrl, @pttAvmUrl, @ciceksepetiUrl, @websiteUrl, @whatsappBusinessUrl, @videoUrl);
             `);
 
         // 3. Son eklenen kartı al
@@ -379,6 +381,7 @@ const updateCard = async (req, res) => {
         ciceksepetiUrl,
         websiteUrl,
         whatsappBusinessUrl,
+        videoUrl,
         // Döküman alanı
         documents
     } = req.body;
@@ -473,6 +476,7 @@ const updateCard = async (req, res) => {
             .input('ciceksepetiUrl', sql.NVarChar, ciceksepetiUrl)
             .input('websiteUrl', sql.NVarChar, websiteUrl)
             .input('whatsappBusinessUrl', sql.NVarChar, whatsappBusinessUrl)
+            .input('videoUrl', sql.NVarChar, videoUrl)
             .input('documents', sql.NVarChar, documents ? JSON.stringify(documents) : '[]')
             .query(`
                 UPDATE Cards SET 
@@ -518,6 +522,7 @@ const updateCard = async (req, res) => {
                     ciceksepetiUrl = @ciceksepetiUrl,
                     websiteUrl = @websiteUrl,
                     whatsappBusinessUrl = @whatsappBusinessUrl,
+                    videoUrl = @videoUrl,
                     documents = @documents
                 WHERE id = @cardId;
             `);
