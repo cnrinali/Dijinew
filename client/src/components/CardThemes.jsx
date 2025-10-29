@@ -1922,7 +1922,8 @@ export const LegacyBusinessTheme = ({ cardData }) => {
             key: 'add_contact',
             label: 'REHBERE EKLE',
             iconSrc: getLegacyIconPath('rehber.png'),
-            onClick: handleAddToContacts
+            onClick: handleAddToContacts,
+            trackType: 'add_contact'
         });
 
         if (cardData?.bio) {
@@ -1997,7 +1998,8 @@ export const LegacyBusinessTheme = ({ cardData }) => {
             label: 'QR',
             iconSrc: getLegacyIconPath('qr.png'),
             fallbackIcon: <QrCodeIcon sx={{ fontSize: 26 }} />,
-            onClick: handleQrClick
+            onClick: handleQrClick,
+            trackType: 'qr'
         });
 
         pushTile({
@@ -2005,7 +2007,8 @@ export const LegacyBusinessTheme = ({ cardData }) => {
             label: 'PAYLAŞ',
             iconSrc: getLegacyIconPath('paylas.png'),
             fallbackIcon: <ShareIcon sx={{ fontSize: 26 }} />,
-            onClick: handleShareClick
+            onClick: handleShareClick,
+            trackType: 'share'
         });
 
         if (documents.length) {
@@ -2255,8 +2258,9 @@ export const LegacyBusinessTheme = ({ cardData }) => {
                 width: '100%',
                 display: 'flex',
                 justifyContent: 'center',
-                p: { xs: 2, sm: 4 },
-                background: 'linear-gradient(135deg, #f8f8f8 0%, #f1f1f1 45%, #f9f9f9 100%)'
+                pt: 0,
+                pb: 0,
+                background: 'transparent'
             }}
         >
             <Box
@@ -2266,8 +2270,8 @@ export const LegacyBusinessTheme = ({ cardData }) => {
                     backgroundColor: 'rgba(255,255,255,0.95)',
                     borderRadius: 4,
                     boxShadow: '0 24px 48px rgba(15,23,42,0.12)',
-                    pt: { xs: 2.5, sm: 3.5 },
-                    pb: { xs: 3, sm: 4 },
+                    pt: { xs: 1.5, sm: 2.5 },
+                    pb: { xs: 2, sm: 3 },
                     px: { xs: 2, sm: 3 }
                 }}
             >
@@ -2328,9 +2332,17 @@ export const LegacyBusinessTheme = ({ cardData }) => {
                     </Box>
                 </Box>
 
-                <Grid container spacing={{ xs: 1.5, sm: 2 }} justifyContent="center">
+                <Box
+                    sx={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                        columnGap: { xs: 1.5, sm: 2 },
+                        rowGap: { xs: 1.5, sm: 2 },
+                        justifyItems: 'center'
+                    }}
+                >
                     {tiles.map((tile) => (
-                        <Grid item xs={4} sm={4} key={tile.key} sx={{ display: 'flex', justifyContent: 'center' }}>
+                        <Box key={tile.key} sx={{ display: 'flex', justifyContent: 'center' }}>
                             <ButtonBase
                                 onClick={handleTileClick(tile)}
                                 component={tile.href ? 'a' : 'button'}
@@ -2338,35 +2350,31 @@ export const LegacyBusinessTheme = ({ cardData }) => {
                                 target={tile.target}
                                 rel={tile.target === '_blank' ? 'noopener noreferrer' : undefined}
                                 sx={{
-                                    width: { xs: 92, sm: 108 },
-                                    height: { xs: 112, sm: 124 },
-                                    borderRadius: 32,
-                                    backgroundColor: 'rgba(255,255,255,0.95)',
-                                    boxShadow: '0 12px 26px rgba(15,23,42,0.15)',
+                                    width: { xs: 86, sm: 94 },
+                                    height: { xs: 104, sm: 116 },
+                                    borderRadius: 20,
+                                    backgroundColor: 'transparent',
+                                    boxShadow: 'none',
                                     display: 'flex',
                                     flexDirection: 'column',
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     textDecoration: 'none',
                                     color: '#0f172a',
-                                    p: 1.25,
-                                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                                    p: 0.75,
+                                    transition: 'transform 0.2s ease',
                                     '&:hover': {
-                                        transform: 'translateY(-4px)',
-                                        boxShadow: '0 18px 34px rgba(15,23,42,0.18)'
+                                        transform: 'translateY(-4px)'
                                     }
                                 }}
                             >
                                 <Box
                                     sx={{
-                                        width: { xs: 54, sm: 60 },
-                                        height: { xs: 54, sm: 60 },
-                                        borderRadius: 18,
-                                        backgroundColor: '#ffffff',
+                                        width: { xs: 52, sm: 58 },
+                                        height: { xs: 52, sm: 58 },
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
-                                        boxShadow: '0 10px 22px rgba(15,23,42,0.12)',
                                         mb: 1
                                     }}
                                 >
@@ -2384,9 +2392,9 @@ export const LegacyBusinessTheme = ({ cardData }) => {
                                     {tile.label}
                                 </Typography>
                             </ButtonBase>
-                        </Grid>
+                        </Box>
                     ))}
-                </Grid>
+                </Box>
             </Box>
 
             <Dialog

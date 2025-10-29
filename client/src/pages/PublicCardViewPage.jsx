@@ -63,9 +63,8 @@ function PublicCardViewPage() {
                 };
             case 'legacybusiness':
                 return {
-                    background: 'linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #0b1120 100%)',
-                    minHeight: '100vh',
-                    color: 'white'
+                    background: '#f4f4f6',
+                    minHeight: '100vh'
                 };
             case 'icongrid':
                 return {
@@ -343,8 +342,9 @@ function PublicCardViewPage() {
             display: 'flex', 
             justifyContent: 'center', 
             alignItems: 'center',
-            p: { xs: 2, sm: 3, md: 4 },
-            boxSizing: 'border-box'
+            p: 0,
+            boxSizing: 'border-box',
+            width: '100%'
         }}>
             <ThemeComponent cardData={cardData} />
         </Box>
