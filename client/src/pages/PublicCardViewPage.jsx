@@ -61,6 +61,12 @@ function PublicCardViewPage() {
                     background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
                     minHeight: '100vh'
                 };
+            case 'legacybusiness':
+                return {
+                    background: 'linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #0b1120 100%)',
+                    minHeight: '100vh',
+                    color: 'white'
+                };
             case 'icongrid':
                 return {
                     background: 'linear-gradient(135deg, #fafafa 0%, #f0f0f0 100%)',

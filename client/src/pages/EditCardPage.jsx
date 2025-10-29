@@ -1835,7 +1835,8 @@ function EditCardPage() {
                                     <MenuItem value="minimalist">Minimalist</MenuItem>
                                                     <MenuItem value="icongrid">İkon Grid</MenuItem>
                                                     <MenuItem value="business">İş</MenuItem>
-                                    <MenuItem value="creative">Yaratıcı</MenuItem>
+                                                    <MenuItem value="legacybusiness">Klasik Business</MenuItem>
+                                                    <MenuItem value="creative">Yaratıcı</MenuItem>
                                     <MenuItem value="carousel">🎡 3D Carousel (Dönen İkonlar)</MenuItem>
                                     <MenuItem value="corporatedigital">🏢 Kurumsal Dijital</MenuItem>
                                     <MenuItem value="corporatevideo">📹 Kurumsal Videolu</MenuItem>

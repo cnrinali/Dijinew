@@ -3994,6 +3994,7 @@ export default function CardWizard() {
                                 <MenuItem value="modern">Modern Tema</MenuItem>
                                 <MenuItem value="icongrid">İkon Grid Tema</MenuItem>
                                 <MenuItem value="business">İş Teması</MenuItem>
+                                <MenuItem value="legacybusiness">Klasik Business</MenuItem>
                                 <MenuItem value="creative">Yaratıcı Tema</MenuItem>
                                 <MenuItem value="carousel">3D Carousel Tema</MenuItem>
                                 <MenuItem value="ovalcarousel">Oval Carousel Tema</MenuItem>

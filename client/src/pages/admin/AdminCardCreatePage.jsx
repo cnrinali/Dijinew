@@ -920,6 +920,7 @@ function AdminCardCreatePage() {
                                             <MenuItem value="modern">Modern</MenuItem>
                                             <MenuItem value="icongrid">İkon Grid</MenuItem>
                                             <MenuItem value="business">İş</MenuItem>
+                                            <MenuItem value="legacybusiness">Klasik Business</MenuItem>
                                             <MenuItem value="creative">Yaratıcı</MenuItem>
                                             <MenuItem value="carousel">3D Carousel (Dönen İkonlar)</MenuItem>
                                             <MenuItem value="ovalcarousel">Oval Carousel</MenuItem>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
     Box,
     Card,
@@ -22,6 +22,7 @@ import {
     DialogContent,
     DialogActions,
     Button,
+    ButtonBase,
     Snackbar,
     Alert,
     Grid,
@@ -48,10 +49,13 @@ import YouTubeIcon from '@mui/icons-material/YouTube';
 import VideoCallIcon from '@mui/icons-material/VideoCall';
 import ChatIcon from '@mui/icons-material/Chat';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import PinterestIcon from '@mui/icons-material/Pinterest';
+import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ShareIcon from '@mui/icons-material/Share';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import CollectionsIcon from '@mui/icons-material/Collections';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import StoreIcon from '@mui/icons-material/Store';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
@@ -98,6 +102,47 @@ const getMarketplaceName = (marketplace) => {
         default: return marketplace;
     }
 };
+
+const LEGACY_ICON_FILES = new Set([
+    'rehber.png',
+    'hakkimda.png',
+    'phone.png',
+    'mail.png',
+    'map.png',
+    'web.png',
+    'video.png',
+    'qr.png',
+    'paylas.png',
+    'dokuman.png',
+    'fatura.png',
+    'galeri.png',
+    'whatsapp.png',
+    'whatsappbusiness.png',
+    'instagram.png',
+    'twitter.png',
+    'facebook.png',
+    'telegram.png',
+    'youtube.png',
+    'skype.png',
+    'snapchat.png',
+    'tiktok.png',
+    'linkedin.png',
+    'pinterest.png',
+    'wechat.png',
+    'sahibinden.png',
+    'hepsiemlak.png',
+    'letgo.png',
+    'arabam.png',
+    'pttavm.png',
+    'amazon.png',
+    'trendyol.png',
+    'hepsiburada.png',
+    'ciceksepeti.png',
+    'n11.png',
+    'getir.svg',
+    'yemeksepeti.svg',
+    'gittigidiyor.svg'
+]);
 
 const getVideoEmbedUrl = (url) => {
     if (!url || typeof url !== 'string') {
@@ -1672,6 +1717,711 @@ export const BusinessTheme = ({ cardData }) => {
                     </Box>
                 </CardContent>
             </Card>
+        </Box>
+    );
+};
+
+// Legacy Business Tema (eski DijitaCO görünümüne yakınlaştırılmış versiyon)
+export const LegacyBusinessTheme = ({ cardData }) => {
+    const {
+        handleQrClick,
+        handleShareClick,
+        handleVideoClick,
+        QrModal,
+        ShareSnackbar,
+        VideoModal,
+        cardUrl
+    } = useCardActions(cardData);
+    const [activeModal, setActiveModal] = useState(null);
+
+    useEffect(() => {
+        if (cardData?.id) {
+            analyticsService.recordCardView(cardData.id);
+        }
+    }, [cardData?.id]);
+
+    const registerClick = useCallback((type) => {
+        if (cardData?.id && type) {
+            trackClick(cardData.id, type);
+        }
+    }, [cardData?.id]);
+
+    const documents = useMemo(() => {
+        if (!cardData) return [];
+
+        if (Array.isArray(cardData.documents)) {
+            return cardData.documents.filter((doc) => doc && (doc.url || doc.name));
+        }
+
+        if (typeof cardData.documents === 'string') {
+            try {
+                const parsed = JSON.parse(cardData.documents);
+                if (Array.isArray(parsed)) {
+                    return parsed.filter((doc) => doc && (doc.url || doc.name));
+                }
+            } catch (error) {
+                console.warn('[LegacyBusinessTheme] documents parse hatası:', error);
+            }
+        }
+
+        return [];
+    }, [cardData]);
+
+    const bankAccounts = useMemo(() => {
+        if (Array.isArray(cardData?.bankAccounts)) {
+            return cardData.bankAccounts.filter(Boolean);
+        }
+        return [];
+    }, [cardData?.bankAccounts]);
+
+    const galleryItems = useMemo(() => {
+        const items = [];
+
+        const pushItem = (value) => {
+            if (!value) return;
+            if (typeof value === 'string') {
+                items.push({ url: value, title: cardData?.name || 'Galeri' });
+                return;
+            }
+
+            const url = value.url || value.imageUrl;
+            if (url) {
+                items.push({ url, title: value.title || value.name || cardData?.name || 'Galeri' });
+            }
+        };
+
+        const addFromCandidate = (candidate) => {
+            if (!candidate) return;
+
+            if (Array.isArray(candidate)) {
+                candidate.forEach(pushItem);
+                return;
+            }
+
+            if (typeof candidate === 'string') {
+                try {
+                    const parsed = JSON.parse(candidate);
+                    if (Array.isArray(parsed)) {
+                        parsed.forEach(pushItem);
+                    }
+                } catch (error) {
+                    console.warn('[LegacyBusinessTheme] galeri parse hatası:', error);
+                }
+            }
+        };
+
+        addFromCandidate(cardData?.galleryImages);
+        addFromCandidate(cardData?.gallery);
+        addFromCandidate(cardData?.mediaItems);
+
+        if (cardData?.coverImageUrl) {
+            pushItem({ url: cardData.coverImageUrl, title: 'Kapak' });
+        }
+
+        const unique = [];
+        const seen = new Set();
+
+        items.forEach((item) => {
+            if (item?.url && !seen.has(item.url)) {
+                seen.add(item.url);
+                unique.push(item);
+            }
+        });
+
+        return unique;
+    }, [cardData]);
+
+    const mapUrl = useMemo(() => {
+        if (cardData?.mapUrl) return cardData.mapUrl;
+        if (cardData?.address) {
+            return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cardData.address)}`;
+        }
+        return null;
+    }, [cardData?.mapUrl, cardData?.address]);
+
+    const getLegacyIconPath = useCallback((fileName, directory = 'legacy-icons') => {
+        if (!fileName) {
+            return null;
+        }
+        if (fileName.startsWith('/')) {
+            return fileName;
+        }
+        if (directory === 'legacy-icons' && !LEGACY_ICON_FILES.has(fileName)) {
+            return null;
+        }
+        return `/${directory}/${fileName}`;
+    }, []);
+
+    const renderLegacyIcon = useCallback((src, alt, fallback) => {
+        if (src) {
+            return (
+                <Box
+                    component="img"
+                    src={src}
+                    alt={alt}
+                    sx={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                />
+            );
+        }
+        if (fallback && React.isValidElement(fallback)) {
+            const existingSx = fallback.props?.sx || {};
+            return React.cloneElement(fallback, {
+                sx: {
+                    ...existingSx,
+                    fontSize: { xs: 40, sm: 44 },
+                    color: existingSx.color ?? 'inherit'
+                }
+            });
+        }
+        return null;
+    }, []);
+
+    const handleAddToContacts = useCallback(() => {
+        if (!cardData) return;
+
+        const vcard = [
+            'BEGIN:VCARD',
+            'VERSION:3.0',
+            cardData.name ? `FN:${cardData.name}` : null,
+            cardData.company ? `ORG:${cardData.company}` : null,
+            cardData.title ? `TITLE:${cardData.title}` : null,
+            cardData.phone ? `TEL;TYPE=CELL:${cardData.phone}` : null,
+            cardData.email ? `EMAIL;TYPE=INTERNET:${cardData.email}` : null,
+            cardData.website ? `URL:${cardData.website}` : null,
+            cardData.address ? `ADR;TYPE=WORK:;;${cardData.address.replace(/\n/g, ' ')}` : null,
+            cardUrl ? `NOTE:Kart URL - ${cardUrl}` : null,
+            'END:VCARD'
+        ].filter(Boolean).join('\n');
+
+        const blob = new Blob([vcard], { type: 'text/vcard;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${(cardData.name || 'kartvizit').replace(/\s+/g, '_')}.vcf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        registerClick('add_contact');
+    }, [cardData, cardUrl, registerClick]);
+
+    const openModal = useCallback((type) => {
+        setActiveModal(type);
+        registerClick(type);
+    }, [registerClick]);
+
+    const tiles = useMemo(() => {
+        const tileList = [];
+        const pushTile = (tile) => {
+            if (!tile) return;
+            tileList.push(tile);
+        };
+
+        pushTile({
+            key: 'add_contact',
+            label: 'REHBERE EKLE',
+            iconSrc: getLegacyIconPath('rehber.png'),
+            onClick: handleAddToContacts
+        });
+
+        if (cardData?.bio) {
+            pushTile({
+                key: 'about',
+                label: 'HAKKIMDA',
+                iconSrc: getLegacyIconPath('hakkimda.png'),
+                onClick: () => openModal('about'),
+                track: 'about'
+            });
+        }
+
+        if (cardData?.phone) {
+            pushTile({
+                key: 'gsm',
+                label: 'GSM',
+                iconSrc: getLegacyIconPath('phone.png'),
+                fallbackIcon: <PhoneIcon sx={{ fontSize: 26 }} />,
+                href: `tel:${cardData.phone}`,
+                track: 'phone'
+            });
+        }
+
+        if (cardData?.email) {
+            pushTile({
+                key: 'email',
+                label: 'E-POSTA',
+                iconSrc: getLegacyIconPath('mail.png'),
+                fallbackIcon: <EmailIcon sx={{ fontSize: 26 }} />,
+                href: `mailto:${cardData.email}`,
+                track: 'email'
+            });
+        }
+
+        if (mapUrl) {
+            pushTile({
+                key: 'map',
+                label: 'KONUM',
+                iconSrc: getLegacyIconPath('map.png'),
+                fallbackIcon: <LocationOnIcon sx={{ fontSize: 26 }} />,
+                href: mapUrl,
+                track: 'map',
+                target: '_blank'
+            });
+        }
+
+        if (cardData?.website) {
+            pushTile({
+                key: 'website',
+                label: 'WEB SİTESİ',
+                iconSrc: getLegacyIconPath('web.png'),
+                fallbackIcon: <LanguageIcon sx={{ fontSize: 26 }} />,
+                href: cardData.website,
+                track: 'website',
+                target: '_blank'
+            });
+        }
+
+        if (cardData?.videoUrl) {
+            pushTile({
+                key: 'video',
+                label: 'TANITIM VİDEO',
+                iconSrc: getLegacyIconPath('video.png'),
+                fallbackIcon: <PlayArrowIcon sx={{ fontSize: 26 }} />,
+                onClick: handleVideoClick,
+                track: 'video'
+            });
+        }
+
+        pushTile({
+            key: 'qr',
+            label: 'QR',
+            iconSrc: getLegacyIconPath('qr.png'),
+            fallbackIcon: <QrCodeIcon sx={{ fontSize: 26 }} />,
+            onClick: handleQrClick
+        });
+
+        pushTile({
+            key: 'share',
+            label: 'PAYLAŞ',
+            iconSrc: getLegacyIconPath('paylas.png'),
+            fallbackIcon: <ShareIcon sx={{ fontSize: 26 }} />,
+            onClick: handleShareClick
+        });
+
+        if (documents.length) {
+            pushTile({
+                key: 'documents',
+                label: 'DÖKÜMANLAR',
+                iconSrc: getLegacyIconPath('dokuman.png'),
+                fallbackIcon: <DescriptionIcon sx={{ fontSize: 26 }} />,
+                onClick: () => openModal('documents'),
+                track: 'documents'
+            });
+        }
+
+        if (bankAccounts.length) {
+            pushTile({
+                key: 'bank',
+                label: 'FATURA B.',
+                iconSrc: getLegacyIconPath('fatura.png'),
+                fallbackIcon: <AccountBalanceIcon sx={{ fontSize: 26 }} />,
+                onClick: () => openModal('bank'),
+                track: 'bank'
+            });
+        }
+
+        if (galleryItems.length) {
+            pushTile({
+                key: 'gallery',
+                label: 'ÜRÜNLER',
+                iconSrc: getLegacyIconPath('galeri.png'),
+                fallbackIcon: <CollectionsIcon sx={{ fontSize: 26 }} />,
+                onClick: () => openModal('gallery'),
+                track: 'gallery'
+            });
+        }
+
+        if (cardData?.whatsappUrl) {
+            pushTile({
+                key: 'whatsapp',
+                label: 'WHATSAPP',
+                iconSrc: getLegacyIconPath('whatsapp.png'),
+                fallbackIcon: <WhatsAppIcon sx={{ fontSize: 26 }} />,
+                href: cardData.whatsappUrl,
+                track: 'whatsapp',
+                target: '_blank'
+            });
+        }
+
+        if (cardData?.whatsappBusinessUrl) {
+            pushTile({
+                key: 'whatsappBusiness',
+                label: 'W. BUSINESS',
+                iconSrc: getLegacyIconPath('whatsappbusiness.png'),
+                fallbackIcon: <WhatsAppIcon sx={{ fontSize: 26 }} />,
+                href: cardData.whatsappBusinessUrl,
+                track: 'whatsappBusiness',
+                target: '_blank'
+            });
+        }
+
+        const socialDefinitions = [
+            { field: 'linkedinUrl', key: 'linkedin', label: 'LINKEDIN', file: 'linkedin.png', fallback: <LinkedInIcon sx={{ fontSize: 26 }} /> },
+            { field: 'twitterUrl', key: 'twitter', label: 'TWITTER', file: 'twitter.png', fallback: <TwitterIcon sx={{ fontSize: 26 }} /> },
+            { field: 'instagramUrl', key: 'instagram', label: 'INSTAGRAM', file: 'instagram.png', fallback: <InstagramIcon sx={{ fontSize: 26 }} /> },
+            { field: 'facebookUrl', key: 'facebook', label: 'FACEBOOK', file: 'facebook.png', fallback: <FacebookIcon sx={{ fontSize: 26 }} /> },
+            { field: 'telegramUrl', key: 'telegram', label: 'TELEGRAM', file: 'telegram.png', fallback: <TelegramIcon sx={{ fontSize: 26 }} /> },
+            { field: 'youtubeUrl', key: 'youtube', label: 'YOUTUBE', file: 'youtube.png', fallback: <YouTubeIcon sx={{ fontSize: 26 }} /> },
+            { field: 'skypeUrl', key: 'skype', label: 'SKYPE', file: 'skype.png', fallback: <VideoCallIcon sx={{ fontSize: 26 }} /> },
+            { field: 'wechatUrl', key: 'wechat', label: 'WECHAT', file: 'wechat.png', fallback: <ChatIcon sx={{ fontSize: 26 }} /> },
+            { field: 'pinterestUrl', key: 'pinterest', label: 'PINTEREST', file: 'pinterest.png', fallback: <PinterestIcon sx={{ fontSize: 26 }} /> },
+            { field: 'snapchatUrl', key: 'snapchat', label: 'SNAPCHAT', file: 'snapchat.png', fallback: <SentimentSatisfiedAltIcon sx={{ fontSize: 26 }} /> },
+            { field: 'tiktokUrl', key: 'tiktok', label: 'TIKTOK', file: 'tiktok.png', fallback: <MusicNoteIcon sx={{ fontSize: 26 }} /> }
+        ];
+
+        socialDefinitions.forEach(({ field, key, label, file, fallback }) => {
+            const value = cardData?.[field];
+            if (value) {
+                pushTile({
+                    key,
+                    label,
+                    iconSrc: getLegacyIconPath(file),
+                    fallbackIcon: fallback,
+                    href: value,
+                    track: key,
+                    target: '_blank'
+                });
+            }
+        });
+
+        const marketplaceDefinitions = [
+            { field: 'trendyolUrl', key: 'trendyol', label: getMarketplaceName('trendyol').toUpperCase(), file: 'trendyol.png', directory: 'img/ikon' },
+            { field: 'hepsiburadaUrl', key: 'hepsiburada', label: getMarketplaceName('hepsiburada').toUpperCase(), file: 'hepsiburada.png', directory: 'img/ikon' },
+            { field: 'ciceksepetiUrl', key: 'ciceksepeti', label: getMarketplaceName('ciceksepeti').toUpperCase(), file: 'ciceksepeti.png', directory: 'img/ikon' },
+            { field: 'sahibindenUrl', key: 'sahibinden', label: getMarketplaceName('sahibinden').toUpperCase(), file: 'sahibinden.png' },
+            { field: 'hepsiemlakUrl', key: 'hepsiemlak', label: getMarketplaceName('hepsiemlak').toUpperCase(), file: 'hepsiemlak.png' },
+            { field: 'gittigidiyorUrl', key: 'gittigidiyor', label: getMarketplaceName('gittigidiyor').toUpperCase(), file: 'gittigidiyor.svg' },
+            { field: 'n11Url', key: 'n11', label: getMarketplaceName('n11').toUpperCase(), file: 'n11.png', directory: 'img/ikon' },
+            { field: 'amazonTrUrl', key: 'amazonTr', label: getMarketplaceName('amazonTr').toUpperCase(), file: 'amazon.png', directory: 'img/ikon' },
+            { field: 'getirUrl', key: 'getir', label: getMarketplaceName('getir').toUpperCase(), file: 'getir.svg' },
+            { field: 'yemeksepetiUrl', key: 'yemeksepeti', label: getMarketplaceName('yemeksepeti').toUpperCase(), file: 'yemeksepeti.svg' },
+            { field: 'arabamUrl', key: 'arabam', label: 'ARABAM', file: 'arabam.png' },
+            { field: 'letgoUrl', key: 'letgo', label: 'LETGO', file: 'letgo.png' },
+            { field: 'pttAvmUrl', key: 'pttAvm', label: 'PTT AVM', file: 'pttavm.png' }
+        ];
+
+        marketplaceDefinitions.forEach(({ field, key, label, file, directory }) => {
+            const value = cardData?.[field];
+            if (value) {
+                pushTile({
+                    key,
+                    label,
+                    iconSrc: getLegacyIconPath(file, directory || 'legacy-icons'),
+                    fallbackIcon: getMarketplaceIcon(key),
+                    href: value,
+                    track: key,
+                    target: '_blank'
+                });
+            }
+        });
+
+        return tileList;
+    }, [
+        cardData,
+        documents.length,
+        bankAccounts.length,
+        galleryItems.length,
+        handleAddToContacts,
+        handleQrClick,
+        handleShareClick,
+        handleVideoClick,
+        mapUrl,
+        openModal,
+        getLegacyIconPath
+    ]);
+
+    const renderModalContent = () => {
+        switch (activeModal) {
+            case 'documents':
+                return documents.length ? (
+                    <Stack spacing={1.5}>
+                        {documents.map((document, index) => (
+                            <Button
+                                key={index}
+                                variant="outlined"
+                                startIcon={<DescriptionIcon />}
+                                component="a"
+                                href={document.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                sx={{ justifyContent: 'flex-start', borderRadius: 2 }}
+                            >
+                                {document.name || `Döküman ${index + 1}`}
+                            </Button>
+                        ))}
+                    </Stack>
+                ) : (
+                    <Typography variant="body2">Yüklü döküman bulunmuyor.</Typography>
+                );
+            case 'bank':
+                return bankAccounts.length ? (
+                    <List>
+                        {bankAccounts.map((account, index) => {
+                            const bankLogo = getBankLogo(account.bankName);
+                            return (
+                                <ListItem key={index} alignItems="flex-start">
+                                    <ListItemIcon>
+                                        {bankLogo ? (
+                                            <Box
+                                                component="img"
+                                                src={bankLogo}
+                                                alt={account.bankName}
+                                                sx={{ width: 32, height: 32, objectFit: 'contain' }}
+                                            />
+                                        ) : (
+                                            <AccountBalanceIcon />
+                                        )}
+                                    </ListItemIcon>
+                                    <ListItemText
+                                        primary={account.bankName}
+                                        secondary={
+                                            <Box>
+                                                {account.accountName && (
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        {account.accountName}
+                                                    </Typography>
+                                                )}
+                                                {account.iban && (
+                                                    <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                                                        {formatIban(account.iban)}
+                                                    </Typography>
+                                                )}
+                                            </Box>
+                                        }
+                                    />
+                                </ListItem>
+                            );
+                        })}
+                    </List>
+                ) : (
+                    <Typography variant="body2">Kayıtlı banka bilgisi bulunmuyor.</Typography>
+                );
+            case 'gallery':
+                return galleryItems.length ? (
+                    <Grid container spacing={2}>
+                        {galleryItems.map((item, index) => (
+                            <Grid item xs={12} sm={6} key={index}>
+                                <Box
+                                    component="img"
+                                    src={item.url}
+                                    alt={item.title || `Galeri ${index + 1}`}
+                                    sx={{ width: '100%', borderRadius: 2, objectFit: 'cover' }}
+                                />
+                            </Grid>
+                        ))}
+                    </Grid>
+                ) : (
+                    <Typography variant="body2">Galeri görseli bulunmuyor.</Typography>
+                );
+            case 'about':
+                return (
+                    <Typography variant="body1" color="text.secondary" sx={{ whiteSpace: 'pre-line' }}>
+                        {cardData?.bio}
+                    </Typography>
+                );
+            default:
+                return null;
+        }
+    };
+
+    const handleTileClick = useCallback(
+        (tile) => (event) => {
+            if (tile.onClick) {
+                event.preventDefault();
+                tile.onClick();
+            }
+
+            const trackKey = tile.track || tile.trackType;
+            if (trackKey) {
+                registerClick(trackKey);
+            }
+        },
+        [registerClick]
+    );
+
+    return (
+        <Box
+            sx={{
+                width: '100%',
+                display: 'flex',
+                justifyContent: 'center',
+                p: { xs: 2, sm: 4 },
+                background: 'linear-gradient(135deg, #f8f8f8 0%, #f1f1f1 45%, #f9f9f9 100%)'
+            }}
+        >
+            <Box
+                sx={{
+                    maxWidth: 430,
+                    width: '100%',
+                    backgroundColor: 'rgba(255,255,255,0.95)',
+                    borderRadius: 4,
+                    boxShadow: '0 24px 48px rgba(15,23,42,0.12)',
+                    pt: { xs: 2.5, sm: 3.5 },
+                    pb: { xs: 3, sm: 4 },
+                    px: { xs: 2, sm: 3 }
+                }}
+            >
+                <Box
+                    sx={{
+                        display: 'flex',
+                        flexDirection: { xs: 'column', sm: 'row' },
+                        alignItems: 'center',
+                        gap: { xs: 2, sm: 4 }
+                    }}
+                >
+                    <Avatar
+                        alt={cardData?.name || 'Profil'}
+                        src={cardData?.profileImageUrl}
+                        sx={{
+                            width: 120,
+                            height: 120,
+                            border: '6px solid #ffffff',
+                            boxShadow: '0 20px 45px rgba(15,23,42,0.18)',
+                            flexShrink: 0
+                        }}
+                    />
+                    <Box
+                        sx={{
+                            flex: 1,
+                            textAlign: { xs: 'center', sm: 'left' },
+                            mt: { xs: 1, sm: 0 }
+                        }}
+                    >
+                        <Typography
+                            variant="h5"
+                            sx={{
+                                fontWeight: 700,
+                                color: '#1f2937'
+                            }}
+                        >
+                            {cardData?.name || 'İsim Belirtilmemiş'}
+                        </Typography>
+                        {cardData?.title && (
+                            <Typography variant="body2" sx={{ color: '#6b7280', mt: 0.5 }}>
+                                {cardData.title}
+                            </Typography>
+                        )}
+                        {cardData?.company && (
+                            <Typography variant="body2" sx={{ color: '#9ca3af', mt: 0.5 }}>
+                                {cardData.company}
+                            </Typography>
+                        )}
+                        <Box
+                            sx={{
+                                mt: { xs: 2, sm: 2.5 },
+                                borderBottom: '1px solid',
+                                borderColor: '#d1d5db',
+                                width: { xs: '60%', sm: '100%' },
+                                mx: { xs: 'auto', sm: 0 }
+                            }}
+                        />
+                    </Box>
+                </Box>
+
+                <Grid container spacing={{ xs: 1.5, sm: 2 }} justifyContent="center">
+                    {tiles.map((tile) => (
+                        <Grid item xs={4} sm={4} key={tile.key} sx={{ display: 'flex', justifyContent: 'center' }}>
+                            <ButtonBase
+                                onClick={handleTileClick(tile)}
+                                component={tile.href ? 'a' : 'button'}
+                                href={tile.href}
+                                target={tile.target}
+                                rel={tile.target === '_blank' ? 'noopener noreferrer' : undefined}
+                                sx={{
+                                    width: { xs: 92, sm: 108 },
+                                    height: { xs: 112, sm: 124 },
+                                    borderRadius: 32,
+                                    backgroundColor: 'rgba(255,255,255,0.95)',
+                                    boxShadow: '0 12px 26px rgba(15,23,42,0.15)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    textDecoration: 'none',
+                                    color: '#0f172a',
+                                    p: 1.25,
+                                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                                    '&:hover': {
+                                        transform: 'translateY(-4px)',
+                                        boxShadow: '0 18px 34px rgba(15,23,42,0.18)'
+                                    }
+                                }}
+                            >
+                                <Box
+                                    sx={{
+                                        width: { xs: 54, sm: 60 },
+                                        height: { xs: 54, sm: 60 },
+                                        borderRadius: 18,
+                                        backgroundColor: '#ffffff',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        boxShadow: '0 10px 22px rgba(15,23,42,0.12)',
+                                        mb: 1
+                                    }}
+                                >
+                                    {renderLegacyIcon(tile.iconSrc, tile.label, tile.fallbackIcon)}
+                                </Box>
+                                <Typography
+                                    variant="caption"
+                                    sx={{
+                                        fontWeight: 700,
+                                        textAlign: 'center',
+                                        color: '#0f172a',
+                                        lineHeight: 1.3
+                                    }}
+                                >
+                                    {tile.label}
+                                </Typography>
+                            </ButtonBase>
+                        </Grid>
+                    ))}
+                </Grid>
+            </Box>
+
+            <Dialog
+                open={Boolean(activeModal)}
+                onClose={() => setActiveModal(null)}
+                maxWidth={activeModal === 'gallery' ? 'md' : 'sm'}
+                fullWidth
+            >
+                <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                        {(() => {
+                            switch (activeModal) {
+                                case 'documents':
+                                    return 'Dökümanlar';
+                                case 'bank':
+                                    return 'Banka Bilgileri';
+                                case 'gallery':
+                                    return 'Galeri';
+                                case 'about':
+                                    return 'Hakkımızda';
+                                default:
+                                    return '';
+                            }
+                        })()}
+                    </Typography>
+                    <IconButton onClick={() => setActiveModal(null)}>
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent dividers>{renderModalContent()}</DialogContent>
+            </Dialog>
+
+            <QrModal />
+            <ShareSnackbar />
+            <VideoModal />
         </Box>
     );
 };
@@ -4101,6 +4851,8 @@ export const getThemeComponent = (theme) => {
             return IconGridTheme;
         case 'business':
             return BusinessTheme;
+        case 'legacybusiness':
+            return LegacyBusinessTheme;
         case 'creative':
             return CreativeTheme;
         case 'dark':
