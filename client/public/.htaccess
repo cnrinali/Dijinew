@@ -1,11 +1,20 @@
 RewriteEngine On
 RewriteBase /
 
-# Doğrudan var olan dosya/klasörleri sun
-RewriteCond %{REQUEST_FILENAME} -f [OR]
+# Statik dosyalar için (CSS, JS, resimler, uploads)
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# Klasörler için
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
-# Kalan tüm istekleri SPA girişine yönlendir
-RewriteRule . /index.html [L]
+# API isteklerini Node.js sunucusuna yönlendir (eğer gerekirse)
+# RewriteCond %{REQUEST_URI} ^/api/
+# RewriteRule ^(.*)$ http://localhost:10000/$1 [P,L]
+
+# Tüm diğer istekleri index.html'e yönlendir (React Router için)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.html [L]
 

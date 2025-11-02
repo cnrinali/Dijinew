@@ -1,5 +1,6 @@
 const { getPool, sql } = require('../../config/db');
 const ActivityLogger = require('../../middleware/activityLogger');
+const { normalizeCardImageUrls, normalizeCardsImageUrls } = require('../../utils/urlHelper');
 
 // Yardımcı Fonksiyon: Slug'ı doğrular ve temizler
 const validateAndCleanSlug = (slug) => {
@@ -57,7 +58,10 @@ const getCards = async (req, res) => {
                      card.status === 1 || card.status === '1' || card.status === true
         }));
         
-        res.status(200).json(cardsWithMappedStatus); // Kullanıcının kartlarını dizi olarak dön
+        // Image URL'lerini normalize et (relative path'leri tam URL'ye çevir)
+        const cardsWithNormalizedUrls = normalizeCardsImageUrls(cardsWithMappedStatus, req);
+        
+        res.status(200).json(cardsWithNormalizedUrls); // Kullanıcının kartlarını dizi olarak dön
 
     } catch (error) {
         console.error("Kartvizitleri getirme hatası:", error);
@@ -317,7 +321,10 @@ const getCardById = async (req, res) => {
             card.documents = [];
         }
 
-        res.status(200).json(card); // Bulunan kartviziti dön
+        // Image URL'lerini normalize et (relative path'leri tam URL'ye çevir)
+        const cardWithNormalizedUrls = normalizeCardImageUrls(card, req);
+
+        res.status(200).json(cardWithNormalizedUrls); // Bulunan kartviziti dön
 
     } catch (error) {
         console.error("Kartvizit getirme hatası (ID):". error);
@@ -548,7 +555,10 @@ const updateCard = async (req, res) => {
                 { cardId: updatedCard.id }
             );
             
-            res.status(200).json(updatedCard); 
+            // Image URL'lerini normalize et (relative path'leri tam URL'ye çevir)
+            const cardWithNormalizedUrls = normalizeCardImageUrls(updatedCard, req);
+            
+            res.status(200).json(cardWithNormalizedUrls); 
         } else {
             throw new Error('Kartvizit güncellenemedi.');
         }
@@ -744,7 +754,10 @@ const getPublicCard = async (req, res) => {
         // Kartın sonucuna banka hesaplarını ekle
         card.bankAccounts = bankAccountsResult.recordset;
 
-        res.status(200).json(card);
+        // Image URL'lerini normalize et (relative path'leri tam URL'ye çevir)
+        const cardWithNormalizedUrls = normalizeCardImageUrls(card, req);
+
+        res.status(200).json(cardWithNormalizedUrls);
 
     } catch (error) {
         console.error("Herkese açık kartvizit getirme hatası:", error);

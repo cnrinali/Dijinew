@@ -76,18 +76,32 @@ const uploadDocument = async (req, res) => {
             });
         }
 
-        const documentUrl = `/uploads/documents/${req.file.filename}`;
-        
+        // Dosya izinlerini ayarla (644 = rw-r--r--): Owner okuyabilir, herkes okuyabilir
+        try {
+            fs.chmodSync(req.file.path, 0o644);
+        } catch (chmodError) {
+            console.warn('Dosya izinleri ayarlanamadı:', chmodError);
+            // İzin hatası kritik değil, devam et
+        }
+
+        // Tam URL oluştur (production'da api.dijinew.com kullan)
+        const protocol = req.protocol || 'https';
+        const host = req.get('host') || 'api.dijinew.com';
+        const baseUrl = `${protocol}://${host}`;
+        const relativePath = `/uploads/documents/${req.file.filename}`;
+        const fullUrl = `${baseUrl}${relativePath}`;
+
         res.json({
             success: true,
             data: {
                 filename: req.file.filename,
                 originalName: req.file.originalname,
-                url: documentUrl,
+                url: fullUrl, // Tam URL
+                relativePath: relativePath, // Relative path (legacy için)
                 size: req.file.size,
                 type: req.file.mimetype
             },
-            url: documentUrl, // EditCardPage'in beklediği format için
+            url: fullUrl, // EditCardPage'in beklediği format için - tam URL
             message: 'Döküman başarıyla yüklendi'
         });
 
@@ -120,15 +134,29 @@ const uploadImage = async (req, res) => {
                 });
             }
 
-            const imageUrl = `/uploads/images/${req.file.filename}`;
+            // Dosya izinlerini ayarla (644 = rw-r--r--): Owner okuyabilir, herkes okuyabilir
+            try {
+                fs.chmodSync(req.file.path, 0o644);
+            } catch (chmodError) {
+                console.warn('Dosya izinleri ayarlanamadı:', chmodError);
+                // İzin hatası kritik değil, devam et
+            }
+
+            // Tam URL oluştur (production'da api.dijinew.com kullan)
+            const protocol = req.protocol || 'https';
+            const host = req.get('host') || 'api.dijinew.com';
+            const baseUrl = `${protocol}://${host}`;
+            const relativePath = `/uploads/images/${req.file.filename}`;
+            const fullUrl = `${baseUrl}${relativePath}`;
             
             res.json({
                 success: true,
                 data: {
                     filename: req.file.filename,
                     originalName: req.file.originalname,
-                    filePath: imageUrl, // EditCardPage'in beklediği format
-                    url: imageUrl,
+                    filePath: fullUrl, // Tam URL (API base URL ile)
+                    url: fullUrl, // Tam URL
+                    relativePath: relativePath, // Relative path (ger Legacy için)
                     size: req.file.size,
                     type: req.file.mimetype
                 },
