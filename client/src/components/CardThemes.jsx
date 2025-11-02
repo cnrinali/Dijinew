@@ -30,6 +30,7 @@ import {
 } from '@mui/material';
 import analyticsService, { trackClick } from '../services/analyticsService';
 import { QRCodeSVG } from 'qrcode.react';
+import { pathToFullUrl } from '../utils/urlHelper';
 
 // Icon Imports
 import PhoneIcon from '@mui/icons-material/Phone';
@@ -166,6 +167,26 @@ const getVideoEmbedUrl = (url) => {
     }
 
     return trimmedUrl;
+};
+
+// URL'yi tam URL'ye çeviren helper fonksiyon
+// Eğer URL zaten http/https ile başlıyorsa olduğu gibi döner
+// Yoksa path'i tam URL'ye çevirir (domain bilgisi ile)
+const ensureFullUrl = (url, fieldName = null) => {
+    if (!url || typeof url !== 'string') return url;
+    
+    // Zaten tam URL ise olduğu gibi döndür
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
+    }
+    
+    // Path ise ve field name varsa, domain ile birleştir
+    if (fieldName) {
+        return pathToFullUrl(url, fieldName);
+    }
+    
+    // Fallback: Sadece https:// ekle (genel URL için)
+    return `https://${url}`;
 };
 
 // Ortak QR kod ve paylaş fonksiyonları
@@ -331,10 +352,6 @@ export const DefaultTheme = ({ cardData }) => {
         }
     }, [cardData?.id]);
 
-    useEffect(() => {
-        setShowInlineVideo(false);
-    }, [embedUrl]);
-
     // Link tıklama handler'ı
     const handleLinkClick = (linkType) => {
         console.log(`DefaultTheme - handleLinkClick çağrıldı: linkType=${linkType}, cardId=${cardData?.id}`);
@@ -431,8 +448,8 @@ export const DefaultTheme = ({ cardData }) => {
                     )}
                     {cardData.website && (
                         <ListItem 
-                            component={Link} 
-                            href={cardData.website} 
+                            component="a" 
+                            href={ensureFullUrl(cardData.website, 'website')} 
                             target="_blank" 
                             rel="noopener noreferrer"
                             onClick={() => handleLinkClick('website')}
@@ -513,11 +530,12 @@ export const DefaultTheme = ({ cardData }) => {
                         <List dense>
                             {cardData.trendyolUrl && (
                                 <ListItem 
-                                    component={Link} 
-                                    href={cardData.trendyolUrl} 
+                                    component="a" 
+                                    href={ensureFullUrl(cardData.trendyolUrl, 'trendyolUrl')} 
                                     target="_blank" 
                                     rel="noopener noreferrer"
                                     onClick={() => handleLinkClick('trendyol')}
+                                    sx={{ textDecoration: 'none', color: 'inherit' }}
                                 >
                                     <ListItemIcon>
                                         <img 
@@ -530,7 +548,7 @@ export const DefaultTheme = ({ cardData }) => {
                                 </ListItem>
                             )}
                             {cardData.hepsiburadaUrl && (
-                                <ListItem component={Link} href={cardData.hepsiburadaUrl} target="_blank" rel="noopener noreferrer">
+                                <ListItem component="a" href={ensureFullUrl(cardData.hepsiburadaUrl)} target="_blank" rel="noopener noreferrer" sx={{ textDecoration: 'none', color: 'inherit' }}>
                                     <ListItemIcon>
                                         <img 
                                             src="/img/ikon/hepsiburada.png" 
@@ -542,7 +560,7 @@ export const DefaultTheme = ({ cardData }) => {
                                 </ListItem>
                             )}
                             {cardData.ciceksepeti && (
-                                <ListItem component={Link} href={cardData.ciceksepeti} target="_blank" rel="noopener noreferrer">
+                                <ListItem component="a" href={ensureFullUrl(cardData.ciceksepeti)} target="_blank" rel="noopener noreferrer" sx={{ textDecoration: 'none', color: 'inherit' }}>
                                     <ListItemIcon>
                                         <img 
                                             src="/img/ikon/ciceksepeti.png" 
@@ -554,7 +572,7 @@ export const DefaultTheme = ({ cardData }) => {
                                 </ListItem>
                             )}
                             {cardData.sahibindenUrl && (
-                                <ListItem component={Link} href={cardData.sahibindenUrl} target="_blank" rel="noopener noreferrer">
+                                <ListItem component="a" href={ensureFullUrl(cardData.sahibindenUrl)} target="_blank" rel="noopener noreferrer" sx={{ textDecoration: 'none', color: 'inherit' }}>
                                     <ListItemIcon>
                                         <img 
                                             src="/img/ikon/sahibinden.png" 
@@ -566,7 +584,7 @@ export const DefaultTheme = ({ cardData }) => {
                                 </ListItem>
                             )}
                             {cardData.hepsiemlakUrl && (
-                                <ListItem component={Link} href={cardData.hepsiemlakUrl} target="_blank" rel="noopener noreferrer">
+                                <ListItem component="a" href={ensureFullUrl(cardData.hepsiemlakUrl, 'hepsiemlakUrl')} target="_blank" rel="noopener noreferrer" sx={{ textDecoration: 'none', color: 'inherit' }}>
                                     <ListItemIcon>
                                         <img 
                                             src="/img/ikon/hepsiemlak.png" 
@@ -578,13 +596,13 @@ export const DefaultTheme = ({ cardData }) => {
                                 </ListItem>
                             )}
                             {cardData.gittigidiyorUrl && (
-                                <ListItem component={Link} href={cardData.gittigidiyorUrl} target="_blank" rel="noopener noreferrer">
+                                <ListItem component="a" href={ensureFullUrl(cardData.gittigidiyorUrl, 'gittigidiyorUrl')} target="_blank" rel="noopener noreferrer" sx={{ textDecoration: 'none', color: 'inherit' }}>
                                     <ListItemIcon>{getMarketplaceIcon('gittigidiyor')}</ListItemIcon>
                                     <ListItemText primary={getMarketplaceName('gittigidiyor')} />
                                 </ListItem>
                             )}
                             {cardData.n11Url && (
-                                <ListItem component={Link} href={cardData.n11Url} target="_blank" rel="noopener noreferrer">
+                                <ListItem component="a" href={ensureFullUrl(cardData.n11Url, 'n11Url')} target="_blank" rel="noopener noreferrer" sx={{ textDecoration: 'none', color: 'inherit' }}>
                                     <ListItemIcon>
                                         <img 
                                             src="/img/ikon/n11.png" 
@@ -596,7 +614,7 @@ export const DefaultTheme = ({ cardData }) => {
                                 </ListItem>
                             )}
                             {cardData.amazonTrUrl && (
-                                <ListItem component={Link} href={cardData.amazonTrUrl} target="_blank" rel="noopener noreferrer">
+                                <ListItem component="a" href={ensureFullUrl(cardData.amazonTrUrl, 'amazonTrUrl')} target="_blank" rel="noopener noreferrer" sx={{ textDecoration: 'none', color: 'inherit' }}>
                                     <ListItemIcon>
                                         <img 
                                             src="/img/ikon/amazon.png" 
@@ -608,49 +626,49 @@ export const DefaultTheme = ({ cardData }) => {
                                 </ListItem>
                             )}
                             {cardData.getirUrl && (
-                                <ListItem component={Link} href={cardData.getirUrl} target="_blank" rel="noopener noreferrer">
+                                <ListItem component="a" href={ensureFullUrl(cardData.getirUrl, 'getirUrl')} target="_blank" rel="noopener noreferrer" sx={{ textDecoration: 'none', color: 'inherit' }}>
                                     <ListItemIcon>{getMarketplaceIcon('getir')}</ListItemIcon>
                                     <ListItemText primary={getMarketplaceName('getir')} />
                                 </ListItem>
                             )}
                             {cardData.yemeksepetiUrl && (
-                                <ListItem component={Link} href={cardData.yemeksepetiUrl} target="_blank" rel="noopener noreferrer">
+                                <ListItem component="a" href={ensureFullUrl(cardData.yemeksepetiUrl, 'yemeksepetiUrl')} target="_blank" rel="noopener noreferrer" sx={{ textDecoration: 'none', color: 'inherit' }}>
                                     <ListItemIcon>{getMarketplaceIcon('yemeksepeti')}</ListItemIcon>
                                     <ListItemText primary={getMarketplaceName('yemeksepeti')} />
                                 </ListItem>
                             )}
                             {cardData.arabamUrl && (
-                                <ListItem component={Link} href={cardData.arabamUrl} target="_blank" rel="noopener noreferrer">
+                                <ListItem component="a" href={ensureFullUrl(cardData.arabamUrl, 'arabamUrl')} target="_blank" rel="noopener noreferrer" sx={{ textDecoration: 'none', color: 'inherit' }}>
                                     <ListItemIcon><BusinessIcon /></ListItemIcon>
                                     <ListItemText primary="Arabam" />
                                 </ListItem>
                             )}
                             {cardData.letgoUrl && (
-                                <ListItem component={Link} href={cardData.letgoUrl} target="_blank" rel="noopener noreferrer">
+                                <ListItem component="a" href={ensureFullUrl(cardData.letgoUrl, 'letgoUrl')} target="_blank" rel="noopener noreferrer" sx={{ textDecoration: 'none', color: 'inherit' }}>
                                     <ListItemIcon><StoreIcon /></ListItemIcon>
                                     <ListItemText primary="Letgo" />
                                 </ListItem>
                             )}
                             {cardData.pttAvmUrl && (
-                                <ListItem component={Link} href={cardData.pttAvmUrl} target="_blank" rel="noopener noreferrer">
+                                <ListItem component="a" href={ensureFullUrl(cardData.pttAvmUrl, 'pttAvmUrl')} target="_blank" rel="noopener noreferrer" sx={{ textDecoration: 'none', color: 'inherit' }}>
                                     <ListItemIcon><StoreIcon /></ListItemIcon>
                                     <ListItemText primary="PTT AVM" />
                                 </ListItem>
                             )}
                             {cardData.ciceksepetiUrl && (
-                                <ListItem component={Link} href={cardData.ciceksepetiUrl} target="_blank" rel="noopener noreferrer">
+                                <ListItem component="a" href={ensureFullUrl(cardData.ciceksepetiUrl, 'ciceksepetiUrl')} target="_blank" rel="noopener noreferrer" sx={{ textDecoration: 'none', color: 'inherit' }}>
                                     <ListItemIcon><LocalFloristIcon /></ListItemIcon>
                                     <ListItemText primary="Çiçek Sepeti" />
                                 </ListItem>
                             )}
                             {cardData.websiteUrl && (
-                                <ListItem component={Link} href={cardData.websiteUrl} target="_blank" rel="noopener noreferrer">
+                                <ListItem component="a" href={ensureFullUrl(cardData.websiteUrl, 'websiteUrl')} target="_blank" rel="noopener noreferrer" sx={{ textDecoration: 'none', color: 'inherit' }}>
                                     <ListItemIcon><LanguageIcon /></ListItemIcon>
                                     <ListItemText primary="Web Sitesi" />
                                 </ListItem>
                             )}
                             {cardData.whatsappBusinessUrl && (
-                                <ListItem component={Link} href={cardData.whatsappBusinessUrl} target="_blank" rel="noopener noreferrer">
+                                <ListItem component="a" href={ensureFullUrl(cardData.whatsappBusinessUrl, 'whatsappBusinessUrl')} target="_blank" rel="noopener noreferrer" sx={{ textDecoration: 'none', color: 'inherit' }}>
                                     <ListItemIcon><WhatsAppIcon /></ListItemIcon>
                                     <ListItemText primary="WhatsApp Business" />
                                 </ListItem>
@@ -671,7 +689,7 @@ export const DefaultTheme = ({ cardData }) => {
                             {cardData.linkedinUrl && (
                                 <IconButton 
                                     component="a" 
-                                    href={cardData.linkedinUrl} 
+                                    href={ensureFullUrl(cardData.linkedinUrl, 'linkedinUrl')} 
                                     target="_blank" 
                                     rel="noopener noreferrer" 
                                     aria-label="LinkedIn" 
@@ -684,7 +702,7 @@ export const DefaultTheme = ({ cardData }) => {
                             {cardData.twitterUrl && (
                                 <IconButton 
                                     component="a" 
-                                    href={cardData.twitterUrl} 
+                                    href={ensureFullUrl(cardData.twitterUrl, 'twitterUrl')} 
                                     target="_blank" 
                                     rel="noopener noreferrer" 
                                     aria-label="Twitter" 
@@ -697,7 +715,7 @@ export const DefaultTheme = ({ cardData }) => {
                             {cardData.instagramUrl && (
                                 <IconButton 
                                     component="a" 
-                                    href={cardData.instagramUrl} 
+                                    href={ensureFullUrl(cardData.instagramUrl, 'instagramUrl')} 
                                     target="_blank" 
                                     rel="noopener noreferrer" 
                                     aria-label="Instagram" 
@@ -710,7 +728,7 @@ export const DefaultTheme = ({ cardData }) => {
                             {cardData.whatsappUrl && (
                                 <IconButton 
                                     component="a" 
-                                    href={cardData.whatsappUrl} 
+                                    href={ensureFullUrl(cardData.whatsappUrl, 'whatsappUrl')} 
                                     target="_blank" 
                                     rel="noopener noreferrer" 
                                     aria-label="WhatsApp" 
@@ -723,7 +741,7 @@ export const DefaultTheme = ({ cardData }) => {
                             {cardData.facebookUrl && (
                                 <IconButton 
                                     component="a" 
-                                    href={cardData.facebookUrl} 
+                                    href={ensureFullUrl(cardData.facebookUrl, 'facebookUrl')} 
                                     target="_blank" 
                                     rel="noopener noreferrer" 
                                     aria-label="Facebook" 
@@ -736,7 +754,7 @@ export const DefaultTheme = ({ cardData }) => {
                             {cardData.telegramUrl && (
                                 <IconButton 
                                     component="a" 
-                                    href={cardData.telegramUrl} 
+                                    href={ensureFullUrl(cardData.telegramUrl, 'telegramUrl')} 
                                     target="_blank" 
                                     rel="noopener noreferrer" 
                                     aria-label="Telegram" 
@@ -749,7 +767,7 @@ export const DefaultTheme = ({ cardData }) => {
                             {cardData.youtubeUrl && (
                                 <IconButton 
                                     component="a" 
-                                    href={cardData.youtubeUrl} 
+                                    href={ensureFullUrl(cardData.youtubeUrl, 'youtubeUrl')} 
                                     target="_blank" 
                                     rel="noopener noreferrer" 
                                     aria-label="YouTube" 
@@ -762,7 +780,7 @@ export const DefaultTheme = ({ cardData }) => {
                             {cardData.skypeUrl && (
                                 <IconButton 
                                     component="a" 
-                                    href={cardData.skypeUrl} 
+                                    href={ensureFullUrl(cardData.skypeUrl, 'skypeUrl')} 
                                     target="_blank" 
                                     rel="noopener noreferrer" 
                                     aria-label="Skype" 
@@ -775,7 +793,7 @@ export const DefaultTheme = ({ cardData }) => {
                             {cardData.wechatUrl && (
                                 <IconButton 
                                     component="a" 
-                                    href={cardData.wechatUrl} 
+                                    href={ensureFullUrl(cardData.wechatUrl, 'wechatUrl')} 
                                     target="_blank" 
                                     rel="noopener noreferrer" 
                                     aria-label="WeChat" 
@@ -788,7 +806,7 @@ export const DefaultTheme = ({ cardData }) => {
                             {cardData.snapchatUrl && (
                                 <IconButton 
                                     component="a" 
-                                    href={cardData.snapchatUrl} 
+                                    href={ensureFullUrl(cardData.snapchatUrl, 'snapchatUrl')} 
                                     target="_blank" 
                                     rel="noopener noreferrer" 
                                     aria-label="Snapchat" 
@@ -801,7 +819,7 @@ export const DefaultTheme = ({ cardData }) => {
                             {cardData.pinterestUrl && (
                                 <IconButton 
                                     component="a" 
-                                    href={cardData.pinterestUrl} 
+                                    href={ensureFullUrl(cardData.pinterestUrl, 'pinterestUrl')} 
                                     target="_blank" 
                                     rel="noopener noreferrer" 
                                     aria-label="Pinterest" 
@@ -814,7 +832,7 @@ export const DefaultTheme = ({ cardData }) => {
                             {cardData.tiktokUrl && (
                                 <IconButton 
                                     component="a" 
-                                    href={cardData.tiktokUrl} 
+                                    href={ensureFullUrl(cardData.tiktokUrl, 'tiktokUrl')} 
                                     target="_blank" 
                                     rel="noopener noreferrer" 
                                     aria-label="TikTok" 
@@ -1140,17 +1158,17 @@ export const ModernTheme = ({ cardData }) => {
                             <Divider sx={{ my: 2 }} />
                             <Stack direction="row" spacing={1} justifyContent="center">
                                 {cardData.linkedinUrl && (
-                                    <IconButton component="a" href={cardData.linkedinUrl} target="_blank" rel="noopener noreferrer" sx={{ backgroundColor: '#0077B5', color: 'white', '&:hover': { backgroundColor: '#005885' } }}>
+                                    <IconButton component="a" href={ensureFullUrl(cardData.linkedinUrl, 'linkedinUrl')} target="_blank" rel="noopener noreferrer" sx={{ backgroundColor: '#0077B5', color: 'white', '&:hover': { backgroundColor: '#005885' } }}>
                                         <LinkedInIcon />
                                     </IconButton>
                                 )}
                                 {cardData.twitterUrl && (
-                                    <IconButton component="a" href={cardData.twitterUrl} target="_blank" rel="noopener noreferrer" sx={{ backgroundColor: '#1DA1F2', color: 'white', '&:hover': { backgroundColor: '#0d8bd9' } }}>
+                                    <IconButton component="a" href={ensureFullUrl(cardData.twitterUrl, 'twitterUrl')} target="_blank" rel="noopener noreferrer" sx={{ backgroundColor: '#1DA1F2', color: 'white', '&:hover': { backgroundColor: '#0d8bd9' } }}>
                                         <TwitterIcon />
                                     </IconButton>
                                 )}
                                 {cardData.instagramUrl && (
-                                    <IconButton component="a" href={cardData.instagramUrl} target="_blank" rel="noopener noreferrer" sx={{ backgroundColor: '#E1306C', color: 'white', '&:hover': { backgroundColor: '#c12958' } }}>
+                                    <IconButton component="a" href={ensureFullUrl(cardData.instagramUrl, 'instagramUrl')} target="_blank" rel="noopener noreferrer" sx={{ backgroundColor: '#E1306C', color: 'white', '&:hover': { backgroundColor: '#c12958' } }}>
                                         <InstagramIcon />
                                     </IconButton>
                                 )}
@@ -1389,7 +1407,7 @@ export const IconGridTheme = ({ cardData }) => {
                             {cardData.linkedinUrl && (
                                 <Box 
                                     component={Link} 
-                                    href={cardData.linkedinUrl} 
+                                    href={ensureFullUrl(cardData.linkedinUrl, 'linkedinUrl')} 
                                     target="_blank" 
                                     rel="noopener noreferrer"
                                     onClick={() => handleLinkClick('linkedin')}
@@ -1402,7 +1420,7 @@ export const IconGridTheme = ({ cardData }) => {
                             {cardData.instagramUrl && (
                                 <Box 
                                     component={Link} 
-                                    href={cardData.instagramUrl} 
+                                    href={ensureFullUrl(cardData.instagramUrl, 'instagramUrl')} 
                                     target="_blank" 
                                     rel="noopener noreferrer"
                                     onClick={() => handleLinkClick('instagram')}
@@ -1415,7 +1433,7 @@ export const IconGridTheme = ({ cardData }) => {
                             {cardData.twitterUrl && (
                                 <Box 
                                     component={Link} 
-                                    href={cardData.twitterUrl} 
+                                    href={ensureFullUrl(cardData.twitterUrl, 'twitterUrl')} 
                                     target="_blank" 
                                     rel="noopener noreferrer"
                                     onClick={() => handleLinkClick('twitter')}
@@ -1651,17 +1669,17 @@ export const BusinessTheme = ({ cardData }) => {
                         <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid', borderColor: 'grey.200' }}>
                             <Stack direction="row" spacing={1} justifyContent="center">
                                 {cardData.linkedinUrl && (
-                                    <IconButton component="a" href={cardData.linkedinUrl} target="_blank" rel="noopener noreferrer" sx={{ backgroundColor: '#0077B5', color: 'white', '&:hover': { backgroundColor: '#005885' } }}>
+                                    <IconButton component="a" href={ensureFullUrl(cardData.linkedinUrl, 'linkedinUrl')} target="_blank" rel="noopener noreferrer" sx={{ backgroundColor: '#0077B5', color: 'white', '&:hover': { backgroundColor: '#005885' } }}>
                                         <LinkedInIcon />
                                     </IconButton>
                                 )}
                                 {cardData.twitterUrl && (
-                                    <IconButton component="a" href={cardData.twitterUrl} target="_blank" rel="noopener noreferrer" sx={{ backgroundColor: '#1DA1F2', color: 'white', '&:hover': { backgroundColor: '#0d8bd9' } }}>
+                                    <IconButton component="a" href={ensureFullUrl(cardData.twitterUrl, 'twitterUrl')} target="_blank" rel="noopener noreferrer" sx={{ backgroundColor: '#1DA1F2', color: 'white', '&:hover': { backgroundColor: '#0d8bd9' } }}>
                                         <TwitterIcon />
                                     </IconButton>
                                 )}
                                 {cardData.instagramUrl && (
-                                    <IconButton component="a" href={cardData.instagramUrl} target="_blank" rel="noopener noreferrer" sx={{ backgroundColor: '#E1306C', color: 'white', '&:hover': { backgroundColor: '#c12958' } }}>
+                                    <IconButton component="a" href={ensureFullUrl(cardData.instagramUrl, 'instagramUrl')} target="_blank" rel="noopener noreferrer" sx={{ backgroundColor: '#E1306C', color: 'white', '&:hover': { backgroundColor: '#c12958' } }}>
                                         <InstagramIcon />
                                     </IconButton>
                                 )}
@@ -1976,7 +1994,7 @@ export const LegacyBusinessTheme = ({ cardData }) => {
                 label: 'WEB SİTESİ',
                 iconSrc: getLegacyIconPath('web.png'),
                 fallbackIcon: <LanguageIcon sx={{ fontSize: 26 }} />,
-                href: cardData.website,
+                href: ensureFullUrl(cardData.website, 'website'),
                 track: 'website',
                 target: '_blank'
             });
@@ -2050,7 +2068,7 @@ export const LegacyBusinessTheme = ({ cardData }) => {
                 label: 'WHATSAPP',
                 iconSrc: getLegacyIconPath('whatsapp.png'),
                 fallbackIcon: <WhatsAppIcon sx={{ fontSize: 26 }} />,
-                href: cardData.whatsappUrl,
+                href: ensureFullUrl(cardData.whatsappUrl, 'whatsappUrl'),
                 track: 'whatsapp',
                 target: '_blank'
             });
@@ -2062,7 +2080,7 @@ export const LegacyBusinessTheme = ({ cardData }) => {
                 label: 'W. BUSINESS',
                 iconSrc: getLegacyIconPath('whatsappbusiness.png'),
                 fallbackIcon: <WhatsAppIcon sx={{ fontSize: 26 }} />,
-                href: cardData.whatsappBusinessUrl,
+                href: ensureFullUrl(cardData.whatsappBusinessUrl, 'whatsappBusinessUrl'),
                 track: 'whatsappBusiness',
                 target: '_blank'
             });
@@ -2085,12 +2103,14 @@ export const LegacyBusinessTheme = ({ cardData }) => {
         socialDefinitions.forEach(({ field, key, label, file, fallback }) => {
             const value = cardData?.[field];
             if (value) {
+                // Path'i tam URL'ye çevir (field name ile domain bilgisi eklenir)
+                const fullUrl = ensureFullUrl(value, field);
                 pushTile({
                     key,
                     label,
                     iconSrc: getLegacyIconPath(file),
                     fallbackIcon: fallback,
-                    href: value,
+                    href: fullUrl,
                     track: key,
                     target: '_blank'
                 });
@@ -2116,12 +2136,14 @@ export const LegacyBusinessTheme = ({ cardData }) => {
         marketplaceDefinitions.forEach(({ field, key, label, file, directory }) => {
             const value = cardData?.[field];
             if (value) {
+                // Path'i tam URL'ye çevir (field name ile domain bilgisi eklenir)
+                const fullUrl = ensureFullUrl(value, field);
                 pushTile({
                     key,
                     label,
                     iconSrc: getLegacyIconPath(file, directory || 'legacy-icons'),
                     fallbackIcon: getMarketplaceIcon(key),
-                    href: value,
+                    href: fullUrl,
                     track: key,
                     target: '_blank'
                 });
@@ -2585,7 +2607,7 @@ export const CreativeTheme = ({ cardData }) => {
                                     {cardData.linkedinUrl && (
                                         <IconButton 
                                             component="a" 
-                                            href={cardData.linkedinUrl} 
+                                            href={ensureFullUrl(cardData.linkedinUrl, 'linkedinUrl')} 
                                             target="_blank" 
                                             rel="noopener noreferrer"
                                             sx={{ 
@@ -2600,7 +2622,7 @@ export const CreativeTheme = ({ cardData }) => {
                                     {cardData.twitterUrl && (
                                         <IconButton 
                                             component="a" 
-                                            href={cardData.twitterUrl} 
+                                            href={ensureFullUrl(cardData.twitterUrl, 'twitterUrl')} 
                                             target="_blank" 
                                             rel="noopener noreferrer"
                                             sx={{ 
@@ -2615,7 +2637,7 @@ export const CreativeTheme = ({ cardData }) => {
                                     {cardData.instagramUrl && (
                                         <IconButton 
                                             component="a" 
-                                            href={cardData.instagramUrl} 
+                                            href={ensureFullUrl(cardData.instagramUrl, 'instagramUrl')} 
                                             target="_blank" 
                                             rel="noopener noreferrer"
                                             sx={{ 
@@ -2763,7 +2785,7 @@ export const DarkTheme = ({ cardData }) => {
                         </ListItem>
                     )}
                     {cardData.website && (
-                        <ListItem component={Link} href={cardData.website} target="_blank" rel="noopener noreferrer" sx={{ color: 'white', textDecoration: 'none' }}>
+                        <ListItem component="a" href={ensureFullUrl(cardData.website)} target="_blank" rel="noopener noreferrer" sx={{ color: 'white', textDecoration: 'none' }}>
                             <ListItemIcon><LanguageIcon sx={{ color: '#FF9800' }} /></ListItemIcon>
                             <ListItemText primary={cardData.website} sx={{ color: 'white' }} />
                         </ListItem>
@@ -2961,7 +2983,7 @@ export const CarouselTheme = ({ cardData }) => {
             color: '#000000',
             action: () => {
                 handleLinkClick('website');
-                window.open(cardData.website, '_blank');
+                window.open(ensureFullUrl(cardData.website, 'website'), '_blank');
             }
         },
         cardData.linkedinUrl && {
@@ -2970,7 +2992,7 @@ export const CarouselTheme = ({ cardData }) => {
             color: '#000000',
             action: () => {
                 handleLinkClick('linkedin');
-                window.open(cardData.linkedinUrl, '_blank');
+                window.open(ensureFullUrl(cardData.linkedinUrl, 'linkedinUrl'), '_blank');
             }
         },
         cardData.instagramUrl && {
@@ -2979,7 +3001,7 @@ export const CarouselTheme = ({ cardData }) => {
             color: '#F4C734',
             action: () => {
                 handleLinkClick('instagram');
-                window.open(cardData.instagramUrl, '_blank');
+                window.open(ensureFullUrl(cardData.instagramUrl, 'instagramUrl'), '_blank');
             }
         },
         cardData.twitterUrl && {
@@ -2988,7 +3010,7 @@ export const CarouselTheme = ({ cardData }) => {
             color: '#000000',
             action: () => {
                 handleLinkClick('twitter');
-                window.open(cardData.twitterUrl, '_blank');
+                window.open(ensureFullUrl(cardData.twitterUrl, 'twitterUrl'), '_blank');
             }
         },
         cardData.address && {
@@ -3347,7 +3369,7 @@ export const OvalCarouselTheme = ({ cardData }) => {
             color: '#000000',
             action: () => {
                 handleLinkClick('website');
-                window.open(cardData.website, '_blank');
+                window.open(ensureFullUrl(cardData.website, 'website'), '_blank');
             }
         },
         cardData.linkedinUrl && {
@@ -3356,7 +3378,7 @@ export const OvalCarouselTheme = ({ cardData }) => {
             color: '#000000',
             action: () => {
                 handleLinkClick('linkedin');
-                window.open(cardData.linkedinUrl, '_blank');
+                window.open(ensureFullUrl(cardData.linkedinUrl, 'linkedinUrl'), '_blank');
             }
         },
         cardData.instagramUrl && {
@@ -3365,7 +3387,7 @@ export const OvalCarouselTheme = ({ cardData }) => {
             color: '#F4C734',
             action: () => {
                 handleLinkClick('instagram');
-                window.open(cardData.instagramUrl, '_blank');
+                window.open(ensureFullUrl(cardData.instagramUrl, 'instagramUrl'), '_blank');
             }
         },
         cardData.twitterUrl && {
@@ -3374,7 +3396,7 @@ export const OvalCarouselTheme = ({ cardData }) => {
             color: '#000000',
             action: () => {
                 handleLinkClick('twitter');
-                window.open(cardData.twitterUrl, '_blank');
+                window.open(ensureFullUrl(cardData.twitterUrl, 'twitterUrl'), '_blank');
             }
         },
         cardData.address && {
@@ -4716,9 +4738,9 @@ export const CorporateVideoTheme = ({ cardData }) => {
                                                 : `https://wa.me/${item.value.replace(/[^0-9]/g, '')}`;
                                             window.open(sanitized, '_blank');
                                         } else if (item.type === 'website' && item.value) {
-                                            window.open(item.value, '_blank');
+                                            window.open(ensureFullUrl(item.value, 'website'), '_blank');
                                         } else if (item.type === 'location' && item.value) {
-                                            window.open(`https://maps.google.com/?q=${encodeURIComponent(item.value)}`);
+                                            window.open(`https://maps.google.com/?q=${encodeURIComponent(item.value)}`, '_blank');
                                         } else if (item.type === 'video' && hasVideo) {
                                             handleVideoClick();
                                         } else if (item.type === 'qr') {
@@ -4726,10 +4748,36 @@ export const CorporateVideoTheme = ({ cardData }) => {
                                         } else if (item.type === 'share') {
                                             handleShareClick();
                                         } else if (item.value) {
-                                            if (typeof item.value === 'string' && item.value.startsWith('http')) {
-                                                window.open(item.value, '_blank');
-                                            } else if (typeof item.value === 'string') {
-                                                window.location.href = item.value;
+                                            if (typeof item.value === 'string') {
+                                                // item.type'ı field name'e çevir (örn: 'trendyol' -> 'trendyolUrl')
+                                                const typeToFieldMap = {
+                                                    'trendyol': 'trendyolUrl',
+                                                    'hepsiburada': 'hepsiburadaUrl',
+                                                    'ciceksepeti': 'ciceksepetiUrl',
+                                                    'sahibinden': 'sahibindenUrl',
+                                                    'hepsiemlak': 'hepsiemlakUrl',
+                                                    'gittigidiyor': 'gittigidiyorUrl',
+                                                    'n11': 'n11Url',
+                                                    'amazonTr': 'amazonTrUrl',
+                                                    'getir': 'getirUrl',
+                                                    'yemeksepeti': 'yemeksepetiUrl',
+                                                    'arabam': 'arabamUrl',
+                                                    'letgo': 'letgoUrl',
+                                                    'pttAvm': 'pttAvmUrl',
+                                                    'linkedin': 'linkedinUrl',
+                                                    'twitter': 'twitterUrl',
+                                                    'instagram': 'instagramUrl',
+                                                    'facebook': 'facebookUrl',
+                                                    'telegram': 'telegramUrl',
+                                                    'youtube': 'youtubeUrl',
+                                                    'skype': 'skypeUrl',
+                                                    'wechat': 'wechatUrl',
+                                                    'snapchat': 'snapchatUrl',
+                                                    'pinterest': 'pinterestUrl',
+                                                    'tiktok': 'tiktokUrl'
+                                                };
+                                                const fieldName = typeToFieldMap[item.type] || null;
+                                                window.open(ensureFullUrl(item.value, fieldName), '_blank');
                                             }
                                         }
                                     }}

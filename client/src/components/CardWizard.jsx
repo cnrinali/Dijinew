@@ -66,6 +66,7 @@ import authService from '../services/authService';
 import { TURKISH_BANKS, formatIban, validateTurkishIban } from '../constants/turkishBanks';
 import ThemePreview from './ThemePreview';
 import { KVKK_TEXTS } from '../constants/kvkkTexts';
+import { normalizeUrl, normalizeUrlFields, extractPathOnly } from '../utils/urlHelper';
 
 const steps = [
     'Kullanıcı Bilgileri',
@@ -87,6 +88,22 @@ export default function CardWizard() {
     const { login, isAuthenticated } = useAuth();
     const { showNotification } = useNotification();
     const [loading, setLoading] = useState(false);
+
+    // URL alanlarını normalize eden helper fonksiyon
+    const handleUrlChange = (fieldName, value) => {
+        // Eğer kullanıcı tam URL yazdıysa, sadece path kısmını al
+        // Eğer sadece path yazdıysa, olduğu gibi sakla
+        let pathValue = value;
+        if (value && (value.startsWith('http://') || value.startsWith('https://'))) {
+            pathValue = extractPathOnly(value, fieldName);
+        } else if (value) {
+            // Zaten path ise, domain kısmını kaldır (varsa)
+            pathValue = value.replace(/^https?:\/\//i, '').trim();
+            const domainPattern = /^[^/]+\.(com|net|org|io|tr|me|qq\.com|co\.uk)[/]?/i;
+            pathValue = pathValue.replace(domainPattern, '').replace(/^\/+/, '');
+        }
+        setCardData(prev => ({ ...prev, [fieldName]: pathValue }));
+    };
 
     // Kart yükleme state'leri
     const [cardLoading, setCardLoading] = useState(true);
@@ -285,35 +302,35 @@ export default function CardWizard() {
                         bio: data.bio || '',
                         phone: data.phone || '',
                         email: data.email || '',
-                        website: data.website || '',
+                        website: extractPathOnly(data.website || '', 'website'),
                         address: data.address || '',
                         theme: data.theme || 'light',
-                        linkedinUrl: data.linkedinUrl || '',
-                        twitterUrl: data.twitterUrl || '',
-                        instagramUrl: data.instagramUrl || '',
-                        trendyolUrl: data.trendyolUrl || '',
-                        hepsiburadaUrl: data.hepsiburadaUrl || '',
+                        linkedinUrl: extractPathOnly(data.linkedinUrl || '', 'linkedinUrl'),
+                        twitterUrl: extractPathOnly(data.twitterUrl || '', 'twitterUrl'),
+                        instagramUrl: extractPathOnly(data.instagramUrl || '', 'instagramUrl'),
+                        trendyolUrl: extractPathOnly(data.trendyolUrl || '', 'trendyolUrl'),
+                        hepsiburadaUrl: extractPathOnly(data.hepsiburadaUrl || '', 'hepsiburadaUrl'),
                         // Yeni sosyal medya alanları
-                        whatsappUrl: data.whatsappUrl || '',
-                        facebookUrl: data.facebookUrl || '',
-                        telegramUrl: data.telegramUrl || '',
-                        youtubeUrl: data.youtubeUrl || '',
-                        skypeUrl: data.skypeUrl || '',
-                        wechatUrl: data.wechatUrl || '',
-                        snapchatUrl: data.snapchatUrl || '',
-                        pinterestUrl: data.pinterestUrl || '',
-                        tiktokUrl: data.tiktokUrl || '',
+                        whatsappUrl: extractPathOnly(data.whatsappUrl || '', 'whatsappUrl'),
+                        facebookUrl: extractPathOnly(data.facebookUrl || '', 'facebookUrl'),
+                        telegramUrl: extractPathOnly(data.telegramUrl || '', 'telegramUrl'),
+                        youtubeUrl: extractPathOnly(data.youtubeUrl || '', 'youtubeUrl'),
+                        skypeUrl: extractPathOnly(data.skypeUrl || '', 'skypeUrl'),
+                        wechatUrl: extractPathOnly(data.wechatUrl || '', 'wechatUrl'),
+                        snapchatUrl: extractPathOnly(data.snapchatUrl || '', 'snapchatUrl'),
+                        pinterestUrl: extractPathOnly(data.pinterestUrl || '', 'pinterestUrl'),
+                        tiktokUrl: extractPathOnly(data.tiktokUrl || '', 'tiktokUrl'),
                         // Yeni pazaryeri alanları
-                        sahibindenUrl: data.sahibindenUrl || '',
-                        hepsiemlakUrl: data.hepsiemlakUrl || '',
-                        arabamUrl: data.arabamUrl || '',
-                        letgoUrl: data.letgoUrl || '',
-                        n11Url: data.n11Url || '',
-                        amazonUrl: data.amazonUrl || '',
-                        pttAvmUrl: data.pttAvmUrl || '',
-                        ciceksepetiUrl: data.ciceksepetiUrl || '',
-                        websiteUrl: data.websiteUrl || '',
-                        whatsappBusinessUrl: data.whatsappBusinessUrl || ''
+                        sahibindenUrl: extractPathOnly(data.sahibindenUrl || '', 'sahibindenUrl'),
+                        hepsiemlakUrl: extractPathOnly(data.hepsiemlakUrl || '', 'hepsiemlakUrl'),
+                        arabamUrl: extractPathOnly(data.arabamUrl || '', 'arabamUrl'),
+                        letgoUrl: extractPathOnly(data.letgoUrl || '', 'letgoUrl'),
+                        n11Url: extractPathOnly(data.n11Url || '', 'n11Url'),
+                        amazonUrl: extractPathOnly(data.amazonUrl || '', 'amazonUrl'),
+                        pttAvmUrl: extractPathOnly(data.pttAvmUrl || '', 'pttAvmUrl'),
+                        ciceksepetiUrl: extractPathOnly(data.ciceksepetiUrl || '', 'ciceksepetiUrl'),
+                        websiteUrl: extractPathOnly(data.websiteUrl || '', 'websiteUrl'),
+                        whatsappBusinessUrl: extractPathOnly(data.whatsappBusinessUrl || '', 'whatsappBusinessUrl')
                     }));
                     
                     showNotification('Sihirbaz hazır. Kart bilgilerinizi girebilirsiniz.', 'success');
@@ -511,8 +528,11 @@ export default function CardWizard() {
         try {
             setLoading(true);
             
+            // URL alanlarını normalize et
+            const normalizedCardData = normalizeUrlFields(cardData);
+            
             const finalCardData = {
-                ...cardData,
+                ...normalizedCardData,
                 bankAccounts: bankAccounts,
                 documents: documents, // Dökümanları dahil et
                 isActive: true, // Kartı aktif hale getir
@@ -1632,7 +1652,7 @@ export default function CardWizard() {
                                     fullWidth
                                     label="Website"
                                     value={cardData.website}
-                                    onChange={(e) => setCardData(prev => ({ ...prev, website: e.target.value }))}
+                                    onChange={(e) => handleUrlChange('website', e.target.value)}
                                     variant="outlined"
                                     size="large"
                                     sx={{
@@ -1786,7 +1806,7 @@ export default function CardWizard() {
                                     fullWidth
                                     label="LinkedIn URL"
                                     value={cardData.linkedinUrl}
-                                    onChange={(e) => setCardData(prev => ({ ...prev, linkedinUrl: e.target.value }))}
+                                    onChange={(e) => handleUrlChange('linkedinUrl', e.target.value)}
                                     variant="outlined"
                                     InputProps={{
                                             startAdornment: cardData.linkedinUrl ? (
@@ -1854,7 +1874,7 @@ export default function CardWizard() {
                                     fullWidth
                                     label="Twitter URL"
                                     value={cardData.twitterUrl}
-                                    onChange={(e) => setCardData(prev => ({ ...prev, twitterUrl: e.target.value }))}
+                                    onChange={(e) => handleUrlChange('twitterUrl', e.target.value)}
                                     variant="outlined"
                                     InputProps={{
                                             startAdornment: cardData.twitterUrl ? (
@@ -1922,7 +1942,7 @@ export default function CardWizard() {
                                     fullWidth
                                     label="Instagram URL"
                                     value={cardData.instagramUrl}
-                                    onChange={(e) => setCardData(prev => ({ ...prev, instagramUrl: e.target.value }))}
+                                    onChange={(e) => handleUrlChange('instagramUrl', e.target.value)}
                                     variant="outlined"
                                     InputProps={{
                                             startAdornment: cardData.instagramUrl ? (
@@ -1990,7 +2010,7 @@ export default function CardWizard() {
                                         fullWidth
                                         label="WhatsApp URL"
                                         value={cardData.whatsappUrl}
-                                        onChange={(e) => setCardData(prev => ({ ...prev, whatsappUrl: e.target.value }))}
+                                        onChange={(e) => handleUrlChange('whatsappUrl', e.target.value)}
                                         variant="outlined"
                                         InputProps={{
                                             startAdornment: cardData.whatsappUrl ? (
@@ -2058,7 +2078,7 @@ export default function CardWizard() {
                                         fullWidth
                                         label="Facebook URL"
                                         value={cardData.facebookUrl}
-                                        onChange={(e) => setCardData(prev => ({ ...prev, facebookUrl: e.target.value }))}
+                                        onChange={(e) => handleUrlChange('facebookUrl', e.target.value)}
                                         variant="outlined"
                                         InputProps={{
                                             startAdornment: cardData.facebookUrl ? (
@@ -2126,7 +2146,7 @@ export default function CardWizard() {
                                         fullWidth
                                         label="YouTube URL"
                                         value={cardData.youtubeUrl}
-                                        onChange={(e) => setCardData(prev => ({ ...prev, youtubeUrl: e.target.value }))}
+                                        onChange={(e) => handleUrlChange('youtubeUrl', e.target.value)}
                                         variant="outlined"
                                         InputProps={{
                                             startAdornment: cardData.youtubeUrl ? (
@@ -2194,7 +2214,7 @@ export default function CardWizard() {
                                         fullWidth
                                         label="TikTok URL"
                                         value={cardData.tiktokUrl}
-                                        onChange={(e) => setCardData(prev => ({ ...prev, tiktokUrl: e.target.value }))}
+                                        onChange={(e) => handleUrlChange('tiktokUrl', e.target.value)}
                                         variant="outlined"
                                         InputProps={{
                                             startAdornment: cardData.tiktokUrl ? (
@@ -2262,7 +2282,7 @@ export default function CardWizard() {
                                         fullWidth
                                         label="Telegram URL"
                                         value={cardData.telegramUrl}
-                                        onChange={(e) => setCardData(prev => ({ ...prev, telegramUrl: e.target.value }))}
+                                        onChange={(e) => handleUrlChange('telegramUrl', e.target.value)}
                                         variant="outlined"
                                         InputProps={{
                                             startAdornment: cardData.telegramUrl ? (
@@ -2330,7 +2350,7 @@ export default function CardWizard() {
                                         fullWidth
                                         label="Pinterest URL"
                                         value={cardData.pinterestUrl}
-                                        onChange={(e) => setCardData(prev => ({ ...prev, pinterestUrl: e.target.value }))}
+                                        onChange={(e) => handleUrlChange('pinterestUrl', e.target.value)}
                                         variant="outlined"
                                         InputProps={{
                                             startAdornment: cardData.pinterestUrl ? (
@@ -2398,7 +2418,7 @@ export default function CardWizard() {
                                         fullWidth
                                         label="Skype URL"
                                         value={cardData.skypeUrl}
-                                        onChange={(e) => setCardData(prev => ({ ...prev, skypeUrl: e.target.value }))}
+                                        onChange={(e) => handleUrlChange('skypeUrl', e.target.value)}
                                         variant="outlined"
                                         InputProps={{
                                             startAdornment: cardData.skypeUrl ? (
@@ -2466,7 +2486,7 @@ export default function CardWizard() {
                                         fullWidth
                                         label="WeChat URL"
                                         value={cardData.wechatUrl}
-                                        onChange={(e) => setCardData(prev => ({ ...prev, wechatUrl: e.target.value }))}
+                                        onChange={(e) => handleUrlChange('wechatUrl', e.target.value)}
                                         variant="outlined"
                                         InputProps={{
                                             startAdornment: cardData.wechatUrl ? (
@@ -2534,7 +2554,7 @@ export default function CardWizard() {
                                         fullWidth
                                         label="Snapchat URL"
                                         value={cardData.snapchatUrl}
-                                        onChange={(e) => setCardData(prev => ({ ...prev, snapchatUrl: e.target.value }))}
+                                        onChange={(e) => handleUrlChange('snapchatUrl', e.target.value)}
                                         variant="outlined"
                                         InputProps={{
                                             startAdornment: cardData.snapchatUrl ? (
@@ -2632,7 +2652,7 @@ export default function CardWizard() {
                                     fullWidth
                                     label="Trendyol URL"
                                     value={cardData.trendyolUrl}
-                                    onChange={(e) => setCardData(prev => ({ ...prev, trendyolUrl: e.target.value }))}
+                                    onChange={(e) => handleUrlChange('trendyolUrl', e.target.value)}
                                     variant="outlined"
                                     InputProps={{
                                         startAdornment: cardData.trendyolUrl ? (
@@ -2702,7 +2722,7 @@ export default function CardWizard() {
                                         fullWidth
                                         label="N11 URL"
                                         value={cardData.n11Url}
-                                        onChange={(e) => setCardData(prev => ({ ...prev, n11Url: e.target.value }))}
+                                        onChange={(e) => handleUrlChange('n11Url', e.target.value)}
                                         variant="outlined"
                                         InputProps={{
                                             startAdornment: cardData.n11Url ? (
@@ -2772,7 +2792,7 @@ export default function CardWizard() {
                                         fullWidth
                                         label="Hepsiburada URL"
                                         value={cardData.hepsiburadaUrl}
-                                        onChange={(e) => setCardData(prev => ({ ...prev, hepsiburadaUrl: e.target.value }))}
+                                        onChange={(e) => handleUrlChange('hepsiburadaUrl', e.target.value)}
                                         variant="outlined"
                                         InputProps={{
                                             startAdornment: cardData.hepsiburadaUrl ? (
@@ -2842,7 +2862,7 @@ export default function CardWizard() {
                                         fullWidth
                                         label="Web Site URL"
                                         value={cardData.websiteUrl}
-                                        onChange={(e) => setCardData(prev => ({ ...prev, websiteUrl: e.target.value }))}
+                                        onChange={(e) => handleUrlChange('websiteUrl', e.target.value)}
                                         variant="outlined"
                                         InputProps={{
                                             startAdornment: cardData.websiteUrl ? (
@@ -2910,7 +2930,7 @@ export default function CardWizard() {
                                         fullWidth
                                         label="Sahibinden URL"
                                         value={cardData.sahibindenUrl}
-                                        onChange={(e) => setCardData(prev => ({ ...prev, sahibindenUrl: e.target.value }))}
+                                        onChange={(e) => handleUrlChange('sahibindenUrl', e.target.value)}
                                         variant="outlined"
                                         InputProps={{
                                             startAdornment: cardData.sahibindenUrl ? (
@@ -2978,7 +2998,7 @@ export default function CardWizard() {
                                         fullWidth
                                         label="Amazon URL"
                                         value={cardData.amazonUrl}
-                                        onChange={(e) => setCardData(prev => ({ ...prev, amazonUrl: e.target.value }))}
+                                        onChange={(e) => handleUrlChange('amazonUrl', e.target.value)}
                                         variant="outlined"
                                         InputProps={{
                                             startAdornment: cardData.amazonUrl ? (
@@ -3048,7 +3068,7 @@ export default function CardWizard() {
                                         fullWidth
                                         label="Hepsiemlak URL"
                                         value={cardData.hepsiemlakUrl}
-                                        onChange={(e) => setCardData(prev => ({ ...prev, hepsiemlakUrl: e.target.value }))}
+                                        onChange={(e) => handleUrlChange('hepsiemlakUrl', e.target.value)}
                                         variant="outlined"
                                         InputProps={{
                                             startAdornment: cardData.hepsiemlakUrl ? (
@@ -3118,7 +3138,7 @@ export default function CardWizard() {
                                         fullWidth
                                         label="Arabam URL"
                                         value={cardData.arabamUrl}
-                                        onChange={(e) => setCardData(prev => ({ ...prev, arabamUrl: e.target.value }))}
+                                        onChange={(e) => handleUrlChange('arabamUrl', e.target.value)}
                                         variant="outlined"
                                         InputProps={{
                                             startAdornment: cardData.arabamUrl ? (
@@ -3186,7 +3206,7 @@ export default function CardWizard() {
                                         fullWidth
                                         label="Letgo URL"
                                         value={cardData.letgoUrl}
-                                        onChange={(e) => setCardData(prev => ({ ...prev, letgoUrl: e.target.value }))}
+                                        onChange={(e) => handleUrlChange('letgoUrl', e.target.value)}
                                         variant="outlined"
                                         InputProps={{
                                             startAdornment: cardData.letgoUrl ? (
@@ -3254,7 +3274,7 @@ export default function CardWizard() {
                                         fullWidth
                                         label="PTT AVM URL"
                                         value={cardData.pttAvmUrl}
-                                        onChange={(e) => setCardData(prev => ({ ...prev, pttAvmUrl: e.target.value }))}
+                                        onChange={(e) => handleUrlChange('pttAvmUrl', e.target.value)}
                                         variant="outlined"
                                         InputProps={{
                                             startAdornment: cardData.pttAvmUrl ? (
@@ -3322,7 +3342,7 @@ export default function CardWizard() {
                                         fullWidth
                                         label="Çiçek Sepeti URL"
                                         value={cardData.ciceksepetiUrl}
-                                        onChange={(e) => setCardData(prev => ({ ...prev, ciceksepetiUrl: e.target.value }))}
+                                        onChange={(e) => handleUrlChange('ciceksepetiUrl', e.target.value)}
                                         variant="outlined"
                                         InputProps={{
                                             startAdornment: cardData.ciceksepetiUrl ? (
@@ -3392,7 +3412,7 @@ export default function CardWizard() {
                                         fullWidth
                                         label="WhatsApp Business URL"
                                         value={cardData.whatsappBusinessUrl}
-                                        onChange={(e) => setCardData(prev => ({ ...prev, whatsappBusinessUrl: e.target.value }))}
+                                        onChange={(e) => handleUrlChange('whatsappBusinessUrl', e.target.value)}
                                         variant="outlined"
                                         InputProps={{
                                             startAdornment: cardData.whatsappBusinessUrl ? (
@@ -3739,7 +3759,7 @@ export default function CardWizard() {
                                     fullWidth
                                     label="Video URL"
                                     value={cardData.videoUrl}
-                                    onChange={(e) => setCardData(prev => ({ ...prev, videoUrl: e.target.value }))}
+                                    onChange={(e) => handleUrlChange('videoUrl', e.target.value)}
                                     variant="outlined"
                                     placeholder="https://www.youtube.com/watch?v=..."
                                     InputProps={{

@@ -31,10 +31,79 @@ function PublicCardViewPage() {
     console.log('Slug or ID:', slug);
     console.log('Edit mode:', isEditMode, 'Token:', token);
 
-    // Sayfa başlığını ayarla
+    // Meta tag'leri ayarla (Open Graph ve Twitter Card için)
     useEffect(() => {
-        document.title = 'Yeni Nesil Kartvizit Dijinew';
-    }, []);
+        if (!cardData) return;
+
+        const cardUrl = `${window.location.origin}/card/${cardData.customSlug || cardData.id}`;
+        const cardTitle = cardData.name 
+            ? `${cardData.name}${cardData.title ? ' - ' + cardData.title : ''} - Dijinew Dijital Kartvizit`
+            : 'Dijinew Dijital Kartvizit';
+        const cardDescription = cardData.bio || cardData.company || 'Yeni nesil dijital kartvizit ile tanışın';
+        
+        // Görsel URL'sini belirle (öncelik: coverImageUrl > profileImageUrl)
+        // API'den gelen görsel URL'leri zaten tam URL olarak geliyor (normalizeCardImageUrls ile)
+        let imageUrl = null;
+        if (cardData.coverImageUrl || cardData.profileImageUrl) {
+            imageUrl = cardData.coverImageUrl || cardData.profileImageUrl;
+            
+            // Eğer relative path ise (nadir durum), tam URL'ye çevir
+            if (imageUrl && !imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
+                const isProduction = window.location.hostname !== 'localhost';
+                const apiBaseUrl = isProduction 
+                    ? 'https://api.dijinew.com'
+                    : `${window.location.protocol}//${window.location.hostname}:5001`;
+                imageUrl = `${apiBaseUrl}${imageUrl.startsWith('/') ? imageUrl : '/' + imageUrl}`;
+            }
+        }
+
+        // Sayfa başlığını ayarla
+        document.title = cardTitle;
+
+        // Meta tag'leri ekle/güncelle
+        const setMetaTag = (property, content) => {
+            if (!content) return;
+            
+            let element = document.querySelector(`meta[property="${property}"]`) || 
+                         document.querySelector(`meta[name="${property}"]`);
+            
+            if (!element) {
+                element = document.createElement('meta');
+                if (property.startsWith('og:')) {
+                    element.setAttribute('property', property);
+                } else {
+                    element.setAttribute('name', property);
+                }
+                document.head.appendChild(element);
+            }
+            element.setAttribute('content', content);
+        };
+
+        // Open Graph meta tag'leri
+        setMetaTag('og:title', cardTitle);
+        setMetaTag('og:description', cardDescription);
+        setMetaTag('og:url', cardUrl);
+        setMetaTag('og:type', 'website');
+        if (imageUrl) {
+            setMetaTag('og:image', imageUrl);
+            setMetaTag('og:image:width', '1200');
+            setMetaTag('og:image:height', '630');
+            setMetaTag('og:image:type', 'image/jpeg');
+        }
+
+        // Twitter Card meta tag'leri
+        setMetaTag('twitter:card', 'summary_large_image');
+        setMetaTag('twitter:title', cardTitle);
+        setMetaTag('twitter:description', cardDescription);
+        if (imageUrl) {
+            setMetaTag('twitter:image', imageUrl);
+        }
+
+        // Cleanup function
+        return () => {
+            // Meta tag'leri kaldırma (isteğe bağlı - genelde kaldırmaya gerek yok)
+        };
+    }, [cardData]);
 
     // Tema uyumlu arka plan renklerini belirle
     const getBackgroundStyle = (theme) => {

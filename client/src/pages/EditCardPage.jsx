@@ -8,6 +8,7 @@ import ThemePreview from '../components/ThemePreview';
 import { TURKISH_BANKS, formatIban, validateTurkishIban } from '../constants/turkishBanks';
 import { optimizeImageForUpload } from '../utils/imageCompression.jsx';
 import { compressProfileImage, compressCoverImage } from '../utils/imageCompression';
+import { normalizeUrl, normalizeUrlFields, extractPathOnly } from '../utils/urlHelper';
 
 // MUI Imports
 import Box from '@mui/material/Box';
@@ -165,45 +166,45 @@ function EditCardPage() {
                     bio: card.bio || '',
                     phone: card.phone || '',
                     email: card.email || '',
-                    website: card.website || '',
+                    website: extractPathOnly(card.website || '', 'website'),
                     address: card.address || '',
                     isActive: card.isActive ?? true, 
                     profileImageUrl: card.profileImageUrl || '',
                     coverImageUrl: card.coverImageUrl || '', 
                     customSlug: card.customSlug || '',
                     theme: card.theme || 'light',
-                    linkedinUrl: card.linkedinUrl || '',
-                    twitterUrl: card.twitterUrl || '',
-                    instagramUrl: card.instagramUrl || '',
+                    linkedinUrl: extractPathOnly(card.linkedinUrl || '', 'linkedinUrl'),
+                    twitterUrl: extractPathOnly(card.twitterUrl || '', 'twitterUrl'),
+                    instagramUrl: extractPathOnly(card.instagramUrl || '', 'instagramUrl'),
                     // Yeni sosyal medya alanları
-                    whatsappUrl: card.whatsappUrl || '',
-                    facebookUrl: card.facebookUrl || '',
-                    telegramUrl: card.telegramUrl || '',
-                    youtubeUrl: card.youtubeUrl || '',
-                    skypeUrl: card.skypeUrl || '',
-                    wechatUrl: card.wechatUrl || '',
-                    snapchatUrl: card.snapchatUrl || '',
-                    pinterestUrl: card.pinterestUrl || '',
-                    tiktokUrl: card.tiktokUrl || '',
+                    whatsappUrl: extractPathOnly(card.whatsappUrl || '', 'whatsappUrl'),
+                    facebookUrl: extractPathOnly(card.facebookUrl || '', 'facebookUrl'),
+                    telegramUrl: extractPathOnly(card.telegramUrl || '', 'telegramUrl'),
+                    youtubeUrl: extractPathOnly(card.youtubeUrl || '', 'youtubeUrl'),
+                    skypeUrl: extractPathOnly(card.skypeUrl || '', 'skypeUrl'),
+                    wechatUrl: extractPathOnly(card.wechatUrl || '', 'wechatUrl'),
+                    snapchatUrl: extractPathOnly(card.snapchatUrl || '', 'snapchatUrl'),
+                    pinterestUrl: extractPathOnly(card.pinterestUrl || '', 'pinterestUrl'),
+                    tiktokUrl: extractPathOnly(card.tiktokUrl || '', 'tiktokUrl'),
                     // Pazaryeri alanları
-                    trendyolUrl: card.trendyolUrl || '',
-                    hepsiburadaUrl: card.hepsiburadaUrl || '',
-                    ciceksepeti: card.ciceksepeti || '',
-                    sahibindenUrl: card.sahibindenUrl || '',
-                    hepsiemlakUrl: card.hepsiemlakUrl || '',
-                    gittigidiyorUrl: card.gittigidiyorUrl || '',
-                    n11Url: card.n11Url || '',
-                    amazonTrUrl: card.amazonTrUrl || '',
-                    getirUrl: card.getirUrl || '',
-                    yemeksepetiUrl: card.yemeksepetiUrl || '',
+                    trendyolUrl: extractPathOnly(card.trendyolUrl || '', 'trendyolUrl'),
+                    hepsiburadaUrl: extractPathOnly(card.hepsiburadaUrl || '', 'hepsiburadaUrl'),
+                    ciceksepeti: extractPathOnly(card.ciceksepeti || '', 'ciceksepeti'),
+                    sahibindenUrl: extractPathOnly(card.sahibindenUrl || '', 'sahibindenUrl'),
+                    hepsiemlakUrl: extractPathOnly(card.hepsiemlakUrl || '', 'hepsiemlakUrl'),
+                    gittigidiyorUrl: extractPathOnly(card.gittigidiyorUrl || '', 'gittigidiyorUrl'),
+                    n11Url: extractPathOnly(card.n11Url || '', 'n11Url'),
+                    amazonTrUrl: extractPathOnly(card.amazonTrUrl || '', 'amazonTrUrl'),
+                    getirUrl: extractPathOnly(card.getirUrl || '', 'getirUrl'),
+                    yemeksepetiUrl: extractPathOnly(card.yemeksepetiUrl || '', 'yemeksepetiUrl'),
                     // Yeni pazaryeri alanları
-                    arabamUrl: card.arabamUrl || '',
-                    letgoUrl: card.letgoUrl || '',
-                    pttAvmUrl: card.pttAvmUrl || '',
-                    ciceksepetiUrl: card.ciceksepetiUrl || '',
-                    websiteUrl: card.websiteUrl || '',
-                    whatsappBusinessUrl: card.whatsappBusinessUrl || '',
-                    videoUrl: card.videoUrl || '',
+                    arabamUrl: extractPathOnly(card.arabamUrl || '', 'arabamUrl'),
+                    letgoUrl: extractPathOnly(card.letgoUrl || '', 'letgoUrl'),
+                    pttAvmUrl: extractPathOnly(card.pttAvmUrl || '', 'pttAvmUrl'),
+                    ciceksepetiUrl: extractPathOnly(card.ciceksepetiUrl || '', 'ciceksepetiUrl'),
+                    websiteUrl: extractPathOnly(card.websiteUrl || '', 'websiteUrl'),
+                    whatsappBusinessUrl: extractPathOnly(card.whatsappBusinessUrl || '', 'whatsappBusinessUrl'),
+                    videoUrl: extractPathOnly(card.videoUrl || '', 'videoUrl'),
                     documents: (() => {
                         try {
                             console.log('[EditCardPage] Raw card.documents:', card.documents);
@@ -324,10 +325,44 @@ function EditCardPage() {
             }
         } else {
             const { name, value, type, checked } = e.target;
-            setFormData((prevState) => ({
-                ...prevState,
-                [name]: type === 'switch' ? checked : value,
-            }));
+            // URL alanlarını normalize et
+            const urlFields = [
+                'website', 'websiteUrl', 'linkedinUrl', 'twitterUrl', 'instagramUrl',
+                'whatsappUrl', 'facebookUrl', 'telegramUrl', 'youtubeUrl', 'skypeUrl',
+                'wechatUrl', 'snapchatUrl', 'pinterestUrl', 'tiktokUrl',
+                'trendyolUrl', 'hepsiburadaUrl', 'ciceksepeti', 'ciceksepetiUrl',
+                'sahibindenUrl', 'hepsiemlakUrl', 'gittigidiyorUrl', 'n11Url',
+                'amazonTrUrl', 'getirUrl', 'yemeksepetiUrl', 'arabamUrl',
+                'letgoUrl', 'pttAvmUrl', 'whatsappBusinessUrl', 'videoUrl'
+            ];
+            
+            if (type === 'switch') {
+                setFormData((prevState) => ({
+                    ...prevState,
+                    [name]: checked,
+                }));
+            } else if (urlFields.includes(name) && value) {
+                // Eğer kullanıcı tam URL yazdıysa, sadece path kısmını al
+                // Eğer sadece path yazdıysa, olduğu gibi sakla
+                let pathValue = value;
+                if (value.startsWith('http://') || value.startsWith('https://')) {
+                    pathValue = extractPathOnly(value, name);
+                } else {
+                    // Zaten path ise, domain kısmını kaldır (varsa)
+                    pathValue = value.replace(/^https?:\/\//i, '').trim();
+                    const domainPattern = /^[^/]+\.(com|net|org|io|tr|me|qq\.com|co\.uk)[/]?/i;
+                    pathValue = pathValue.replace(domainPattern, '').replace(/^\/+/, '');
+                }
+                setFormData((prevState) => ({
+                    ...prevState,
+                    [name]: pathValue,
+                }));
+            } else {
+                setFormData((prevState) => ({
+                    ...prevState,
+                    [name]: value,
+                }));
+            }
         }
     };
 
@@ -367,7 +402,10 @@ function EditCardPage() {
         try {
             await Promise.all(uploadPromises);
 
-            const updateData = { ...formData };
+            // URL alanlarını normalize et
+            const normalizedFormData = normalizeUrlFields(formData);
+            
+            const updateData = { ...normalizedFormData };
             delete updateData.profileImage;
             delete updateData.coverImage;
             updateData.profileImageUrl = profileImagePath;

@@ -8,6 +8,7 @@ import { API_ENDPOINTS } from '../config/api.js';
 import ThemePreview from '../components/ThemePreview';
 import { TURKISH_BANKS, formatIban, validateTurkishIban } from '../constants/turkishBanks';
 import { optimizeImageForUpload } from '../utils/imageCompression.jsx';
+import { normalizeUrlFields, extractPathOnly } from '../utils/urlHelper';
 
 // MUI Imports
 import Box from '@mui/material/Box';
@@ -197,7 +198,34 @@ function CreateCardPage() {
                 showNotification('Dosya işlenirken hata oluştu. Lütfen başka bir dosya seçin.', 'error');
             }
         } else {
-            setFormData((prevState) => ({ ...prevState, [e.target.name]: e.target.value }));
+            const { name, value } = e.target;
+            // URL alanlarını normalize et
+            const urlFields = [
+                'website', 'websiteUrl', 'linkedinUrl', 'twitterUrl', 'instagramUrl',
+                'whatsappUrl', 'facebookUrl', 'telegramUrl', 'youtubeUrl', 'skypeUrl',
+                'wechatUrl', 'snapchatUrl', 'pinterestUrl', 'tiktokUrl',
+                'trendyolUrl', 'hepsiburadaUrl', 'ciceksepeti', 'ciceksepetiUrl',
+                'sahibindenUrl', 'hepsiemlakUrl', 'gittigidiyorUrl', 'n11Url',
+                'amazonTrUrl', 'amazonUrl', 'getirUrl', 'yemeksepetiUrl', 'arabamUrl',
+                'letgoUrl', 'pttAvmUrl', 'whatsappBusinessUrl', 'videoUrl'
+            ];
+            
+            if (urlFields.includes(name) && value) {
+                // Eğer kullanıcı tam URL yazdıysa, sadece path kısmını al
+                // Eğer sadece path yazdıysa, olduğu gibi sakla
+                let pathValue = value;
+                if (value.startsWith('http://') || value.startsWith('https://')) {
+                    pathValue = extractPathOnly(value, name);
+                } else {
+                    // Zaten path ise, domain kısmını kaldır (varsa)
+                    pathValue = value.replace(/^https?:\/\//i, '').trim();
+                    const domainPattern = /^[^/]+\.(com|net|org|io|tr|me|qq\.com|co\.uk)[/]?/i;
+                    pathValue = pathValue.replace(domainPattern, '').replace(/^\/+/, '');
+                }
+                setFormData((prevState) => ({ ...prevState, [name]: pathValue }));
+            } else {
+                setFormData((prevState) => ({ ...prevState, [name]: value }));
+            }
         }
     };
 
@@ -325,10 +353,13 @@ function CreateCardPage() {
         setLoading(true);
         setUploadError('');
 
+        // URL alanlarını normalize et
+        const normalizedFormData = normalizeUrlFields(formData);
+
         const data = new FormData();
-        Object.keys(formData).forEach(key => {
-            if (key !== 'selectedUserId' && formData[key] !== null && formData[key] !== '') {
-                data.append(key, formData[key]);
+        Object.keys(normalizedFormData).forEach(key => {
+            if (key !== 'selectedUserId' && normalizedFormData[key] !== null && normalizedFormData[key] !== '') {
+                data.append(key, normalizedFormData[key]);
             }
         });
 
