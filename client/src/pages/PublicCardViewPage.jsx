@@ -6,7 +6,6 @@ import { getThemeComponent } from '../components/CardThemes';
 
 // MUI Imports
 import Box from '@mui/material/Box';
-import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
@@ -187,43 +186,9 @@ function PublicCardViewPage() {
     if (loading) {
         return (
             <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                alignItems: 'center', 
                 minHeight: '100vh',
-                background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #000000 100%)'
-            }}>
-                <Card sx={{ 
-                    borderRadius: 3,
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
-                    background: 'rgba(255, 255, 255, 0.98)',
-                    backdropFilter: 'blur(10px)',
-                    border: '2px solid rgba(255, 215, 0, 0.3)',
-                    p: 4
-                }}>
-                    <Box sx={{ textAlign: 'center' }}>
-                        <CircularProgress 
-                            size={60} 
-                            sx={{ 
-                                color: '#FFD700',
-                                mb: 2
-                            }} 
-                        />
-                        <Typography variant="h6" sx={{ 
-                            color: '#000000',
-                            fontWeight: 'bold'
-                        }}>
-                            Kartvizit Yükleniyor...
-                        </Typography>
-                        <Typography variant="body2" sx={{ 
-                            color: '#333333',
-                            mt: 1
-                        }}>
-                            Lütfen bekleyin
-                        </Typography>
-                    </Box>
-                </Card>
-            </Box>
+                background: '#ffffff'
+            }} />
         );
     }
 
