@@ -67,6 +67,7 @@ import { TURKISH_BANKS, formatIban, validateTurkishIban } from '../constants/tur
 import ThemePreview from './ThemePreview';
 import { KVKK_TEXTS } from '../constants/kvkkTexts';
 import { normalizeUrl, normalizeUrlFields, extractPathOnly } from '../utils/urlHelper';
+import { API_ENDPOINTS } from '../config/api.js';
 
 const steps = [
     'Kullanıcı Bilgileri',
@@ -4999,7 +5000,7 @@ export default function CardWizard() {
                                         const formData = new FormData();
                                         formData.append('document', selectedFile);
                                         
-                                        const response = await fetch('/api/upload/document', {
+                                        const response = await fetch(`${API_ENDPOINTS.UPLOAD}/document`, {
                                             method: 'POST',
                                             headers: {
                                                 'Authorization': `Bearer ${JSON.parse(localStorage.getItem('user')).token}`
