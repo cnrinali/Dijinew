@@ -13,12 +13,12 @@ import { ThemeContext } from '../context/ThemeContext';
 import {
     Visibility as VisibilityIcon,
     Edit as EditIcon,
-    Delete as DeleteIcon,
     QrCode as QrIcon,
     Logout as LogoutIcon,
     PowerSettingsNew as PowerSettingsNewIcon,
     BarChart as BarChartIcon,
-    Person as PersonIcon
+    Person as PersonIcon,
+    Share as ShareIcon
 } from '@mui/icons-material';
 
 function UserDashboardPage() {
@@ -73,28 +73,6 @@ function UserDashboardPage() {
         navigate(`/cards/edit/${firstCard.id}`);
     };
 
-    // Sil fonksiyonu
-    const handleDelete = async () => {
-        if (userCards.length === 0) {
-            alert('Silinecek kart bulunamadı.');
-            return;
-        }
-
-        const firstCard = userCards[0];
-        if (window.confirm(`"${firstCard.name}" kartını silmek istediğinizden emin misiniz?`)) {
-            try {
-                await cardService.deleteCard(firstCard.id);
-                alert('Kart başarıyla silindi!');
-                // Kartları yeniden yükle
-                const cards = await cardService.getCards();
-                setUserCards(cards);
-            } catch (error) {
-                console.error('Kart silinirken hata:', error);
-                alert('Kart silinirken bir hata oluştu.');
-            }
-        }
-    };
-
     // QR Kod Modal açma fonksiyonu
     const handleOpenQrModal = () => {
         if (userCards.length === 0) {
@@ -136,6 +114,62 @@ function UserDashboardPage() {
     const handleCloseQrModal = () => {
         setQrModalOpen(false);
         setSelectedQrUrl('');
+    };
+
+    // Paylaş fonksiyonu
+    const handleShare = async () => {
+        if (userCards.length === 0) {
+            alert('Paylaşılacak kart bulunamadı.');
+            return;
+        }
+
+        const firstCard = userCards[0];
+        const cardUrl = `${window.location.origin}/card/${firstCard.customSlug || firstCard.id}`;
+        const shareData = {
+            title: firstCard.name || 'Kartvizit',
+            text: `${firstCard.name || 'Kartvizit'} - ${firstCard.title || ''}`,
+            url: cardUrl
+        };
+
+        // Web Share API desteği varsa kullan
+        if (navigator.share) {
+            try {
+                await navigator.share(shareData);
+            } catch (error) {
+                // Kullanıcı paylaşımı iptal ettiyse veya hata oluştuysa linki kopyala
+                if (error.name !== 'AbortError') {
+                    await copyToClipboard(cardUrl);
+                }
+            }
+        } else {
+            // Web Share API desteklenmiyorsa linki kopyala
+            await copyToClipboard(cardUrl);
+        }
+    };
+
+    // Linki panoya kopyalama fonksiyonu
+    const copyToClipboard = async (text) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            alert('Link panoya kopyalandı!');
+        } catch (error) {
+            console.error('Panoya kopyalama hatası:', error);
+            // Fallback: Eski yöntem
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                alert('Link panoya kopyalandı!');
+            } catch (err) {
+                alert('Link kopyalanamadı. Lütfen manuel olarak kopyalayın: ' + text);
+            }
+            document.body.removeChild(textArea);
+        }
     };
 
     const cardStyle = (isSecondColumn = false) => ({
@@ -381,28 +415,8 @@ function UserDashboardPage() {
                     {/* Row 4 */}
                     <Box sx={{ display: 'flex', width: '100%', gap: { xs: 2, sm: 1 } }}>
                         <Card
-                            onClick={handleDelete}
-                            sx={cardStyle(false)}
-                        >
-                            <Box sx={iconContainerStyle()}>
-                                <DeleteIcon sx={{ 
-                                    fontSize: { xs: 30, sm: 40 }, 
-                                    color: isDarkMode ? 'white' : theme.palette.text.primary 
-                                }} />
-                            </Box>
-                            <Box>
-                                <Typography variant="h5" sx={textStyle()}>
-                                    Sil
-                                </Typography>
-                                <Typography variant="body2" sx={subtitleStyle()}>
-                                    Kartı sil
-                                </Typography>
-                            </Box>
-                        </Card>
-                        
-                        <Card
                             onClick={handleToggleStatus}
-                            sx={cardStyle(true)}
+                            sx={cardStyle(false)}
                         >
                             <Box sx={iconContainerStyle()}>
                                 <PowerSettingsNewIcon sx={{ 
@@ -418,6 +432,28 @@ function UserDashboardPage() {
                                 </Typography>
                                 <Typography variant="body2" sx={subtitleStyle()}>
                                     {userCards.length > 0 && userCards[0].isActive ? 'Kartı pasif yap' : 'Kartı aktif yap'}
+                                </Typography>
+                            </Box>
+                        </Card>
+                        
+                        <Card
+                            onClick={handleShare}
+                            sx={cardStyle(true)}
+                        >
+                            <Box sx={iconContainerStyle()}>
+                                <ShareIcon sx={{ 
+                                    fontSize: { xs: 30, sm: 40 }, 
+                                    color: isDarkMode 
+                                        ? 'white' 
+                                        : theme.palette.text.primary
+                                }} />
+                            </Box>
+                            <Box>
+                                <Typography variant="h5" sx={textStyle()}>
+                                    Paylaş
+                                </Typography>
+                                <Typography variant="body2" sx={subtitleStyle()}>
+                                    Kartı paylaş
                                 </Typography>
                             </Box>
                         </Card>

@@ -1853,42 +1853,68 @@ function EditCardPage() {
 
                         {/* Tema Seçimi ve Önizlemesi */}
                         <Grid item xs={12}>
-                            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'text.primary' }}>
-                                Tema Ayarları
-                                                        </Typography>
-                        </Grid>
-                        <Grid item xs={12}>
-                                            <FormControl fullWidth disabled={formLoading}>
-                                                <InputLabel id="theme-select-label">Kartvizit Teması</InputLabel>
-                                                <Select
-                                                    labelId="theme-select-label"
-                                                    id="theme-select"
-                                                    value={formData.theme}
-                                                    label="Kartvizit Teması"
-                                                    name="theme"
-                                                    onChange={onChange}
-                                                >
-                                                    <MenuItem value="light">Varsayılan (Açık)</MenuItem>
-                                                    <MenuItem value="modern">Modern</MenuItem>
-                                    <MenuItem value="minimalist">Minimalist</MenuItem>
-                                                    <MenuItem value="icongrid">İkon Grid</MenuItem>
-                                                    <MenuItem value="business">İş</MenuItem>
-                                                    <MenuItem value="legacybusiness">Klasik Business</MenuItem>
-                                                    <MenuItem value="creative">Yaratıcı</MenuItem>
-                                    <MenuItem value="carousel">🎡 3D Carousel (Dönen İkonlar)</MenuItem>
-                                    <MenuItem value="corporatedigital">🏢 Kurumsal Dijital</MenuItem>
-                                    <MenuItem value="corporatevideo">📹 Kurumsal Videolu</MenuItem>
-                                    <MenuItem value="dark">Koyu</MenuItem>
-                                    <MenuItem value="darkmodern">Koyu Modern</MenuItem>
-                                    <MenuItem value="blue">Mavi</MenuItem>
-                                </Select>
-                            </FormControl>
-                        </Grid>
-                        <Grid item xs={12}>
-                            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600, color: 'text.secondary' }}>
-                                Tema Önizlemesi
+                            <Paper sx={{ 
+                                p: { xs: 2, sm: 3 }, 
+                                backgroundColor: 'background.paper', 
+                                border: '1px solid', 
+                                borderColor: 'divider' 
+                            }}>
+                                <Box sx={{ mb: 3 }}>
+                                    <Typography variant="h6" sx={{ mb: 1, fontWeight: 600, color: 'text.primary' }}>
+                                        Tema Ayarları
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Kartvizitinizin görsel temasını seçin ve önizleyin
+                                    </Typography>
+                                </Box>
+                                
+                                <Grid container spacing={3}>
+                                    <Grid item xs={12} md={4}>
+                                        <FormControl fullWidth disabled={formLoading}>
+                                            <InputLabel id="theme-select-label">Kartvizit Teması</InputLabel>
+                                            <Select
+                                                labelId="theme-select-label"
+                                                id="theme-select"
+                                                value={formData.theme}
+                                                label="Kartvizit Teması"
+                                                name="theme"
+                                                onChange={onChange}
+                                            >
+                                                <MenuItem value="light">Varsayılan (Açık)</MenuItem>
+                                                <MenuItem value="modern">Modern</MenuItem>
+                                                <MenuItem value="minimalist">Minimalist</MenuItem>
+                                                <MenuItem value="icongrid">İkon Grid</MenuItem>
+                                                <MenuItem value="business">İş</MenuItem>
+                                                <MenuItem value="legacybusiness">Klasik Business</MenuItem>
+                                                <MenuItem value="creative">Yaratıcı</MenuItem>
+                                                <MenuItem value="carousel">🎡 3D Carousel (Dönen İkonlar)</MenuItem>
+                                                <MenuItem value="corporatedigital">🏢 Kurumsal Dijital</MenuItem>
+                                                <MenuItem value="corporatevideo">📹 Kurumsal Videolu</MenuItem>
+                                                <MenuItem value="dark">Koyu</MenuItem>
+                                                <MenuItem value="darkmodern">Koyu Modern</MenuItem>
+                                                <MenuItem value="blue">Mavi</MenuItem>
+                                            </Select>
+                                        </FormControl>
+                                    </Grid>
+                                    
+                                    <Grid item xs={12} md={8}>
+                                        <Box>
+                                            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600, color: 'text.secondary' }}>
+                                                Tema Önizlemesi
                                             </Typography>
-                            <ThemePreview formData={formData} />
+                                            <Box sx={{ 
+                                                border: '1px solid', 
+                                                borderColor: 'divider', 
+                                                borderRadius: 2, 
+                                                overflow: 'hidden',
+                                                backgroundColor: 'background.default'
+                                            }}>
+                                                <ThemePreview formData={formData} />
+                                            </Box>
+                                        </Box>
+                                    </Grid>
+                                </Grid>
+                            </Paper>
                         </Grid>
 
                         </Grid>
