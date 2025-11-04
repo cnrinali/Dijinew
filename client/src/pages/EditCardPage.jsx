@@ -8,7 +8,7 @@ import ThemePreview from '../components/ThemePreview';
 import { TURKISH_BANKS, formatIban, validateTurkishIban } from '../constants/turkishBanks';
 import { optimizeImageForUpload } from '../utils/imageCompression.jsx';
 import { compressProfileImage, compressCoverImage } from '../utils/imageCompression';
-import { normalizeUrl, normalizeUrlFields, extractPathOnly } from '../utils/urlHelper';
+import { normalizeUrlFields, extractPathOnly } from '../utils/urlHelper';
 
 // MUI Imports
 import Box from '@mui/material/Box';
@@ -83,7 +83,7 @@ function EditCardPage() {
         profileImageUrl: '',
         coverImageUrl: '',
         customSlug: '',
-        theme: 'light',
+        theme: 'legacybusiness',
         isActive: true,
         linkedinUrl: '',
         twitterUrl: '',
@@ -1905,19 +1905,7 @@ function EditCardPage() {
                                                 name="theme"
                                                 onChange={onChange}
                                             >
-                                                <MenuItem value="light">Varsayılan (Açık)</MenuItem>
-                                                <MenuItem value="modern">Modern</MenuItem>
-                                                <MenuItem value="minimalist">Minimalist</MenuItem>
-                                                <MenuItem value="icongrid">İkon Grid</MenuItem>
-                                                <MenuItem value="business">İş</MenuItem>
                                                 <MenuItem value="legacybusiness">Klasik Business</MenuItem>
-                                                <MenuItem value="creative">Yaratıcı</MenuItem>
-                                                <MenuItem value="carousel">🎡 3D Carousel (Dönen İkonlar)</MenuItem>
-                                                <MenuItem value="corporatedigital">🏢 Kurumsal Dijital</MenuItem>
-                                                <MenuItem value="corporatevideo">📹 Kurumsal Videolu</MenuItem>
-                                                <MenuItem value="dark">Koyu</MenuItem>
-                                                <MenuItem value="darkmodern">Koyu Modern</MenuItem>
-                                                <MenuItem value="blue">Mavi</MenuItem>
                                             </Select>
                                         </FormControl>
                                     </Grid>

@@ -154,7 +154,7 @@ export default function CardWizard() {
         email: '',
         website: '',
         address: '',
-        theme: 'light',
+        theme: 'legacybusiness',
         linkedinUrl: '',
         twitterUrl: '',
         instagramUrl: '',
@@ -305,7 +305,7 @@ export default function CardWizard() {
                         email: data.email || '',
                         website: extractPathOnly(data.website || '', 'website'),
                         address: data.address || '',
-                        theme: data.theme || 'light',
+                        theme: data.theme || 'legacybusiness',
                         linkedinUrl: extractPathOnly(data.linkedinUrl || '', 'linkedinUrl'),
                         twitterUrl: extractPathOnly(data.twitterUrl || '', 'twitterUrl'),
                         instagramUrl: extractPathOnly(data.instagramUrl || '', 'instagramUrl'),
@@ -4011,17 +4011,7 @@ export default function CardWizard() {
                                 onChange={(e) => setCardData(prev => ({ ...prev, theme: e.target.value }))}
                                 label="Tema"
                             >
-                                <MenuItem value="light">Klasik Tema</MenuItem>
-                                <MenuItem value="modern">Modern Tema</MenuItem>
-                                <MenuItem value="icongrid">İkon Grid Tema</MenuItem>
-                                <MenuItem value="business">İş Teması</MenuItem>
                                 <MenuItem value="legacybusiness">Klasik Business</MenuItem>
-                                <MenuItem value="creative">Yaratıcı Tema</MenuItem>
-                                <MenuItem value="carousel">3D Carousel Tema</MenuItem>
-                                <MenuItem value="ovalcarousel">Oval Carousel Tema</MenuItem>
-                                <MenuItem value="corporatedigital">Kurumsal Dijital Tema</MenuItem>
-                                <MenuItem value="corporatevideo">Kurumsal Videolu Tema</MenuItem>
-                                <MenuItem value="dark">Koyu Tema</MenuItem>
                             </Select>
                         </FormControl>
 
