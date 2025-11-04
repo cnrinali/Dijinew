@@ -265,6 +265,18 @@ function EditCardPage() {
         }
     }, [cardId, navigate, showNotification]);
 
+    const handleRemoveCoverImage = () => {
+        setFormData((prevState) => ({
+            ...prevState,
+            coverImageUrl: '',
+            coverImage: null
+        }));
+        setCoverPreview(null);
+        if (coverInputRef.current) {
+            coverInputRef.current.value = '';
+        }
+    };
+
     const onChange = async (e) => {
         if (e.target.type === 'file') {
             const file = e.target.files[0];
@@ -723,14 +735,27 @@ function EditCardPage() {
                                     style={{ display: 'none' }}
                                     accept="image/*"
                                 />
-                                <Button
-                                    variant="outlined"
-                                    onClick={() => coverInputRef.current.click()}
-                                    disabled={formLoading}
-                                    sx={{ mb: 1, width: { xs: '100%', sm: 'auto' } }}
-                                >
-                                    {formData.coverImageUrl || coverPreview ? 'Kapak Fotoğrafını Değiştir' : 'Kapak Fotoğrafı Seç'}
-                                </Button>
+                                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1, justifyContent: 'center', mb: 1 }}>
+                                    <Button
+                                        variant="outlined"
+                                        onClick={() => coverInputRef.current.click()}
+                                        disabled={formLoading}
+                                        sx={{ width: { xs: '100%', sm: 'auto' } }}
+                                    >
+                                        {formData.coverImageUrl || coverPreview ? 'Kapak Fotoğrafını Değiştir' : 'Kapak Fotoğrafı Seç'}
+                                    </Button>
+                                    {(formData.coverImageUrl || coverPreview) && (
+                                        <Button
+                                            variant="outlined"
+                                            color="error"
+                                            onClick={handleRemoveCoverImage}
+                                            disabled={formLoading}
+                                            sx={{ width: { xs: '100%', sm: 'auto' } }}
+                                        >
+                                            Kapak Fotoğrafını Kaldır
+                                        </Button>
+                                    )}
+                                </Box>
                                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                                     Maksimum 10MB. Büyük dosyalar otomatik sıkıştırılır.
                                 </Typography>

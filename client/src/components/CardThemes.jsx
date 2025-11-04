@@ -2292,11 +2292,30 @@ export const LegacyBusinessTheme = ({ cardData }) => {
                     backgroundColor: 'rgba(255,255,255,0.95)',
                     borderRadius: 4,
                     boxShadow: '0 24px 48px rgba(15,23,42,0.12)',
-                    pt: { xs: 1.5, sm: 2.5 },
-                    pb: { xs: 2, sm: 3 },
-                    px: { xs: 2, sm: 3 }
+                    overflow: 'hidden'
                 }}
             >
+                {/* Kapak Fotoğrafı Bölümü */}
+                {cardData?.coverImageUrl && (
+                    <Box
+                        sx={{
+                            width: '100%',
+                            height: { xs: 180, sm: 200 },
+                            backgroundImage: `url(${cardData.coverImageUrl})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            backgroundRepeat: 'no-repeat'
+                        }}
+                    />
+                )}
+                
+                <Box
+                    sx={{
+                        pt: cardData?.coverImageUrl ? { xs: 1.5, sm: 2.5 } : { xs: 1.5, sm: 2.5 },
+                        pb: { xs: 2, sm: 3 },
+                        px: { xs: 2, sm: 3 }
+                    }}
+                >
                 <Box
                     sx={{
                         display: 'flex',
@@ -2417,7 +2436,7 @@ export const LegacyBusinessTheme = ({ cardData }) => {
                         </Box>
                     ))}
                 </Box>
-            </Box>
+                </Box>
 
             <Dialog
                 open={Boolean(activeModal)}
@@ -2452,6 +2471,7 @@ export const LegacyBusinessTheme = ({ cardData }) => {
             <QrModal />
             <ShareSnackbar />
             <VideoModal />
+            </Box>
         </Box>
     );
 };
