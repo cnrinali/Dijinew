@@ -40,13 +40,13 @@ import ThemeToggle from "../ThemeToggle";
 const drawerWidth = 280;
 
 const menuItems = [
-  {
+  /* {
     id: "home",
     label: "Anasayfa",
     icon: <HomeIcon />,
     path: "/corporate",
     description: "Kurumsal ana panel",
-  },
+  }, */
   {
     id: "dashboard",
     label: "Genel Bakış",
