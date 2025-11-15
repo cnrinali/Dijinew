@@ -245,24 +245,29 @@ function AdminCardCreatePage() {
         setError('');
 
         try {
-            const data = new FormData();
-            Object.keys(formData).forEach(key => {
-                if (formData[key] !== null && formData[key] !== '') {
-                    data.append(key, formData[key]);
+            // JSON formatında gönder
+            const cardData = {
+                ...formData,
+                bankAccounts: bankAccounts.length > 0 ? bankAccounts : [],
+                // Boş stringleri null'a çevir
+                userId: formData.userId || null,
+                companyId: formData.companyId || null,
+            };
+
+            // Boş değerleri temizle
+            Object.keys(cardData).forEach(key => {
+                if (cardData[key] === '' || cardData[key] === undefined) {
+                    delete cardData[key];
                 }
             });
 
-            // Banka hesaplarını ekle
-            if (bankAccounts.length > 0) {
-                data.append('bankAccounts', JSON.stringify(bankAccounts));
-            }
-
-            await createCard(data);
+            await createCard(cardData);
             showNotification('Kartvizit başarıyla oluşturuldu!', 'success');
             navigate('/admin/cards');
         } catch (err) {
             console.error("Kartvizit oluşturma hatası:", err);
             setError(err.response?.data?.message || 'Kartvizit oluşturulamadı.');
+            showNotification(err.response?.data?.message || 'Kartvizit oluşturulamadı.', 'error');
         } finally {
             setLoading(false);
         }
@@ -924,6 +929,11 @@ function AdminCardCreatePage() {
                                             <MenuItem value="creative">Yaratıcı</MenuItem>
                                             <MenuItem value="carousel">3D Carousel (Dönen İkonlar)</MenuItem>
                                             <MenuItem value="ovalcarousel">Oval Carousel</MenuItem>
+                                            <MenuItem value="corporatedigital">Kurumsal Dijital</MenuItem>
+                                            <MenuItem value="corporatevideo">Kurumsal Videolu</MenuItem>
+                                            <MenuItem value="tema1">Tema 1</MenuItem>
+                                            <MenuItem value="tema2">Tema 2</MenuItem>
+                                            <MenuItem value="tema3">Tema 3</MenuItem>
                                             <MenuItem value="dark">Koyu</MenuItem>
                                         </Select>
                                     </FormControl>

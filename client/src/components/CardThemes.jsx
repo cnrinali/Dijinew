@@ -1,4 +1,8 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { EffectCoverflow } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/effect-coverflow';
 import {
     Box,
     Card,
@@ -69,6 +73,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import DescriptionIcon from '@mui/icons-material/Description';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import DownloadIcon from '@mui/icons-material/Download';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import { formatIban, getBankLogo } from '../constants/turkishBanks';
 
 // Pazaryeri ikonları ve isimleri
@@ -4919,6 +4924,2979 @@ export const CorporateVideoTheme = ({ cardData }) => {
     );
 };
 
+// Tema1 Theme - Dark tema, stacked cards animasyonu (LegacyBusiness icon yapısı ile)
+export const Tema1Theme = ({ cardData }) => {
+    const { 
+        handleQrClick, 
+        handleShareClick, 
+        handleVideoClick, 
+        QrModal, 
+        ShareSnackbar, 
+        VideoModal,
+        cardUrl 
+    } = useCardActions(cardData);
+    
+    const [currentIndex, setCurrentIndex] = useState(3);
+    const [isAnimating, setIsAnimating] = useState(false);
+    const [activeModal, setActiveModal] = useState(null);
+
+    // Kart görüntülenmesini kaydet
+    useEffect(() => {
+        if (cardData?.id) {
+            analyticsService.recordCardView(cardData.id);
+        }
+    }, [cardData?.id]);
+
+    // Link tıklama tracking
+    const registerClick = useCallback((type) => {
+        if (cardData?.id && type) {
+            trackClick(cardData.id, type);
+        }
+    }, [cardData?.id]);
+
+    // Legacy icon path helper
+    const getLegacyIconPath = useCallback((fileName, directory = 'legacy-icons') => {
+        if (!fileName) return null;
+        if (fileName.startsWith('/')) return fileName;
+        if (directory === 'legacy-icons' && !LEGACY_ICON_FILES.has(fileName)) {
+            return null;
+        }
+        return `/${directory}/${fileName}`;
+    }, []);
+
+    // Legacy icon render helper (dynamic size için container'da ayarlanacak)
+    const renderLegacyIcon = useCallback((src, alt, fallback) => {
+        if (src) {
+            return (
+                <Box
+                    component="img"
+                    src={src}
+                    alt={alt}
+                    sx={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                />
+            );
+        }
+        if (fallback && React.isValidElement(fallback)) {
+            return fallback;
+        }
+        return null;
+    }, []);
+
+    // VCF oluştur
+    const handleAddToContacts = useCallback(() => {
+        if (!cardData) return;
+
+        const vcard = [
+            'BEGIN:VCARD',
+            'VERSION:3.0',
+            cardData.name ? `FN:${cardData.name}` : null,
+            cardData.company ? `ORG:${cardData.company}` : null,
+            cardData.title ? `TITLE:${cardData.title}` : null,
+            cardData.phone ? `TEL;TYPE=CELL:${cardData.phone}` : null,
+            cardData.email ? `EMAIL;TYPE=INTERNET:${cardData.email}` : null,
+            cardData.website ? `URL:${cardData.website}` : null,
+            cardData.address ? `ADR;TYPE=WORK:;;${cardData.address.replace(/\n/g, ' ')}` : null,
+            cardUrl ? `NOTE:Kart URL - ${cardUrl}` : null,
+            'END:VCARD'
+        ].filter(Boolean).join('\n');
+
+        const blob = new Blob([vcard], { type: 'text/vcard;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${(cardData.name || 'kartvizit').replace(/\s+/g, '_')}.vcf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        registerClick('add_contact');
+    }, [cardData, cardUrl, registerClick]);
+
+    // Galeri items
+    const galleryItems = useMemo(() => {
+        const items = [];
+        const addItem = (item) => {
+            if (!item) return;
+            const url = typeof item === 'string' ? item : (item.url || item.imageUrl);
+            if (url) items.push({ url, title: item.title || 'Galeri' });
+        };
+        [cardData?.galleryImages, cardData?.gallery].forEach(arr => {
+            if (Array.isArray(arr)) arr.forEach(addItem);
+        });
+        if (cardData?.coverImageUrl) {
+            items.push({ url: cardData.coverImageUrl, title: 'Kapak' });
+        }
+        return items;
+    }, [cardData?.galleryImages, cardData?.gallery, cardData?.coverImageUrl]);
+
+    // Banka hesapları
+    const bankAccounts = useMemo(() => 
+        Array.isArray(cardData?.bankAccounts) ? cardData.bankAccounts.filter(Boolean) : []
+    , [cardData?.bankAccounts]);
+
+    // Dökümanlar
+    const documents = useMemo(() => 
+        Array.isArray(cardData?.documents) ? cardData.documents.filter(d => d?.url) : []
+    , [cardData?.documents]);
+
+    // Modal açma
+    const openModal = useCallback((type) => {
+        setActiveModal(type);
+        registerClick(type);
+    }, [registerClick]);
+
+    // Map URL
+    const mapUrl = useMemo(() => {
+        if (cardData?.mapUrl) return cardData.mapUrl;
+        if (cardData?.address) {
+            return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cardData.address)}`;
+        }
+        return null;
+    }, [cardData?.mapUrl, cardData?.address]);
+
+    // Dinamik kartlar oluştur (TAM LegacyBusiness iconlarıyla, AYNI SIRA)
+    const actionCards = useMemo(() => {
+        const cards = [];
+        
+        // 1. REHBERE EKLE
+        cards.push({ 
+            id: 'contact', 
+            label: 'REHBERE EKLE', 
+            color: '#F39C12',
+            iconSrc: getLegacyIconPath('rehber.png'),
+            fallback: <AccountCircleIcon />,
+            action: handleAddToContacts
+        });
+
+        // 2. HAKKIMDA
+        if (cardData?.bio) {
+            cards.push({ 
+                id: 'about', 
+                label: 'HAKKIMDA', 
+                color: '#00afa5',
+                iconSrc: getLegacyIconPath('hakkimda.png'),
+                fallback: <InfoIcon />,
+                action: () => openModal('about')
+            });
+        }
+
+        // 3. GSM
+        if (cardData?.phone) {
+            cards.push({ 
+                id: 'gsm', 
+                label: 'GSM', 
+                color: '#0bd418',
+                iconSrc: getLegacyIconPath('phone.png'),
+                fallback: <PhoneIcon />,
+                action: () => { registerClick('phone'); window.open(`tel:${cardData.phone}`, '_self'); }
+            });
+        }
+
+        // 4. E-POSTA
+        if (cardData?.email) {
+            cards.push({ 
+                id: 'email', 
+                label: 'E-POSTA', 
+                color: '#5877ff',
+                iconSrc: getLegacyIconPath('mail.png'),
+                fallback: <EmailIcon />,
+                action: () => { registerClick('email'); window.open(`mailto:${cardData.email}`, '_self'); }
+            });
+        }
+
+        // 5. KONUM
+        if (mapUrl) {
+            cards.push({ 
+                id: 'map', 
+                label: 'KONUM', 
+                color: '#e0453f',
+                iconSrc: getLegacyIconPath('map.png'),
+                fallback: <LocationOnIcon />,
+                action: () => { registerClick('map'); window.open(mapUrl, '_blank'); }
+            });
+        }
+
+        // 6. WEB SİTESİ
+        if (cardData?.website) {
+            cards.push({ 
+                id: 'website', 
+                label: 'WEB SİTESİ', 
+                color: '#000000',
+                iconSrc: getLegacyIconPath('web.png'),
+                fallback: <LanguageIcon />,
+                action: () => { registerClick('website'); window.open(ensureFullUrl(cardData.website, 'website'), '_blank'); }
+            });
+        }
+
+        // 7. VIDEO
+        if (cardData?.videoUrl) {
+            cards.push({ 
+                id: 'video', 
+                label: 'TANITIM VİDEO', 
+                color: '#000000',
+                iconSrc: getLegacyIconPath('video.png'),
+                fallback: <PlayArrowIcon />,
+                action: () => { registerClick('video'); handleVideoClick(); }
+            });
+        }
+
+        // 8. QR
+        cards.push({ 
+            id: 'qr', 
+            label: 'QR', 
+            color: '#000000',
+            iconSrc: getLegacyIconPath('qr.png'),
+            fallback: <QrCodeIcon />,
+            action: () => { registerClick('qr'); handleQrClick(); }
+        });
+
+        // 9. PAYLAŞ
+        cards.push({ 
+            id: 'share', 
+            label: 'PAYLAŞ', 
+            color: '#000000',
+            iconSrc: getLegacyIconPath('paylas.png'),
+            fallback: <ShareIcon />,
+            action: () => { registerClick('share'); handleShareClick(); }
+        });
+
+        // 10. DÖKÜMANLAR
+        if (documents.length) {
+            cards.push({ 
+                id: 'documents', 
+                label: 'DÖKÜMANLAR', 
+                color: '#ffffff',
+                iconSrc: getLegacyIconPath('dokuman.png'),
+                fallback: <DescriptionIcon />,
+                action: () => openModal('documents')
+            });
+        }
+
+        // 11. FATURA B. (Banka Hesapları)
+        if (bankAccounts.length) {
+            cards.push({ 
+                id: 'bank', 
+                label: 'FATURA B.', 
+                color: '#16a085',
+                iconSrc: getLegacyIconPath('fatura.png'),
+                fallback: <AccountBalanceIcon />,
+                action: () => openModal('bank')
+            });
+        }
+
+        // 12. ÜRÜNLER/GALERİ
+        if (galleryItems.length) {
+            cards.push({ 
+                id: 'gallery', 
+                label: 'ÜRÜNLER', 
+                color: '#ffffff',
+                iconSrc: getLegacyIconPath('galeri.png'),
+                fallback: <CollectionsIcon />,
+                action: () => openModal('gallery')
+            });
+        }
+
+        // 13. WHATSAPP
+        if (cardData?.whatsappUrl) {
+            cards.push({ 
+                id: 'whatsapp', 
+                label: 'WHATSAPP', 
+                color: '#25D366',
+                iconSrc: getLegacyIconPath('whatsapp.png'),
+                fallback: <WhatsAppIcon />,
+                action: () => { registerClick('whatsapp'); window.open(ensureFullUrl(cardData.whatsappUrl, 'whatsappUrl'), '_blank'); }
+            });
+        }
+
+        // 14. WHATSAPP BUSINESS
+        if (cardData?.whatsappBusinessUrl) {
+            cards.push({ 
+                id: 'whatsappBusiness', 
+                label: 'W. BUSINESS', 
+                color: '#25D366',
+                iconSrc: getLegacyIconPath('whatsappbusiness.png'),
+                fallback: <WhatsAppIcon />,
+                action: () => { registerClick('whatsappBusiness'); window.open(ensureFullUrl(cardData.whatsappBusinessUrl, 'whatsappBusinessUrl'), '_blank'); }
+            });
+        }
+
+        // SOSYAL MEDYA (LegacyBusiness sıralaması)
+        const socialDefinitions = [
+            { field: 'linkedinUrl', key: 'linkedin', label: 'LINKEDIN', file: 'linkedin.png', fallback: <LinkedInIcon />, color: '#0077b5' },
+            { field: 'twitterUrl', key: 'twitter', label: 'TWITTER', file: 'twitter.png', fallback: <TwitterIcon />, color: '#1DA1F2' },
+            { field: 'instagramUrl', key: 'instagram', label: 'INSTAGRAM', file: 'instagram.png', fallback: <InstagramIcon />, color: '#E1306C' },
+            { field: 'facebookUrl', key: 'facebook', label: 'FACEBOOK', file: 'facebook.png', fallback: <FacebookIcon />, color: '#3b579d' },
+            { field: 'telegramUrl', key: 'telegram', label: 'TELEGRAM', file: 'telegram.png', fallback: <TelegramIcon />, color: '#2ba3d6' },
+            { field: 'youtubeUrl', key: 'youtube', label: 'YOUTUBE', file: 'youtube.png', fallback: <YouTubeIcon />, color: '#ffffff' },
+            { field: 'skypeUrl', key: 'skype', label: 'SKYPE', file: 'skype.png', fallback: <VideoCallIcon />, color: '#fefefe' },
+            { field: 'wechatUrl', key: 'wechat', label: 'WECHAT', file: 'wechat.png', fallback: <ChatIcon />, color: '#54e120' },
+            { field: 'pinterestUrl', key: 'pinterest', label: 'PINTEREST', file: 'pinterest.png', fallback: <PinterestIcon />, color: '#ee2d34' },
+            { field: 'snapchatUrl', key: 'snapchat', label: 'SNAPCHAT', file: 'snapchat.png', fallback: <SentimentSatisfiedAltIcon />, color: '#ffef00' },
+            { field: 'tiktokUrl', key: 'tiktok', label: 'TIKTOK', file: 'tiktok.png', fallback: <MusicNoteIcon />, color: '#000000' }
+        ];
+
+        socialDefinitions.forEach(({ field, key, label, file, fallback, color }) => {
+            if (cardData?.[field]) {
+                cards.push({
+                    id: key,
+                    label,
+                    color,
+                    iconSrc: getLegacyIconPath(file),
+                    fallback,
+                    action: () => { registerClick(key); window.open(ensureFullUrl(cardData[field], field), '_blank'); }
+                });
+            }
+        });
+
+        // PAZARYERI (LegacyBusiness sıralaması)
+        const marketplaceDefinitions = [
+            { field: 'trendyolUrl', key: 'trendyol', label: getMarketplaceName('trendyol').toUpperCase(), file: 'trendyol.png', directory: 'img/ikon', color: '#ff671a' },
+            { field: 'hepsiburadaUrl', key: 'hepsiburada', label: getMarketplaceName('hepsiburada').toUpperCase(), file: 'hepsiburada.png', directory: 'img/ikon', color: '#f28b00' },
+            { field: 'ciceksepetiUrl', key: 'ciceksepeti', label: getMarketplaceName('ciceksepeti').toUpperCase(), file: 'ciceksepeti.png', directory: 'img/ikon', color: '#ffffff' },
+            { field: 'sahibindenUrl', key: 'sahibinden', label: getMarketplaceName('sahibinden').toUpperCase(), file: 'sahibinden.png', color: '#ffe800' },
+            { field: 'hepsiemlakUrl', key: 'hepsiemlak', label: getMarketplaceName('hepsiemlak').toUpperCase(), file: 'hepsiemlak.png', color: '#e1211b' },
+            { field: 'gittigidiyorUrl', key: 'gittigidiyor', label: getMarketplaceName('gittigidiyor').toUpperCase(), file: 'gittigidiyor.svg', color: '#ffb703' },
+            { field: 'n11Url', key: 'n11', label: getMarketplaceName('n11').toUpperCase(), file: 'n11.png', directory: 'img/ikon', color: '#E10019' },
+            { field: 'amazonTrUrl', key: 'amazonTr', label: getMarketplaceName('amazonTr').toUpperCase(), file: 'amazon.png', directory: 'img/ikon', color: '#ff8e2e' },
+            { field: 'getirUrl', key: 'getir', label: getMarketplaceName('getir').toUpperCase(), file: 'getir.svg', color: '#5F3DC4' },
+            { field: 'yemeksepetiUrl', key: 'yemeksepeti', label: getMarketplaceName('yemeksepeti').toUpperCase(), file: 'yemeksepeti.svg', color: '#ef233c' },
+            { field: 'arabamUrl', key: 'arabam', label: 'ARABAM', file: 'arabam.png', color: '#ffffff' },
+            { field: 'letgoUrl', key: 'letgo', label: 'LETGO', file: 'letgo.png', color: '#ff3f55' },
+            { field: 'pttAvmUrl', key: 'pttAvm', label: 'PTT AVM', file: 'pttavm.png', color: '#ffffff' }
+        ];
+
+        marketplaceDefinitions.forEach(({ field, key, label, file, directory, color }) => {
+            if (cardData?.[field]) {
+                cards.push({
+                    id: key,
+                    label,
+                    color,
+                    iconSrc: getLegacyIconPath(file, directory || 'legacy-icons'),
+                    fallback: getMarketplaceIcon(key),
+                    action: () => { registerClick(key); window.open(ensureFullUrl(cardData[field], field), '_blank'); }
+                });
+            }
+        });
+
+        socialDefinitions.forEach(({ field, key, label, file, fallback, color }) => {
+            if (cardData?.[field]) {
+                cards.push({
+                    id: key,
+                    label,
+                    color,
+                    iconSrc: getLegacyIconPath(file),
+                    fallback,
+                    action: () => { registerClick(key); window.open(ensureFullUrl(cardData[field], field), '_blank'); }
+                });
+            }
+        });
+
+        return cards;
+    }, [
+        cardData,
+        galleryItems.length,
+        bankAccounts.length,
+        documents.length,
+        mapUrl,
+        handleQrClick,
+        handleShareClick,
+        handleVideoClick,
+        handleAddToContacts,
+        openModal,
+        registerClick,
+        getLegacyIconPath
+    ]);
+
+    // İlk yükleme - merkez kartı ayarla
+    useEffect(() => {
+        const centerIndex = Math.floor(actionCards.length / 2);
+        setCurrentIndex(centerIndex);
+    }, [actionCards.length]);
+
+    // Kart pozisyon hesaplama (max 5 kart göster)
+    const getCardPosition = useCallback((diff) => {
+        const positions = {
+            0: { y: 0, size: 140, zIndex: 100, opacity: 1 },
+            [-1]: { y: -75, size: 110, zIndex: 90, opacity: 1 },
+            [-2]: { y: -140, size: 110, zIndex: 80, opacity: 1 },
+            [1]: { y: 75, size: 110, zIndex: 90, opacity: 1 },
+            [2]: { y: 140, size: 110, zIndex: 80, opacity: 1 }
+        };
+        
+        // Max 5 kart göster (2 üst, merkez, 2 alt)
+        if (diff <= -3 || diff >= 3) return { y: 0, size: 110, zIndex: 0, opacity: 0 };
+        return positions[diff] || positions[0];
+    }, []);
+
+    // Scroll/wheel handler
+    const handleWheel = useCallback((e) => {
+        e.preventDefault();
+        if (isAnimating || actionCards.length === 0) return;
+        
+        setIsAnimating(true);
+        setCurrentIndex((prev) => {
+            if (e.deltaY > 0) {
+                return (prev + 1) % actionCards.length;
+            } else {
+                return (prev - 1 + actionCards.length) % actionCards.length;
+            }
+        });
+        
+        setTimeout(() => setIsAnimating(false), 500);
+    }, [isAnimating, actionCards.length]);
+
+    // Klavye kontrolleri
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (isAnimating || actionCards.length === 0) return;
+            
+            if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                setIsAnimating(true);
+                setCurrentIndex((prev) => (prev + 1) % actionCards.length);
+                setTimeout(() => setIsAnimating(false), 500);
+            } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                setIsAnimating(true);
+                setCurrentIndex((prev) => (prev - 1 + actionCards.length) % actionCards.length);
+                setTimeout(() => setIsAnimating(false), 500);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isAnimating, actionCards.length]);
+
+    if (!cardData) {
+        return <Box sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
+            <Typography>Kart bilgileri yükleniyor...</Typography>
+        </Box>;
+    }
+
+    return (
+        <Box sx={{ 
+            width: '100%', 
+            maxWidth: '400px', 
+            height: '100vh',
+            bgcolor: '#0E0E0E',
+            color: 'white',
+            display: 'flex',
+            flexDirection: 'column',
+            mx: 'auto',
+            position: 'relative',
+            overflow: 'hidden'
+        }}>
+            {/* Header - Sol ve Sağ Butonlar (Overlay) */}
+            <Box sx={{ 
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                display: 'flex',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+                px: 2.5,
+                pt: 2.5,
+                zIndex: 300
+            }}>
+                <Button 
+                    sx={{ 
+                        background: 'rgba(0, 0, 0, 0.4)',
+                        backdropFilter: 'blur(8px)',
+                        borderRadius: '8px',
+                        color: 'white',
+                        fontSize: '11px',
+                        fontWeight: 500,
+                        textTransform: 'none',
+                        py: 1,
+                        px: 1.75,
+                        display: 'flex',
+                        gap: 0.75,
+                        minWidth: 'auto',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        '&:hover': { 
+                            background: 'rgba(0, 0, 0, 0.6)',
+                            borderColor: 'rgba(255, 255, 255, 0.2)'
+                        }
+                    }}
+                >
+                    <span>🇹🇷</span>
+                    <span>TR</span>
+                </Button>
+            </Box>
+
+            {/* Kapak Fotoğrafı */}
+            <Box sx={{ 
+                width: '100%',
+                height: '100px',
+                position: 'relative',
+                overflow: 'hidden',
+                bgcolor: cardData.coverImageUrl ? 'transparent' : '#9d9d9d'
+            }}>
+                {cardData.coverImageUrl && (
+                    <Box
+                        component="img"
+                        src={cardData.coverImageUrl}
+                        alt="Kapak"
+                        sx={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                        }}
+                    />
+                )}
+            </Box>
+
+            {/* Profil Fotoğrafı - Kapak ile kesişen */}
+            <Box sx={{ 
+                display: 'flex',
+                justifyContent: 'center',
+                mt: '-60px',
+                mb: 1.5,
+                zIndex: 100,
+                position: 'relative'
+            }}>
+                <Avatar
+                    src={cardData.profileImageUrl}
+                    alt={cardData.name || cardData.company}
+                    sx={{
+                        width: 120,
+                        height: 120,
+                        border: '4px solid #0E0E0E',
+                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
+                        bgcolor: cardData.profileImageUrl ? 'transparent' : '#ffffff',
+                        fontSize: '48px',
+                        fontWeight: 600,
+                        color: cardData.profileImageUrl ? 'transparent' : '#000000'
+                    }}
+                >
+                    {!cardData.profileImageUrl && (cardData.name || cardData.company) 
+                        ? (cardData.name || cardData.company).charAt(0).toUpperCase()
+                        : <BusinessIcon sx={{ fontSize: 48, color: '#666666' }} />
+                    }
+                </Avatar>
+            </Box>
+
+            {/* İsim ve Başlık */}
+            <Box sx={{ textAlign: 'center', mb: 1.5, px: 2 }}>
+                <Typography sx={{ fontSize: 17, fontWeight: 700, mb: 0.5, letterSpacing: '-0.3px', color: '#FFFFFF' }}>
+                    {cardData.name || 'İsim'}
+                </Typography>
+                {cardData.title && (
+                    <Typography sx={{ fontSize: 12, color: '#BFBFBF', fontWeight: 500 }}>
+                        {cardData.title}
+                    </Typography>
+                )}
+                {cardData.company && (
+                    <Typography sx={{ fontSize: 11, color: '#999', mt: 0.5 }}>
+                        {cardData.company}
+                    </Typography>
+                )}
+                {/* Hakkımızda */}
+                {cardData.bio && (
+                    <Typography sx={{ 
+                        fontSize: 11, 
+                        color: '#BFBFBF', 
+                        mt: 1, 
+                        lineHeight: 1.5,
+                        px: 1
+                    }}>
+                        {cardData.bio}
+                    </Typography>
+                )}
+                
+                {/* Tanıtım Video Badge */}
+                {cardData.videoUrl && (
+                    <Box 
+                        onClick={() => {
+                            registerClick('video');
+                            handleVideoClick();
+                        }}
+                        sx={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 0.75,
+                            mt: 1.5,
+                            px: 2,
+                            py: 0.75,
+                            background: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)',
+                            borderRadius: '20px',
+                            cursor: 'pointer',
+                            border: '2px solid rgba(255, 255, 255, 0.15)',
+                            boxShadow: '0 4px 12px rgba(231, 76, 60, 0.5)',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                                boxShadow: '0 6px 20px rgba(231, 76, 60, 0.7)',
+                                borderColor: 'rgba(255, 255, 255, 0.25)'
+                            }
+                        }}
+                    >
+                        <PlayArrowIcon sx={{ fontSize: 18, color: 'white' }} />
+                        <Typography sx={{ 
+                            fontSize: 11, 
+                            fontWeight: 700, 
+                            color: 'white',
+                            letterSpacing: '0.5px',
+                            textTransform: 'uppercase'
+                        }}>
+                            Tanıtım Videosu
+                        </Typography>
+                    </Box>
+                )}
+            </Box>
+
+            {/* Spacer - Kartları alta itmek için */}
+            <Box sx={{ flex: 1 }} />
+
+            {/* Cards Stack - En altta */}
+            {actionCards.length > 0 ? (
+                <Box 
+                    sx={{ 
+                        display: 'flex', 
+                        alignItems: 'flex-end',
+                        justifyContent: 'center',
+                        position: 'relative',
+                        pb: 1,
+                        minHeight: '320px'
+                    }}
+                    onWheel={handleWheel}
+                >
+                    <Box sx={{ 
+                        position: 'relative', 
+                        width: '100%', 
+                        maxWidth: '320px',
+                        height: '320px'
+                    }}>
+                        {actionCards.map((card, index) => {
+                            let diff = index - currentIndex;
+                            const totalCards = actionCards.length;
+                            
+                            if (diff > totalCards / 2) diff -= totalCards;
+                            else if (diff < -totalCards / 2) diff += totalCards;
+                            
+                            const pos = getCardPosition(diff);
+                            const isActive = index === currentIndex;
+
+                            // Max 5 kart göster
+                            if (pos.opacity === 0) return null;
+
+                            return (
+                                <Box
+                                    key={card.id}
+                                    onClick={() => {
+                                        if (isActive) {
+                                            card.action();
+                                        } else if (!isAnimating) {
+                                            setCurrentIndex(index);
+                                        }
+                                    }}
+                                    sx={{
+                                        position: 'absolute',
+                                        width: '100%',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        cursor: 'pointer',
+                                        userSelect: 'none',
+                                        left: 0,
+                                        transform: `translateY(${pos.y}px)`,
+                                        zIndex: pos.zIndex,
+                                        opacity: pos.opacity,
+                                        transition: 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease',
+                                        pointerEvents: pos.opacity === 0 ? 'none' : 'auto'
+                                    }}
+                                >
+                                    {/* Icon - Tek renk arka planlı yuvarlatılmış kutu */}
+                                    <Box sx={{
+                                        width: `${pos.size}px`,
+                                        height: `${pos.size}px`,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        background: card.color || '#666',
+                                        borderRadius: '16px',
+                                        padding: `${pos.size * 0.2}px`,
+                                        transition: 'width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                                        boxShadow: isActive ? '0 8px 24px rgba(0, 0, 0, 0.4)' : '0 4px 12px rgba(0, 0, 0, 0.3)',
+                                        '& img': {
+                                            width: `${pos.size * 0.6}px !important`,
+                                            height: `${pos.size * 0.6}px !important`,
+                                            objectFit: 'contain',
+                                            transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                                        },
+                                        '& svg': {
+                                            fontSize: `${pos.size * 0.5}px !important`,
+                                            color: 'white',
+                                            transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                                        }
+                                    }}>
+                                        {renderLegacyIcon(card.iconSrc, card.label, card.fallback)}
+                                    </Box>
+                                    
+                                    <Typography sx={{
+                                        fontSize: isActive ? 12 : 11,
+                                        color: isActive ? '#FFFFFF' : '#7F7F7F',
+                                        fontWeight: isActive ? 700 : 500,
+                                        position: 'absolute',
+                                        left: '50%',
+                                        marginLeft: `${pos.size / 2 + 15}px`,
+                                        width: '100px',
+                                        transition: 'all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1)',
+                                        letterSpacing: '0.5px'
+                                    }}>
+                                        {card.label}
+                                    </Typography>
+                                </Box>
+                            );
+                        })}
+                    </Box>
+                </Box>
+            ) : (
+                <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', py: 6 }}>
+                    <Typography sx={{ color: '#BFBFBF', fontSize: 14 }}>
+                        Gösterilecek içerik bulunamadı
+                    </Typography>
+                </Box>
+            )}
+
+            {/* Footer - Banka ve Fatura Bilgileri Butonları */}
+            <Box sx={{ 
+                display: 'flex', 
+                gap: 1.5, 
+                px: 2.5, 
+                pb: 2.5,
+                pt: 1
+            }}>
+                <Button 
+                    onClick={() => bankAccounts.length > 0 ? openModal('bank') : null}
+                    disabled={bankAccounts.length === 0}
+                    sx={{
+                        flex: 1,
+                        background: bankAccounts.length > 0 
+                            ? 'rgba(255, 255, 255, 0.10)' 
+                            : 'rgba(255, 255, 255, 0.04)',
+                        backdropFilter: 'blur(10px)',
+                        border: '1px solid',
+                        borderColor: bankAccounts.length > 0 
+                            ? 'rgba(255, 255, 255, 0.15)' 
+                            : 'rgba(255, 255, 255, 0.08)',
+                        borderRadius: '12px',
+                        color: bankAccounts.length > 0 ? '#FFFFFF !important' : 'rgba(255, 255, 255, 0.35) !important',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                        py: 1.5,
+                        px: 2,
+                        boxShadow: bankAccounts.length > 0 ? '0 4px 12px rgba(0, 0, 0, 0.3)' : 'none',
+                        transition: 'all 0.3s ease',
+                        '&:hover': bankAccounts.length > 0 ? {
+                            background: 'rgba(255, 255, 255, 0.18)',
+                            borderColor: 'rgba(255, 255, 255, 0.25)',
+                            boxShadow: '0 6px 16px rgba(0, 0, 0, 0.5)',
+                            transform: 'translateY(-2px)',
+                            color: '#FFFFFF !important'
+                        } : {},
+                        '&.Mui-disabled': {
+                            opacity: 0.5,
+                            color: 'rgba(255, 255, 255, 0.3) !important'
+                        }
+                    }}
+                >
+                    Banka Bilgileri
+                </Button>
+                
+                <Button 
+                    onClick={() => documents.length > 0 ? openModal('documents') : null}
+                    disabled={documents.length === 0}
+                    sx={{
+                        flex: 1,
+                        background: documents.length > 0 
+                            ? 'rgba(255, 255, 255, 0.10)' 
+                            : 'rgba(255, 255, 255, 0.04)',
+                        backdropFilter: 'blur(10px)',
+                        border: '1px solid',
+                        borderColor: documents.length > 0 
+                            ? 'rgba(255, 255, 255, 0.15)' 
+                            : 'rgba(255, 255, 255, 0.08)',
+                        borderRadius: '12px',
+                        color: documents.length > 0 ? '#FFFFFF !important' : 'rgba(255, 255, 255, 0.35) !important',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                        py: 1.5,
+                        px: 2,
+                        boxShadow: documents.length > 0 ? '0 4px 12px rgba(0, 0, 0, 0.3)' : 'none',
+                        transition: 'all 0.3s ease',
+                        '&:hover': documents.length > 0 ? {
+                            background: 'rgba(255, 255, 255, 0.18)',
+                            borderColor: 'rgba(255, 255, 255, 0.25)',
+                            boxShadow: '0 6px 16px rgba(0, 0, 0, 0.5)',
+                            transform: 'translateY(-2px)',
+                            color: '#FFFFFF !important'
+                        } : {},
+                        '&.Mui-disabled': {
+                            opacity: 0.5,
+                            color: 'rgba(255, 255, 255, 0.3) !important'
+                        }
+                    }}
+                >
+                    Fatura Bilgileri
+                </Button>
+            </Box>
+
+            {/* Modals */}
+            <Dialog 
+                open={activeModal !== null}
+                onClose={() => setActiveModal(null)}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        bgcolor: '#1a1a1a',
+                        color: 'white',
+                        borderRadius: 3
+                    }
+                }}
+            >
+                <DialogTitle sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: 'white' }}>
+                    {activeModal === 'gallery' && 'Ürünler / Galeri'}
+                    {activeModal === 'bank' && 'Banka Bilgileri'}
+                    {activeModal === 'documents' && 'Dökümanlar'}
+                    {activeModal === 'about' && 'Hakkımda'}
+                </DialogTitle>
+                <DialogContent sx={{ mt: 2 }}>
+                    {activeModal === 'about' && (
+                        <Typography sx={{ color: '#ddd', lineHeight: 1.7 }}>
+                            {cardData?.bio}
+                        </Typography>
+                    )}
+                    {activeModal === 'gallery' && (
+                        <Grid container spacing={2}>
+                            {galleryItems.map((item, index) => (
+                                <Grid item xs={6} key={index}>
+                                    <Box
+                                        component="img"
+                                        src={item.url}
+                                        alt={item.title}
+                                        sx={{
+                                            width: '100%',
+                                            height: 150,
+                                            objectFit: 'cover',
+                                            borderRadius: 2,
+                                            cursor: 'pointer'
+                                        }}
+                                        onClick={() => window.open(item.url, '_blank')}
+                                    />
+                                </Grid>
+                            ))}
+                        </Grid>
+                    )}
+                    {activeModal === 'bank' && (
+                        <List>
+                            {bankAccounts.map((account, index) => {
+                                const bankLogo = getBankLogo(account.bankName);
+                                return (
+                                    <ListItem key={index} sx={{ flexDirection: 'column', alignItems: 'flex-start', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                            {bankLogo && (
+                                                <Box
+                                                    component="img"
+                                                    src={bankLogo}
+                                                    alt={account.bankName}
+                                                    sx={{ width: 32, height: 32, mr: 1.5 }}
+                                                />
+                                            )}
+                                            <Typography sx={{ fontWeight: 600 }}>{account.bankName}</Typography>
+                                        </Box>
+                                        <Typography variant="body2" sx={{ color: '#bbb' }}>
+                                            {formatIban(account.iban)}
+                                        </Typography>
+                                        {account.accountName && (
+                                            <Typography variant="caption" sx={{ color: '#999', mt: 0.5 }}>
+                                                {account.accountName}
+                                            </Typography>
+                                        )}
+                                    </ListItem>
+                                );
+                            })}
+                        </List>
+                    )}
+                    {activeModal === 'documents' && (
+                        <Stack spacing={1.5}>
+                            {documents.map((doc, index) => (
+                                <Button
+                                    key={index}
+                                    variant="outlined"
+                                    startIcon={<DescriptionIcon />}
+                                    component="a"
+                                    href={doc.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    sx={{
+                                        justifyContent: 'flex-start',
+                                        borderRadius: 2,
+                                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                                        color: 'white',
+                                        '&:hover': {
+                                            borderColor: 'rgba(255, 255, 255, 0.4)',
+                                            bgcolor: 'rgba(255, 255, 255, 0.05)'
+                                        }
+                                    }}
+                                >
+                                    {doc.name || `Döküman ${index + 1}`}
+                                </Button>
+                            ))}
+                        </Stack>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setActiveModal(null)} sx={{ color: 'white' }}>
+                        Kapat
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <QrModal />
+            <ShareSnackbar />
+            <VideoModal />
+        </Box>
+    );
+};
+
+// Tema2 Theme - Grid layout with slider
+export const Tema2Theme = ({ cardData }) => {
+    const { 
+        handleQrClick, 
+        handleShareClick, 
+        handleVideoClick, 
+        QrModal, 
+        ShareSnackbar, 
+        VideoModal,
+        cardUrl 
+    } = useCardActions(cardData);
+    
+    const [sliderIndex, setSliderIndex] = useState(0);
+    const [activeModal, setActiveModal] = useState(null);
+    const [isSliderHovered, setIsSliderHovered] = useState(false);
+
+    // Kart görüntülenmesini kaydet
+    useEffect(() => {
+        if (cardData?.id) {
+            analyticsService.recordCardView(cardData.id);
+        }
+    }, [cardData?.id]);
+
+    // Link tıklama tracking
+    const registerClick = useCallback((type) => {
+        if (cardData?.id && type) {
+            trackClick(cardData.id, type);
+        }
+    }, [cardData?.id]);
+
+    // Legacy icon path helper
+    const getLegacyIconPath = useCallback((fileName, directory = 'legacy-icons') => {
+        if (!fileName) return null;
+        if (fileName.startsWith('/')) return fileName;
+        if (directory === 'legacy-icons' && !LEGACY_ICON_FILES.has(fileName)) {
+            return null;
+        }
+        return `/${directory}/${fileName}`;
+    }, []);
+
+    // Legacy icon render helper
+    const renderLegacyIcon = useCallback((src, alt, fallback) => {
+        if (src) {
+            return (
+                <Box
+                    component="img"
+                    src={src}
+                    alt={alt}
+                    sx={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                />
+            );
+        }
+        if (fallback && React.isValidElement(fallback)) {
+            return fallback;
+        }
+        return null;
+    }, []);
+
+    // VCF oluştur
+    const handleAddToContacts = useCallback(() => {
+        if (!cardData) return;
+        
+        const vcard = [
+            'BEGIN:VCARD',
+            'VERSION:3.0',
+            `FN:${cardData.name || cardData.company || 'Kartvizit'}`,
+            cardData.name ? `N:${cardData.name};;;;` : '',
+            cardData.company ? `ORG:${cardData.company}` : '',
+            cardData.title ? `TITLE:${cardData.title}` : '',
+            cardData.phone ? `TEL;TYPE=CELL:${cardData.phone}` : '',
+            cardData.email ? `EMAIL:${cardData.email}` : '',
+            cardData.website ? `URL:${cardUrl || window.location.href}` : '',
+            cardData.address ? `ADR;TYPE=WORK:;;${cardData.address};;;` : '',
+            cardData.bio ? `NOTE:${cardData.bio}` : '',
+            'END:VCARD'
+        ].filter(Boolean).join('\n');
+
+        const blob = new Blob([vcard], { type: 'text/vcard' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${(cardData.name || 'kartvizit').replace(/\s+/g, '_')}.vcf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        registerClick('add_contact');
+    }, [cardData, cardUrl, registerClick]);
+
+    // Galeri items
+    const galleryItems = useMemo(() => {
+        const items = [];
+        const addItem = (item) => {
+            if (!item) return;
+            const url = typeof item === 'string' ? item : (item.url || item.imageUrl);
+            if (url) items.push({ url, title: item.title || 'Galeri' });
+        };
+        [cardData?.galleryImages, cardData?.gallery].forEach(arr => {
+            if (Array.isArray(arr)) arr.forEach(addItem);
+        });
+        if (cardData?.coverImageUrl) {
+            items.push({ url: cardData.coverImageUrl, title: 'Kapak' });
+        }
+        return items;
+    }, [cardData?.galleryImages, cardData?.gallery, cardData?.coverImageUrl]);
+
+    // Banka hesapları
+    const bankAccounts = useMemo(() => 
+        Array.isArray(cardData?.bankAccounts) ? cardData.bankAccounts.filter(Boolean) : []
+    , [cardData?.bankAccounts]);
+
+    // Dökümanlar
+    const documents = useMemo(() => 
+        Array.isArray(cardData?.documents) ? cardData.documents.filter(d => d?.url) : []
+    , [cardData?.documents]);
+
+    // Modal açma
+    const openModal = useCallback((type) => {
+        setActiveModal(type);
+        registerClick(type);
+    }, [registerClick]);
+
+    // Map URL
+    const mapUrl = useMemo(() => {
+        if (cardData?.mapUrl) return cardData.mapUrl;
+        if (cardData?.address) {
+            return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cardData.address)}`;
+        }
+        return null;
+    }, [cardData?.mapUrl, cardData?.address]);
+
+    // Üst 6 kart: rehbere-ekle, gsm, konum | qr, website, paylaş
+    const topCards = useMemo(() => {
+        const cards = [];
+        
+        // REHBERE EKLE
+        cards.push({ 
+            id: 'contact', 
+            label: 'REHBERE EKLE', 
+            color: '#F39C12',
+            iconSrc: getLegacyIconPath('rehber.png'),
+            fallback: <AccountCircleIcon />,
+            action: handleAddToContacts
+        });
+
+        // GSM
+        if (cardData?.phone) {
+            cards.push({ 
+                id: 'gsm', 
+                label: 'GSM', 
+                color: '#0bd418',
+                iconSrc: getLegacyIconPath('phone.png'),
+                fallback: <PhoneIcon />,
+                action: () => { registerClick('phone'); window.open(`tel:${cardData.phone}`, '_self'); }
+            });
+        }
+
+        // KONUM
+        if (mapUrl) {
+            cards.push({ 
+                id: 'map', 
+                label: 'KONUM', 
+                color: '#e0453f',
+                iconSrc: getLegacyIconPath('map.png'),
+                fallback: <LocationOnIcon />,
+                action: () => { registerClick('map'); window.open(mapUrl, '_blank'); }
+            });
+        }
+
+        // QR
+        cards.push({ 
+            id: 'qr', 
+            label: 'QR', 
+            color: '#000000',
+            iconSrc: getLegacyIconPath('qr.png'),
+            fallback: <QrCodeIcon />,
+            action: () => { registerClick('qr'); handleQrClick(); }
+        });
+
+        // WEB SİTESİ
+        if (cardData?.website) {
+            cards.push({ 
+                id: 'website', 
+                label: 'WEB SİTESİ', 
+                color: '#000000',
+                iconSrc: getLegacyIconPath('web.png'),
+                fallback: <LanguageIcon />,
+                action: () => { registerClick('website'); window.open(ensureFullUrl(cardData.website, 'website'), '_blank'); }
+            });
+        }
+
+        // PAYLAŞ
+        cards.push({ 
+            id: 'share', 
+            label: 'PAYLAŞ', 
+            color: '#000000',
+            iconSrc: getLegacyIconPath('paylas.png'),
+            fallback: <ShareIcon />,
+            action: () => { registerClick('share'); handleShareClick(); }
+        });
+
+        return cards;
+    }, [cardData, mapUrl, handleQrClick, handleShareClick, handleAddToContacts, registerClick, getLegacyIconPath]);
+
+    // Alt slider kartları: geri kalan herşey + sosyal medya + pazaryerleri
+    const sliderCards = useMemo(() => {
+        const cards = [];
+        
+        // HAKKIMDA
+        if (cardData?.bio) {
+            cards.push({ 
+                id: 'about', 
+                label: 'HAKKIMDA', 
+                color: '#00afa5',
+                iconSrc: getLegacyIconPath('hakkimda.png'),
+                fallback: <InfoIcon />,
+                action: () => openModal('about')
+            });
+        }
+
+        // E-POSTA
+        if (cardData?.email) {
+            cards.push({ 
+                id: 'email', 
+                label: 'E-POSTA', 
+                color: '#5877ff',
+                iconSrc: getLegacyIconPath('mail.png'),
+                fallback: <EmailIcon />,
+                action: () => { registerClick('email'); window.open(`mailto:${cardData.email}`, '_self'); }
+            });
+        }
+
+        // VIDEO
+        if (cardData?.videoUrl) {
+            cards.push({ 
+                id: 'video', 
+                label: 'TANITIM VİDEO', 
+                color: '#000000',
+                iconSrc: getLegacyIconPath('video.png'),
+                fallback: <PlayArrowIcon />,
+                action: () => { registerClick('video'); handleVideoClick(); }
+            });
+        }
+
+        // DÖKÜMANLAR
+        if (documents.length) {
+            cards.push({ 
+                id: 'documents', 
+                label: 'DÖKÜMANLAR', 
+                color: '#ffffff',
+                iconSrc: getLegacyIconPath('dokuman.png'),
+                fallback: <DescriptionIcon />,
+                action: () => openModal('documents')
+            });
+        }
+
+        // FATURA B. (Banka Hesapları)
+        if (bankAccounts.length) {
+            cards.push({ 
+                id: 'bank', 
+                label: 'FATURA B.', 
+                color: '#16a085',
+                iconSrc: getLegacyIconPath('fatura.png'),
+                fallback: <AccountBalanceIcon />,
+                action: () => openModal('bank')
+            });
+        }
+
+        // ÜRÜNLER/GALERİ
+        if (galleryItems.length) {
+            cards.push({ 
+                id: 'gallery', 
+                label: 'ÜRÜNLER', 
+                color: '#ffffff',
+                iconSrc: getLegacyIconPath('galeri.png'),
+                fallback: <CollectionsIcon />,
+                action: () => openModal('gallery')
+            });
+        }
+
+        // WHATSAPP
+        if (cardData?.whatsappUrl) {
+            cards.push({ 
+                id: 'whatsapp', 
+                label: 'WHATSAPP', 
+                color: '#25D366',
+                iconSrc: getLegacyIconPath('whatsapp.png'),
+                fallback: <WhatsAppIcon />,
+                action: () => { registerClick('whatsapp'); window.open(ensureFullUrl(cardData.whatsappUrl, 'whatsappUrl'), '_blank'); }
+            });
+        }
+
+        // WHATSAPP BUSINESS
+        if (cardData?.whatsappBusinessUrl) {
+            cards.push({ 
+                id: 'whatsappBusiness', 
+                label: 'W. BUSINESS', 
+                color: '#25D366',
+                iconSrc: getLegacyIconPath('whatsappbusiness.png'),
+                fallback: <WhatsAppIcon />,
+                action: () => { registerClick('whatsappBusiness'); window.open(ensureFullUrl(cardData.whatsappBusinessUrl, 'whatsappBusinessUrl'), '_blank'); }
+            });
+        }
+
+        // SOSYAL MEDYA
+        const socialDefinitions = [
+            { field: 'linkedinUrl', key: 'linkedin', label: 'LINKEDIN', file: 'linkedin.png', fallback: <LinkedInIcon />, color: '#0077b5' },
+            { field: 'twitterUrl', key: 'twitter', label: 'TWITTER', file: 'twitter.png', fallback: <TwitterIcon />, color: '#1DA1F2' },
+            { field: 'instagramUrl', key: 'instagram', label: 'INSTAGRAM', file: 'instagram.png', fallback: <InstagramIcon />, color: '#E1306C' },
+            { field: 'facebookUrl', key: 'facebook', label: 'FACEBOOK', file: 'facebook.png', fallback: <FacebookIcon />, color: '#3b579d' },
+            { field: 'telegramUrl', key: 'telegram', label: 'TELEGRAM', file: 'telegram.png', fallback: <TelegramIcon />, color: '#2ba3d6' },
+            { field: 'youtubeUrl', key: 'youtube', label: 'YOUTUBE', file: 'youtube.png', fallback: <YouTubeIcon />, color: '#ffffff' },
+            { field: 'skypeUrl', key: 'skype', label: 'SKYPE', file: 'skype.png', fallback: <VideoCallIcon />, color: '#fefefe' },
+            { field: 'wechatUrl', key: 'wechat', label: 'WECHAT', file: 'wechat.png', fallback: <ChatIcon />, color: '#54e120' },
+            { field: 'pinterestUrl', key: 'pinterest', label: 'PINTEREST', file: 'pinterest.png', fallback: <PinterestIcon />, color: '#ee2d34' },
+            { field: 'snapchatUrl', key: 'snapchat', label: 'SNAPCHAT', file: 'snapchat.png', fallback: <SentimentSatisfiedAltIcon />, color: '#ffef00' },
+            { field: 'tiktokUrl', key: 'tiktok', label: 'TIKTOK', file: 'tiktok.png', fallback: <MusicNoteIcon />, color: '#000000' }
+        ];
+
+        socialDefinitions.forEach(({ field, key, label, file, fallback, color }) => {
+            if (cardData?.[field]) {
+                cards.push({
+                    id: key,
+                    label,
+                    color,
+                    iconSrc: getLegacyIconPath(file),
+                    fallback,
+                    action: () => { registerClick(key); window.open(ensureFullUrl(cardData[field], field), '_blank'); }
+                });
+            }
+        });
+
+        // PAZARYERI
+        const marketplaceDefinitions = [
+            { field: 'trendyolUrl', key: 'trendyol', label: getMarketplaceName('trendyol').toUpperCase(), file: 'trendyol.png', directory: 'img/ikon', color: '#ff671a' },
+            { field: 'hepsiburadaUrl', key: 'hepsiburada', label: getMarketplaceName('hepsiburada').toUpperCase(), file: 'hepsiburada.png', directory: 'img/ikon', color: '#f28b00' },
+            { field: 'ciceksepetiUrl', key: 'ciceksepeti', label: getMarketplaceName('ciceksepeti').toUpperCase(), file: 'ciceksepeti.png', directory: 'img/ikon', color: '#ffffff' },
+            { field: 'sahibindenUrl', key: 'sahibinden', label: getMarketplaceName('sahibinden').toUpperCase(), file: 'sahibinden.png', color: '#ffe800' },
+            { field: 'hepsiemlakUrl', key: 'hepsiemlak', label: getMarketplaceName('hepsiemlak').toUpperCase(), file: 'hepsiemlak.png', color: '#e1211b' },
+            { field: 'gittigidiyorUrl', key: 'gittigidiyor', label: getMarketplaceName('gittigidiyor').toUpperCase(), file: 'gittigidiyor.svg', color: '#ffb703' },
+            { field: 'n11Url', key: 'n11', label: getMarketplaceName('n11').toUpperCase(), file: 'n11.png', directory: 'img/ikon', color: '#E10019' },
+            { field: 'amazonTrUrl', key: 'amazonTr', label: getMarketplaceName('amazonTr').toUpperCase(), file: 'amazon.png', directory: 'img/ikon', color: '#ff8e2e' },
+            { field: 'getirUrl', key: 'getir', label: getMarketplaceName('getir').toUpperCase(), file: 'getir.svg', color: '#5F3DC4' },
+            { field: 'yemeksepetiUrl', key: 'yemeksepeti', label: getMarketplaceName('yemeksepeti').toUpperCase(), file: 'yemeksepeti.svg', color: '#ef233c' },
+            { field: 'arabamUrl', key: 'arabam', label: 'ARABAM', file: 'arabam.png', color: '#f8f7f7' },
+            { field: 'letgoUrl', key: 'letgo', label: 'LETGO', file: 'letgo.png', color: '#ff3f55' },
+            { field: 'pttAvmUrl', key: 'pttAvm', label: 'PTT AVM', file: 'pttavm.png', color: '#ffffff' }
+        ];
+
+        marketplaceDefinitions.forEach(({ field, key, label, file, directory, color }) => {
+            if (cardData?.[field]) {
+                cards.push({
+                    id: key,
+                    label,
+                    color,
+                    iconSrc: getLegacyIconPath(file, directory || 'legacy-icons'),
+                    fallback: getMarketplaceIcon(key),
+                    action: () => { registerClick(key); window.open(ensureFullUrl(cardData[field], field), '_blank'); }
+                });
+            }
+        });
+
+        return cards;
+    }, [
+        cardData,
+        galleryItems.length,
+        bankAccounts.length,
+        documents.length,
+        handleVideoClick,
+        handleAddToContacts,
+        openModal,
+        registerClick,
+        getLegacyIconPath
+    ]);
+
+    // Slider navigation
+    const maxSliderIndex = useMemo(() => {
+        return Math.max(0, sliderCards.length - 3);
+    }, [sliderCards.length]);
+
+    // Sonsuz slider için modüler aritmetik
+    const handleSliderNext = useCallback(() => {
+        if (sliderCards.length <= 3) return;
+        setSliderIndex((prev) => {
+            const next = prev + 1;
+            return next > maxSliderIndex ? 0 : next;
+        });
+    }, [sliderCards.length, maxSliderIndex]);
+
+    const handleSliderPrev = useCallback(() => {
+        if (sliderCards.length <= 3) return;
+        setSliderIndex((prev) => {
+            const prevIndex = prev - 1;
+            return prevIndex < 0 ? maxSliderIndex : prevIndex;
+        });
+    }, [sliderCards.length, maxSliderIndex]);
+
+    // Auto slider - 3-4 saniyede 1 kart kaydır, hover'da durdur, sonsuz döngü
+    useEffect(() => {
+        if (sliderCards.length <= 3 || isSliderHovered) return;
+        
+        const interval = setInterval(() => {
+            setSliderIndex((prev) => {
+                const next = prev + 1;
+                return next > maxSliderIndex ? 0 : next;
+            });
+        }, 3500);
+
+        return () => clearInterval(interval);
+    }, [sliderCards.length, maxSliderIndex, isSliderHovered]);
+
+    // Sonsuz slider için sliderIndex sınır kontrolü ve reset
+    useEffect(() => {
+        if (sliderCards.length <= 3) return;
+        
+        // SliderIndex maxSliderIndex'i geçerse veya 0'ın altına düşerse reset et
+        if (sliderIndex > maxSliderIndex) {
+            // Animasyonu durdur ve pozisyonu sıfırla
+            setTimeout(() => {
+                setSliderIndex(0);
+            }, 400); // Transition süresi kadar bekle
+        } else if (sliderIndex < 0) {
+            setTimeout(() => {
+                setSliderIndex(maxSliderIndex);
+            }, 400);
+        }
+    }, [sliderIndex, maxSliderIndex, sliderCards.length]);
+
+    // Slider için görünen kartlar (3'lü)
+    const visibleSliderCards = useMemo(() => {
+        if (sliderCards.length <= 3) return sliderCards;
+        const cards = [];
+        for (let i = 0; i < 3; i++) {
+            const index = sliderIndex + i;
+            if (index < sliderCards.length) {
+                cards.push(sliderCards[index]);
+            }
+        }
+        return cards;
+    }, [sliderCards, sliderIndex]);
+
+    // Beyaz veya açık renk kontrolü
+    const isLightColor = useCallback((color) => {
+        if (!color) return false;
+        const lightColors = ['#ffffff', '#fefefe', '#f8f7f7', '#ffe800', '#ffef00', '#ffffff', '#f5f5f5'];
+        const normalizedColor = color.toLowerCase().trim();
+        return lightColors.includes(normalizedColor);
+    }, []);
+
+    if (!cardData) {
+        return <Box sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
+            <Typography>Kart bilgileri yükleniyor...</Typography>
+        </Box>;
+    }
+
+    return (
+        <Box sx={{ 
+            width: '100%', 
+            maxWidth: '400px', 
+            minHeight: '100vh',
+            bgcolor: '#ffffff',
+            color: '#000000',
+            display: 'flex',
+            flexDirection: 'column',
+            mx: 'auto',
+            position: 'relative',
+            overflow: 'hidden'
+        }}>
+            {/* Üst Kısım - Kapak Fotoğrafı Varsa */}
+            {cardData.coverImageUrl ? (
+                <Box sx={{ position: 'relative', mb: 3 }}>
+                    {/* Kapak Fotoğrafı */}
+                    <Box sx={{ 
+                        width: '100%',
+                        height: '100px',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        bgcolor: '#9d9d9d'
+                    }}>
+                        <Box
+                            component="img"
+                            src={cardData.coverImageUrl}
+                            alt="Kapak"
+                            sx={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover'
+                            }}
+                        />
+                        {/* Gradient Overlay */}
+                        <Box sx={{
+                            position: 'absolute',
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            height: '60%',
+                            background: 'linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.3))'
+                        }} />
+                    </Box>
+
+                    {/* Profil ve Bilgiler - Kapak üzerine bindirilmiş */}
+                    <Box sx={{ 
+                        position: 'relative',
+                        px: 2.5,
+                        mt: '-50px',
+                        zIndex: 10
+                    }}>
+                        {/* Profil Fotoğrafı */}
+                        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1.5 }}>
+                            <Avatar
+                                src={cardData.profileImageUrl}
+                                alt={cardData.name || cardData.company}
+                                sx={{
+                                    width: 100,
+                                    height: 100,
+                                    border: '4px solid #ffffff',
+                                    bgcolor: cardData.profileImageUrl ? 'transparent' : '#f5f5f5',
+                                    fontSize: '40px',
+                                    fontWeight: 600,
+                                    color: cardData.profileImageUrl ? 'transparent' : '#999999',
+                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+                                }}
+                            >
+                                {!cardData.profileImageUrl && (
+                                    <AccountCircleIcon sx={{ fontSize: 56, color: '#999999' }} />
+                                )}
+                            </Avatar>
+                        </Box>
+
+                        {/* İsim ve Ünvan - Ortalanmış */}
+                        <Box sx={{ textAlign: 'center', mb: 1 }}>
+                            <Typography sx={{ 
+                                fontSize: 20, 
+                                fontWeight: 700, 
+                                mb: 0.5, 
+                                color: '#000000',
+                                fontFamily: '"Open Sans", sans-serif'
+                            }}>
+                                {cardData.name || 'İsim'}
+                            </Typography>
+                            {cardData.title && (
+                                <Typography sx={{ 
+                                    fontSize: 14, 
+                                    color: '#666666', 
+                                    fontWeight: 700, 
+                                    mb: 0.5,
+                                    fontFamily: '"Open Sans", sans-serif'
+                                }}>
+                                    {cardData.title}
+                                </Typography>
+                            )}
+                            {cardData.company && (
+                                <Typography sx={{ fontSize: 12, color: '#999999', mb: 1 }}>
+                                    {cardData.company}
+                                </Typography>
+                            )}
+                            {/* Hakkımızda */}
+                            {cardData.bio && (
+                                <Typography sx={{ fontSize: 12, color: '#666666', lineHeight: 1.6, mt: 1 }}>
+                                    {cardData.bio}
+                                </Typography>
+                            )}
+                        </Box>
+                    </Box>
+                </Box>
+            ) : (
+                /* Üst Kısım - Kapak Fotoğrafı Yoksa */
+                <Box sx={{ 
+                    p: 2.5,
+                    pt: 3,
+                    pb: 2
+                }}>
+                    <Box sx={{ 
+                        display: 'flex', 
+                        alignItems: 'flex-start',
+                        gap: 2,
+                        mb: 2
+                    }}>
+                        {/* Sol - Profil Fotoğrafı */}
+                        <Avatar
+                            src={cardData.profileImageUrl}
+                            alt={cardData.name || cardData.company}
+                            sx={{
+                                width: 90,
+                                height: 90,
+                                border: '3px solid #f0f0f0',
+                                bgcolor: cardData.profileImageUrl ? 'transparent' : '#f5f5f5',
+                                fontSize: '36px',
+                                fontWeight: 600,
+                                color: cardData.profileImageUrl ? 'transparent' : '#999999',
+                                flexShrink: 0
+                            }}
+                        >
+                            {!cardData.profileImageUrl && (
+                                <AccountCircleIcon sx={{ fontSize: 52, color: '#999999' }} />
+                            )}
+                        </Avatar>
+
+                        {/* Sağ - İsim ve Ünvan */}
+                        <Box sx={{ flex: 1, pt: 0.5 }}>
+                            <Typography sx={{ 
+                                fontSize: 20, 
+                                fontWeight: 700, 
+                                mb: 0.5, 
+                                color: '#000000',
+                                fontFamily: '"Open Sans", sans-serif'
+                            }}>
+                                {cardData.name || 'İsim'}
+                            </Typography>
+                            {cardData.title && (
+                                <Typography sx={{ 
+                                    fontSize: 14, 
+                                    color: '#666666', 
+                                    fontWeight: 700, 
+                                    mb: 0.75,
+                                    fontFamily: '"Open Sans", sans-serif'
+                                }}>
+                                    {cardData.title}
+                                </Typography>
+                            )}
+                            {cardData.company && (
+                                <Typography sx={{ fontSize: 12, color: '#999999', mb: 1 }}>
+                                    {cardData.company}
+                                </Typography>
+                            )}
+                        </Box>
+                    </Box>
+
+                    {/* Hakkımızda - Alt kısım */}
+                    {cardData.bio && (
+                        <Box sx={{ 
+                            mt: 1,
+                            p: 1.5,
+                            bgcolor: '#f8f8f8',
+                            borderRadius: '10px',
+                            border: '1px solid #e8e8e8'
+                        }}>
+                            <Typography sx={{ fontSize: 12, color: '#666666', lineHeight: 1.7 }}>
+                                {cardData.bio}
+                            </Typography>
+                        </Box>
+                    )}
+                </Box>
+            )}
+
+            {/* Spacer - Slider ve Footer'ı alta itmek için */}
+            <Box sx={{ flex: 1 }} />
+
+            {/* Tanıtım Videosu - Iframe */}
+            {cardData.videoUrl && (
+                <Box sx={{ px: 2.5, mb: 2, mt: -1 }}>
+                    <Typography sx={{ 
+                        fontSize: 11,
+                        color: '#000000',
+                        fontWeight: 600,
+                        mb: 0.5,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                        textAlign: 'center'
+                    }}>
+                        Tanıtım Videosu
+                    </Typography>
+                    <Box sx={{ 
+                        width: '100%',
+                        borderRadius: '12px',
+                        overflow: 'hidden',
+                        bgcolor: '#000000',
+                        position: 'relative',
+                        paddingTop: '45%', // Daha küçük aspect ratio
+                        height: 0,
+                        maxHeight: '200px',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                    }}>
+                        <Box
+                            component="iframe"
+                            src={getVideoEmbedUrl(cardData.videoUrl)}
+                            sx={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                height: '100%',
+                                border: 'none'
+                            }}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                        />
+                    </Box>
+                </Box>
+            )}
+
+            {/* Üst 6 Kart (3x3 Grid) */}
+            {topCards.length > 0 && (
+                <Box sx={{ px: 2.5, mb: 1, display: 'flex', justifyContent: 'center' }}>
+                    <Box sx={{ 
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: 1.5,
+                        width: '294px',
+                        justifyContent: 'center',
+                        mx: 'auto'
+                    }}>
+                        {topCards.map((card, index) => (
+                            <Box
+                                key={card.id}
+                                onClick={card.action}
+                                sx={{
+                                    width: '90px',
+                                    height: '90px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    background: card.color || '#666',
+                                    borderRadius: '16px',
+                                    padding: '10px',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s ease',
+                                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                                    '&:hover': {
+                                        transform: 'translateY(-2px)',
+                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)'
+                                    },
+                                    '& img': {
+                                        width: '54px !important',
+                                        height: '54px !important',
+                                        objectFit: 'contain'
+                                    },
+                                    '& svg': {
+                                        fontSize: '42px !important',
+                                        color: isLightColor(card.color) ? '#000000' : 'white'
+                                    }
+                                }}
+                            >
+                                {renderLegacyIcon(card.iconSrc, card.label, card.fallback)}
+                                <Typography sx={{
+                                    fontSize: 9,
+                                    color: isLightColor(card.color) ? '#000000' : '#ffffff',
+                                    fontWeight: 600,
+                                    mt: 0.5,
+                                    textAlign: 'center',
+                                    lineHeight: 1.1
+                                }}>
+                                    {card.label}
+                                </Typography>
+                            </Box>
+                        ))}
+                    </Box>
+                </Box>
+            )}
+
+            {/* Alt Slider - 3'lü */}
+            {sliderCards.length > 0 && (
+                <Box sx={{ px: 2.5, mb: 2, display: 'flex', justifyContent: 'center', width: '100%' }}>
+                    <Box 
+                        sx={{ 
+                            position: 'relative', 
+                            overflow: 'hidden', 
+                            width: '294px',
+                            mx: 'auto'
+                        }}
+                        onMouseEnter={() => setIsSliderHovered(true)}
+                        onMouseLeave={() => setIsSliderHovered(false)}
+                    >
+                        {/* Slider Container */}
+                        <Box sx={{ 
+                            display: 'flex',
+                            gap: 1.5,
+                            position: 'relative',
+                            transform: `translateX(${-(sliderIndex + (sliderCards.length >= 3 ? 3 : 0)) * 102}px)`,
+                            transition: 'transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1)',
+                            width: 'fit-content'
+                        }}>
+                            {/* Sonsuz slider için kartları klonla - orta set görünür */}
+                            {sliderCards.length >= 3 ? [
+                                ...sliderCards.slice(-3), // Son 3 kart (başta görünür)
+                                ...sliderCards, // Orijinal kartlar
+                                ...sliderCards.slice(0, 3) // İlk 3 kart (sonda görünür)
+                            ].map((card, index) => (
+                                <Box
+                                    key={`${card.id}-clone-${index}`}
+                                    onClick={card.action}
+                                    sx={{
+                                        minWidth: '90px',
+                                        width: '90px',
+                                        height: '90px',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        background: card.color || '#666',
+                                        borderRadius: '16px',
+                                        padding: '10px',
+                                        cursor: 'pointer',
+                                        flexShrink: 0,
+                                        '& img': {
+                                            width: '54px !important',
+                                            height: '54px !important',
+                                            objectFit: 'contain'
+                                        },
+                                        '& svg': {
+                                            fontSize: '42px !important',
+                                            color: isLightColor(card.color) ? '#000000' : 'white'
+                                        }
+                                    }}
+                                >
+                                    {renderLegacyIcon(card.iconSrc, card.label, card.fallback)}
+                                    <Typography sx={{
+                                        fontSize: 9,
+                                        color: isLightColor(card.color) ? '#000000' : '#ffffff',
+                                        fontWeight: 600,
+                                        mt: 0.5,
+                                        textAlign: 'center',
+                                        lineHeight: 1.1
+                                    }}>
+                                        {card.label}
+                                    </Typography>
+                                </Box>
+                            )) : sliderCards.map((card) => (
+                                <Box
+                                    key={card.id}
+                                    onClick={card.action}
+                                    sx={{
+                                        minWidth: '90px',
+                                        width: '90px',
+                                        height: '90px',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        background: card.color || '#666',
+                                        borderRadius: '16px',
+                                        padding: '10px',
+                                        cursor: 'pointer',
+                                        flexShrink: 0,
+                                        '& img': {
+                                            width: '54px !important',
+                                            height: '54px !important',
+                                            objectFit: 'contain'
+                                        },
+                                        '& svg': {
+                                            fontSize: '42px !important',
+                                            color: isLightColor(card.color) ? '#000000' : 'white'
+                                        }
+                                    }}
+                                >
+                                    {renderLegacyIcon(card.iconSrc, card.label, card.fallback)}
+                                    <Typography sx={{
+                                        fontSize: 9,
+                                        color: isLightColor(card.color) ? '#000000' : '#ffffff',
+                                        fontWeight: 600,
+                                        mt: 0.5,
+                                        textAlign: 'center',
+                                        lineHeight: 1.1
+                                    }}>
+                                        {card.label}
+                                    </Typography>
+                                </Box>
+                            ))}
+                        </Box>
+
+                        {/* Slider Navigation - Arrow'lar */}
+                        {sliderCards.length > 3 && (
+                            <Box sx={{ 
+                                display: 'flex', 
+                                justifyContent: 'center', 
+                                gap: 2, 
+                                mt: 1.5,
+                                alignItems: 'center'
+                            }}>
+                                <IconButton
+                                    onClick={handleSliderPrev}
+                                    sx={{
+                                        bgcolor: '#ffffff',
+                                        border: '2px solid #e0e0e0',
+                                        width: 40,
+                                        height: 40,
+                                        transition: 'all 0.3s ease',
+                                        '&:hover': { 
+                                            bgcolor: '#f5f5f5',
+                                            borderColor: '#d0d0d0',
+                                            transform: 'translateX(-2px)'
+                                        }
+                                    }}
+                                >
+                                    <Box sx={{ fontSize: 24, fontWeight: 700, color: '#333333' }}>‹</Box>
+                                </IconButton>
+                                <IconButton
+                                    onClick={handleSliderNext}
+                                    sx={{
+                                        bgcolor: '#ffffff',
+                                        border: '2px solid #e0e0e0',
+                                        width: 40,
+                                        height: 40,
+                                        transition: 'all 0.3s ease',
+                                        '&:hover': { 
+                                            bgcolor: '#f5f5f5',
+                                            borderColor: '#d0d0d0',
+                                            transform: 'translateX(2px)'
+                                        }
+                                    }}
+                                >
+                                    <Box sx={{ fontSize: 24, fontWeight: 700, color: '#333333' }}>›</Box>
+                                </IconButton>
+                            </Box>
+                        )}
+                    </Box>
+                </Box>
+            )}
+
+            {/* Footer - Banka ve Fatura Bilgileri Butonları */}
+            <Box sx={{ 
+                display: 'flex', 
+                gap: 1, 
+                px: 2.5, 
+                pb: 2.5,
+                pt: 1,
+                alignItems: 'center'
+            }}>
+                <Button 
+                    onClick={() => bankAccounts.length > 0 ? openModal('bank') : null}
+                    disabled={bankAccounts.length === 0}
+                    sx={{
+                        flex: 1,
+                        background: bankAccounts.length > 0 ? '#f8f8f8' : '#fafafa',
+                        border: '1px solid',
+                        borderColor: bankAccounts.length > 0 ? '#e5e5e5' : '#f0f0f0',
+                        borderRadius: '10px',
+                        color: bankAccounts.length > 0 ? '#333333' : '#999999',
+                        fontSize: '11px',
+                        fontWeight: 500,
+                        textTransform: 'none',
+                        py: 1.25,
+                        px: 1.5,
+                        minHeight: 'auto',
+                        boxShadow: 'none',
+                        transition: 'all 0.2s ease',
+                        '&:hover': bankAccounts.length > 0 ? {
+                            background: '#f0f0f0',
+                            borderColor: '#d5d5d5'
+                        } : {},
+                        '&.Mui-disabled': {
+                            opacity: 0.4,
+                            color: '#999999',
+                            background: '#fafafa',
+                            borderColor: '#f0f0f0'
+                        }
+                    }}
+                >
+                    Banka Bilgileri
+                </Button>
+                
+                {/* Dil Seçimi */}
+                <Button
+                    sx={{
+                        minWidth: 'auto',
+                        px: 1.5,
+                        py: 1.25,
+                        background: '#f8f8f8',
+                        borderRadius: '10px',
+                        color: '#333333',
+                        fontSize: '11px',
+                        fontWeight: 500,
+                        textTransform: 'none',
+                        border: '1px solid #e5e5e5',
+                        boxShadow: 'none',
+                        '&:hover': {
+                            background: '#f0f0f0',
+                            borderColor: '#d5d5d5'
+                        }
+                    }}
+                >
+                    🇹🇷 TR
+                </Button>
+                
+                <Button 
+                    onClick={() => documents.length > 0 ? openModal('documents') : null}
+                    disabled={documents.length === 0}
+                    sx={{
+                        flex: 1,
+                        background: documents.length > 0 ? '#f8f8f8' : '#fafafa',
+                        border: '1px solid',
+                        borderColor: documents.length > 0 ? '#e5e5e5' : '#f0f0f0',
+                        borderRadius: '10px',
+                        color: documents.length > 0 ? '#333333' : '#999999',
+                        fontSize: '11px',
+                        fontWeight: 500,
+                        textTransform: 'none',
+                        py: 1.25,
+                        px: 1.5,
+                        minHeight: 'auto',
+                        boxShadow: 'none',
+                        transition: 'all 0.2s ease',
+                        '&:hover': documents.length > 0 ? {
+                            background: '#f0f0f0',
+                            borderColor: '#d5d5d5'
+                        } : {},
+                        '&.Mui-disabled': {
+                            opacity: 0.4,
+                            color: '#999999',
+                            background: '#fafafa',
+                            borderColor: '#f0f0f0'
+                        }
+                    }}
+                >
+                    Fatura Bilgileri
+                </Button>
+            </Box>
+
+            {/* Modals */}
+            <Dialog 
+                open={activeModal !== null}
+                onClose={() => setActiveModal(null)}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        bgcolor: '#ffffff',
+                        color: '#000000',
+                        borderRadius: 3
+                    }
+                }}
+            >
+                <DialogTitle sx={{ borderBottom: '1px solid rgba(0, 0, 0, 0.1)', color: '#000000' }}>
+                    {activeModal === 'gallery' && 'Ürünler / Galeri'}
+                    {activeModal === 'bank' && 'Banka Bilgileri'}
+                    {activeModal === 'documents' && 'Dökümanlar'}
+                    {activeModal === 'about' && 'Hakkımda'}
+                </DialogTitle>
+                <DialogContent sx={{ mt: 2 }}>
+                    {activeModal === 'about' && (
+                        <Typography sx={{ color: '#333', lineHeight: 1.7 }}>
+                            {cardData?.bio}
+                        </Typography>
+                    )}
+                    {activeModal === 'gallery' && (
+                        <Grid container spacing={2}>
+                            {galleryItems.map((item, index) => (
+                                <Grid item xs={6} key={index}>
+                                    <Box
+                                        component="img"
+                                        src={item.url}
+                                        alt={item.title}
+                                        sx={{
+                                            width: '100%',
+                                            height: 150,
+                                            objectFit: 'cover',
+                                            borderRadius: 2,
+                                            cursor: 'pointer'
+                                        }}
+                                        onClick={() => window.open(item.url, '_blank')}
+                                    />
+                                </Grid>
+                            ))}
+                        </Grid>
+                    )}
+                    {activeModal === 'bank' && (
+                        <List>
+                            {bankAccounts.map((account, index) => {
+                                const bankLogo = getBankLogo(account.bankName);
+                                return (
+                                    <ListItem key={index} sx={{ flexDirection: 'column', alignItems: 'flex-start', borderBottom: '1px solid rgba(0, 0, 0, 0.1)' }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                            {bankLogo && (
+                                                <Box
+                                                    component="img"
+                                                    src={bankLogo}
+                                                    alt={account.bankName}
+                                                    sx={{ width: 32, height: 32, mr: 1.5 }}
+                                                />
+                                            )}
+                                            <Typography sx={{ fontWeight: 600, color: '#000000' }}>{account.bankName}</Typography>
+                                        </Box>
+                                        <Typography variant="body2" sx={{ color: '#666' }}>
+                                            {formatIban(account.iban)}
+                                        </Typography>
+                                        {account.accountName && (
+                                            <Typography variant="caption" sx={{ color: '#999', mt: 0.5 }}>
+                                                {account.accountName}
+                                            </Typography>
+                                        )}
+                                    </ListItem>
+                                );
+                            })}
+                        </List>
+                    )}
+                    {activeModal === 'documents' && (
+                        <Stack spacing={1.5}>
+                            {documents.map((doc, index) => (
+                                <Button
+                                    key={index}
+                                    variant="outlined"
+                                    startIcon={<DescriptionIcon />}
+                                    component="a"
+                                    href={doc.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    sx={{
+                                        justifyContent: 'flex-start',
+                                        borderRadius: 2,
+                                        borderColor: 'rgba(0, 0, 0, 0.2)',
+                                        color: '#000000',
+                                        '&:hover': {
+                                            borderColor: 'rgba(0, 0, 0, 0.4)',
+                                            bgcolor: 'rgba(0, 0, 0, 0.05)'
+                                        }
+                                    }}
+                                >
+                                    {doc.name || `Döküman ${index + 1}`}
+                                </Button>
+                            ))}
+                        </Stack>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setActiveModal(null)} sx={{ color: '#000000' }}>
+                        Kapat
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <QrModal />
+            <ShareSnackbar />
+            <VideoModal />
+        </Box>
+    );
+};
+
+// Tema3 Theme - Swiper ile centerMode ve perspective
+export const Tema3Theme = ({ cardData }) => {
+    const [activeModal, setActiveModal] = useState(null);
+    const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+    const [showReadMore, setShowReadMore] = useState(false);
+    const bioRef = useRef(null);
+    
+    const {
+        handleQrClick,
+        handleShareClick,
+        handleVideoClick,
+        QrModal,
+        ShareSnackbar,
+        VideoModal
+    } = useCardActions(cardData);
+
+    // Kart görüntülenmesini kaydet
+    useEffect(() => {
+        if (cardData?.id) {
+            analyticsService.recordCardView(cardData.id);
+        }
+    }, [cardData?.id]);
+
+    // Bio metninin 3 satırdan uzun olup olmadığını kontrol et
+    useEffect(() => {
+        if (bioRef.current && cardData?.bio) {
+            // Geçici olarak line-clamp'ı kaldırıp gerçek yüksekliği ölç
+            const originalStyle = bioRef.current.style.cssText;
+            bioRef.current.style.display = 'block';
+            bioRef.current.style.webkitLineClamp = 'none';
+            bioRef.current.style.overflow = 'visible';
+            
+            const lineHeight = parseFloat(getComputedStyle(bioRef.current).lineHeight) || 19.2; // 12px * 1.6
+            const maxHeight = lineHeight * 3;
+            const actualHeight = bioRef.current.scrollHeight;
+            
+            // Orijinal stilini geri yükle
+            bioRef.current.style.cssText = originalStyle;
+            
+            setShowReadMore(actualHeight > maxHeight);
+        }
+    }, [cardData?.bio]);
+
+    // Link tıklama tracking
+    const registerClick = useCallback((type) => {
+        if (cardData?.id && type) {
+            trackClick(cardData.id, type);
+        }
+    }, [cardData?.id]);
+
+    // Legacy icon path helper
+    const getLegacyIconPath = useCallback((fileName, directory = 'legacy-icons') => {
+        if (!fileName) return null;
+        if (fileName.startsWith('/')) return fileName;
+        if (directory === 'legacy-icons' && !LEGACY_ICON_FILES.has(fileName)) {
+            return null;
+        }
+        return `/${directory}/${fileName}`;
+    }, []);
+
+    // Legacy icon render helper
+    const renderLegacyIcon = useCallback((src, alt, fallback) => {
+        if (src) {
+            return (
+                <Box
+                    component="img"
+                    src={src}
+                    alt={alt}
+                    sx={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                />
+            );
+        }
+        return fallback || null;
+    }, []);
+
+    // Gallery items
+    const galleryItems = useMemo(() => {
+        const items = [];
+        const addItem = (item) => {
+            if (item && (item.url || item.imageUrl)) {
+                items.push({
+                    url: item.url || item.imageUrl,
+                    title: item.title || item.name || ''
+                });
+            }
+        };
+        if (cardData?.gallery && Array.isArray(cardData.gallery)) {
+            cardData.gallery.forEach(addItem);
+        }
+        if (cardData?.galleryItems && Array.isArray(cardData.galleryItems)) {
+            cardData.galleryItems.forEach(addItem);
+        }
+        return items;
+    }, [cardData?.gallery, cardData?.galleryItems]);
+
+    // Bank accounts
+    const bankAccounts = useMemo(() => 
+        Array.isArray(cardData?.bankAccounts) ? cardData.bankAccounts.filter(Boolean) : []
+    , [cardData?.bankAccounts]);
+
+    // Documents
+    const documents = useMemo(() => {
+        if (!cardData?.documents) return [];
+        if (Array.isArray(cardData.documents)) {
+            return cardData.documents.filter(d => d?.url);
+        }
+        if (typeof cardData.documents === 'string') {
+            try {
+                const parsed = JSON.parse(cardData.documents);
+                if (Array.isArray(parsed)) {
+                    return parsed.filter((doc) => doc && (doc.url || doc.name));
+                }
+            } catch (e) {
+                console.error('Documents parse error:', e);
+            }
+        }
+        return [];
+    }, [cardData?.documents]);
+
+    // Add to contacts handler
+    const handleAddToContacts = useCallback(() => {
+        registerClick('contact');
+        const vcard = `BEGIN:VCARD
+VERSION:3.0
+FN:${cardData?.name || ''}
+ORG:${cardData?.company || ''}
+TITLE:${cardData?.title || ''}
+TEL;TYPE=CELL:${cardData?.phone || ''}
+EMAIL:${cardData?.email || ''}
+URL:${cardData?.website || ''}
+ADR;TYPE=WORK:;;${cardData?.address || ''};;;;
+END:VCARD`;
+        const blob = new Blob([vcard], { type: 'text/vcard' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${cardData?.name || 'contact'}.vcf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }, [cardData, registerClick]);
+
+    const openModal = useCallback((type) => {
+        setActiveModal(type);
+        registerClick(type);
+    }, [registerClick]);
+
+    const mapUrl = useMemo(() => {
+        if (cardData?.mapUrl) {
+            return ensureFullUrl(cardData.mapUrl, 'mapUrl');
+        }
+        if (cardData?.address) {
+            return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cardData.address)}`;
+        }
+        return null;
+    }, [cardData?.mapUrl, cardData?.address]);
+
+    // Tüm kartlar birleştirilmiş
+    const allCards = useMemo(() => {
+        const cards = [];
+        
+        // REHBERE EKLE
+        cards.push({ 
+            id: 'contact', 
+            label: 'REHBERE EKLE', 
+            color: '#F39C12',
+            iconSrc: getLegacyIconPath('rehber.png'),
+            fallback: <AccountCircleIcon />,
+            action: handleAddToContacts
+        });
+
+        // GSM
+        if (cardData?.phone) {
+            cards.push({ 
+                id: 'gsm', 
+                label: 'GSM', 
+                color: '#0bd418',
+                iconSrc: getLegacyIconPath('phone.png'),
+                fallback: <PhoneIcon />,
+                action: () => { registerClick('phone'); window.open(`tel:${cardData.phone}`, '_self'); }
+            });
+        }
+
+        // KONUM
+        if (mapUrl) {
+            cards.push({ 
+                id: 'map', 
+                label: 'KONUM', 
+                color: '#e0453f',
+                iconSrc: getLegacyIconPath('map.png'),
+                fallback: <LocationOnIcon />,
+                action: () => { registerClick('map'); window.open(mapUrl, '_blank'); }
+            });
+        }
+
+        // QR
+        cards.push({ 
+            id: 'qr', 
+            label: 'QR', 
+            color: '#000000',
+            iconSrc: getLegacyIconPath('qr.png'),
+            fallback: <QrCodeIcon />,
+            action: () => { registerClick('qr'); handleQrClick(); }
+        });
+
+        // WEB SİTESİ
+        if (cardData?.website) {
+            cards.push({ 
+                id: 'website', 
+                label: 'WEB SİTESİ', 
+                color: '#000000',
+                iconSrc: getLegacyIconPath('web.png'),
+                fallback: <LanguageIcon />,
+                action: () => { registerClick('website'); window.open(ensureFullUrl(cardData.website, 'website'), '_blank'); }
+            });
+        }
+
+        // PAYLAŞ
+        cards.push({ 
+            id: 'share', 
+            label: 'PAYLAŞ', 
+            color: '#000000',
+            iconSrc: getLegacyIconPath('paylas.png'),
+            fallback: <ShareIcon />,
+            action: () => { registerClick('share'); handleShareClick(); }
+        });
+
+        // HAKKIMDA
+        if (cardData?.bio) {
+            cards.push({ 
+                id: 'about', 
+                label: 'HAKKIMDA', 
+                color: '#00afa5',
+                iconSrc: getLegacyIconPath('hakkimda.png'),
+                fallback: <InfoIcon />,
+                action: () => openModal('about')
+            });
+        }
+
+        // E-POSTA
+        if (cardData?.email) {
+            cards.push({ 
+                id: 'email', 
+                label: 'E-POSTA', 
+                color: '#5877ff',
+                iconSrc: getLegacyIconPath('mail.png'),
+                fallback: <EmailIcon />,
+                action: () => { registerClick('email'); window.open(`mailto:${cardData.email}`, '_self'); }
+            });
+        }
+
+        // TANITIM VİDEO
+        if (cardData?.videoUrl) {
+            cards.push({ 
+                id: 'video', 
+                label: 'TANITIM VİDEO', 
+                color: '#000000',
+                iconSrc: getLegacyIconPath('video.png'),
+                fallback: <PlayArrowIcon />,
+                action: () => { registerClick('video'); handleVideoClick(); }
+            });
+        }
+
+        // DÖKÜMANLAR
+        if (documents.length) {
+            cards.push({ 
+                id: 'documents', 
+                label: 'DÖKÜMANLAR', 
+                color: '#ffffff',
+                iconSrc: getLegacyIconPath('dokuman.png'),
+                fallback: <DescriptionIcon />,
+                action: () => openModal('documents')
+            });
+        }
+
+        // FATURA B.
+        if (bankAccounts.length) {
+            cards.push({ 
+                id: 'bank', 
+                label: 'FATURA B.', 
+                color: '#16a085',
+                iconSrc: getLegacyIconPath('fatura.png'),
+                fallback: <AccountBalanceIcon />,
+                action: () => openModal('bank')
+            });
+        }
+
+        // ÜRÜNLER/GALERİ
+        if (galleryItems.length) {
+            cards.push({ 
+                id: 'gallery', 
+                label: 'ÜRÜNLER', 
+                color: '#ffffff',
+                iconSrc: getLegacyIconPath('galeri.png'),
+                fallback: <CollectionsIcon />,
+                action: () => openModal('gallery')
+            });
+        }
+
+        // WHATSAPP
+        if (cardData?.whatsappUrl) {
+            cards.push({ 
+                id: 'whatsapp', 
+                label: 'WHATSAPP', 
+                color: '#25D366',
+                iconSrc: getLegacyIconPath('whatsapp.png'),
+                fallback: <WhatsAppIcon />,
+                action: () => { registerClick('whatsapp'); window.open(ensureFullUrl(cardData.whatsappUrl, 'whatsappUrl'), '_blank'); }
+            });
+        }
+
+        // WHATSAPP BUSINESS
+        if (cardData?.whatsappBusinessUrl) {
+            cards.push({ 
+                id: 'whatsappBusiness', 
+                label: 'W. BUSINESS', 
+                color: '#25D366',
+                iconSrc: getLegacyIconPath('whatsappbusiness.png'),
+                fallback: <WhatsAppIcon />,
+                action: () => { registerClick('whatsappBusiness'); window.open(ensureFullUrl(cardData.whatsappBusinessUrl, 'whatsappBusinessUrl'), '_blank'); }
+            });
+        }
+
+        // SOSYAL MEDYA
+        const socialDefinitions = [
+            { field: 'linkedinUrl', key: 'linkedin', label: 'LINKEDIN', file: 'linkedin.png', fallback: <LinkedInIcon />, color: '#0077b5' },
+            { field: 'twitterUrl', key: 'twitter', label: 'TWITTER', file: 'twitter.png', fallback: <TwitterIcon />, color: '#1DA1F2' },
+            { field: 'instagramUrl', key: 'instagram', label: 'INSTAGRAM', file: 'instagram.png', fallback: <InstagramIcon />, color: '#E1306C' },
+            { field: 'facebookUrl', key: 'facebook', label: 'FACEBOOK', file: 'facebook.png', fallback: <FacebookIcon />, color: '#3b579d' },
+            { field: 'telegramUrl', key: 'telegram', label: 'TELEGRAM', file: 'telegram.png', fallback: <TelegramIcon />, color: '#2ba3d6' },
+            { field: 'youtubeUrl', key: 'youtube', label: 'YOUTUBE', file: 'youtube.png', fallback: <YouTubeIcon />, color: '#ffffff' },
+            { field: 'skypeUrl', key: 'skype', label: 'SKYPE', file: 'skype.png', fallback: <VideoCallIcon />, color: '#fefefe' },
+            { field: 'wechatUrl', key: 'wechat', label: 'WECHAT', file: 'wechat.png', fallback: <ChatIcon />, color: '#54e120' },
+            { field: 'pinterestUrl', key: 'pinterest', label: 'PINTEREST', file: 'pinterest.png', fallback: <PinterestIcon />, color: '#ee2d34' },
+            { field: 'snapchatUrl', key: 'snapchat', label: 'SNAPCHAT', file: 'snapchat.png', fallback: <SentimentSatisfiedAltIcon />, color: '#ffef00' },
+            { field: 'tiktokUrl', key: 'tiktok', label: 'TIKTOK', file: 'tiktok.png', fallback: <MusicNoteIcon />, color: '#000000' }
+        ];
+
+        socialDefinitions.forEach(({ field, key, label, file, fallback, color }) => {
+            if (cardData?.[field]) {
+                cards.push({
+                    id: key,
+                    label,
+                    color,
+                    iconSrc: getLegacyIconPath(file),
+                    fallback,
+                    action: () => { registerClick(key); window.open(ensureFullUrl(cardData[field], field), '_blank'); }
+                });
+            }
+        });
+
+        // PAZARYERI
+        const marketplaceDefinitions = [
+            { field: 'trendyolUrl', key: 'trendyol', label: getMarketplaceName('trendyol').toUpperCase(), file: 'trendyol.png', directory: 'img/ikon', color: '#ff671a' },
+            { field: 'hepsiburadaUrl', key: 'hepsiburada', label: getMarketplaceName('hepsiburada').toUpperCase(), file: 'hepsiburada.png', directory: 'img/ikon', color: '#f28b00' },
+            { field: 'ciceksepetiUrl', key: 'ciceksepeti', label: getMarketplaceName('ciceksepeti').toUpperCase(), file: 'ciceksepeti.png', directory: 'img/ikon', color: '#ffffff' },
+            { field: 'sahibindenUrl', key: 'sahibinden', label: getMarketplaceName('sahibinden').toUpperCase(), file: 'sahibinden.png', color: '#ffe800' },
+            { field: 'hepsiemlakUrl', key: 'hepsiemlak', label: getMarketplaceName('hepsiemlak').toUpperCase(), file: 'hepsiemlak.png', color: '#e1211b' },
+            { field: 'gittigidiyorUrl', key: 'gittigidiyor', label: getMarketplaceName('gittigidiyor').toUpperCase(), file: 'gittigidiyor.svg', color: '#ffb703' },
+            { field: 'n11Url', key: 'n11', label: getMarketplaceName('n11').toUpperCase(), file: 'n11.png', directory: 'img/ikon', color: '#E10019' },
+            { field: 'amazonTrUrl', key: 'amazonTr', label: getMarketplaceName('amazonTr').toUpperCase(), file: 'amazon.png', directory: 'img/ikon', color: '#ff8e2e' },
+            { field: 'getirUrl', key: 'getir', label: getMarketplaceName('getir').toUpperCase(), file: 'getir.svg', color: '#5F3DC4' },
+            { field: 'yemeksepetiUrl', key: 'yemeksepeti', label: getMarketplaceName('yemeksepeti').toUpperCase(), file: 'yemeksepeti.svg', color: '#ef233c' },
+            { field: 'arabamUrl', key: 'arabam', label: 'ARABAM', file: 'arabam.png', color: '#ffffff' },
+            { field: 'letgoUrl', key: 'letgo', label: 'LETGO', file: 'letgo.png', color: '#ff3f55' },
+            { field: 'pttAvmUrl', key: 'pttAvm', label: 'PTT AVM', file: 'pttavm.png', color: '#ffffff' }
+        ];
+
+        marketplaceDefinitions.forEach(({ field, key, label, file, directory, color }) => {
+            if (cardData?.[field]) {
+                cards.push({
+                    id: key,
+                    label,
+                    color,
+                    iconSrc: getLegacyIconPath(file, directory || 'legacy-icons'),
+                    fallback: getMarketplaceIcon(key),
+                    action: () => { registerClick(key); window.open(ensureFullUrl(cardData[field], field), '_blank'); }
+                });
+            }
+        });
+
+        return cards;
+    }, [
+        cardData,
+        galleryItems.length,
+        bankAccounts.length,
+        documents.length,
+        handleVideoClick,
+        handleAddToContacts,
+        openModal,
+        registerClick,
+        getLegacyIconPath,
+        mapUrl,
+        handleQrClick,
+        handleShareClick
+    ]);
+
+    // Instagram kartının index'ini bul
+    const instagramIndex = useMemo(() => {
+        const index = allCards.findIndex(card => card.id === 'instagram');
+        return index >= 0 ? index : 0;
+    }, [allCards]);
+
+    // Beyaz veya açık renk kontrolü
+    const isLightColor = useCallback((color) => {
+        if (!color) return false;
+        const lightColors = ['#ffffff', '#fefefe', '#f8f7f7', '#ffe800', '#ffef00', '#ffffff', '#f5f5f5'];
+        const normalizedColor = color.toLowerCase().trim();
+        return lightColors.includes(normalizedColor);
+    }, []);
+
+    if (!cardData) {
+        return <Box sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
+            <Typography>Kart bilgileri yükleniyor...</Typography>
+        </Box>;
+    }
+
+    return (
+        <Box sx={{ 
+            width: '100%', 
+            maxWidth: '400px', 
+            minHeight: '100vh',
+            bgcolor: '#ffffff',
+            color: '#000000',
+            display: 'flex',
+            flexDirection: 'column',
+            mx: 'auto',
+            position: 'relative',
+            overflow: 'hidden'
+        }}>
+            {/* Üst Alan - Tamamen Farklı Tasarım */}
+            <Box sx={{ 
+                px: 2.5,
+                pt: 3,
+                pb: 2
+            }}>
+                {/* Kapak Fotoğrafı - Üstte, Full Width */}
+                {cardData.coverImageUrl && (
+                    <Box sx={{ 
+                        width: '100%',
+                        height: '120px',
+                        borderRadius: '16px',
+                        overflow: 'hidden',
+                        mb: 2.5,
+                        bgcolor: '#9d9d9d',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)'
+                    }}>
+                        <Box
+                            component="img"
+                            src={cardData.coverImageUrl}
+                            alt="Kapak"
+                            sx={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover'
+                            }}
+                        />
+                    </Box>
+                )}
+
+                {/* Profil ve Bilgiler - Grid Layout */}
+                <Box sx={{ 
+                    display: 'grid',
+                    gridTemplateColumns: 'auto 1fr',
+                    gap: 2,
+                    mb: 2.5                }}>
+                    {/* Sol - Profil Fotoğrafı ve Ünvan */}
+                    <Box sx={{ 
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 1
+                    }}>
+                        <Avatar
+                            src={cardData.profileImageUrl}
+                            alt={cardData.name || cardData.company}
+                            sx={{
+                                width: 110,
+                                height: 110,
+                                border: '4px solid #f0f0f0',
+                                bgcolor: cardData.profileImageUrl ? 'transparent' : '#f5f5f5',
+                                fontSize: '44px',
+                                fontWeight: 600,
+                                color: cardData.profileImageUrl ? 'transparent' : '#999999',
+                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                            }}
+                        >
+                            {!cardData.profileImageUrl && (
+                                <AccountCircleIcon sx={{ fontSize: 60, color: '#999999' }} />
+                            )}
+                        </Avatar>
+                    </Box>
+
+                    {/* Sağ - İsim Soyisim ve Ünvan */}
+                    <Box sx={{ 
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        pt: 0.5
+                    }}>
+                        <Typography sx={{ 
+                            fontSize: 24, 
+                            fontWeight: 700, 
+                            mb: 0.5, 
+                            color: '#000000',
+                            fontFamily: '"Open Sans", sans-serif',
+                            lineHeight: 1.2
+                        }}>
+                            {cardData.name || 'İsim'}
+                        </Typography>
+                        {/* Ünvan - İsimin Altında */}
+                        {cardData.title && (
+                            <Typography sx={{ 
+                                fontSize: 13, 
+                                color: '#666666', 
+                                fontWeight: 600,
+                                fontFamily: '"Open Sans", sans-serif',
+                                mb: 0.5
+                            }}>
+                                {cardData.title}
+                            </Typography>
+                        )}
+                        {cardData.company && (
+                            <Typography sx={{ 
+                                fontSize: 12, 
+                                color: '#999999',
+                                mt: 0.5
+                            }}>
+                                {cardData.company}
+                            </Typography>
+                        )}
+                    </Box>
+                </Box>
+
+                {/* Tanıtım Videosu - Full Width Card */}
+                {cardData.videoUrl && (
+                    <Box sx={{ 
+                        borderRadius: '16px',
+                        overflow: 'hidden',
+                        bgcolor: '#FF0000',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                    }}>
+                        <Box sx={{ 
+                            px: 1.5,
+                            py: 1,
+                            bgcolor: 'rgba(244, 199, 52, 1)',
+                            borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+                            textAlign: 'center'
+                        }}>
+                            <Typography sx={{ 
+                                fontSize: 12,
+                                color: '#000000',
+                                fontWeight: 600,
+                                fontFamily: '"Open Sans", sans-serif',
+                                textTransform: 'uppercase',
+                                letterSpacing: '1px'
+                            }}>
+                                Tanıtım Videosu
+                            </Typography>
+                        </Box>
+                        <Box sx={{ 
+                            width: '100%',
+                            position: 'relative',
+                            paddingTop: '56.25%',
+                            height: 0
+                        }}>
+                            <Box
+                                component="iframe"
+                                src={getVideoEmbedUrl(cardData.videoUrl)}
+                                sx={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    width: '100%',
+                                    height: '100%',
+                                    border: 'none'
+                                }}
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                            />
+                        </Box>
+                    </Box>
+                )}
+            </Box>
+
+            {/* Swiper Slider - CenterMode ve Perspective */}
+            {allCards.length > 0 && (
+                <Box sx={{ 
+                    width: '100%',
+                    py: 3,
+                    mb: 2,
+                    position: 'relative',
+                    '& .swiper-slide': {
+                        opacity: '1 !important'
+                    },
+                    '& .swiper-slide-shadow': {
+                        display: 'none !important'
+                    },
+                    '& .swiper-slide-shadow-left, & .swiper-slide-shadow-right': {
+                        display: 'none !important'
+                    }
+                }}>
+                    <Swiper
+                        modules={[EffectCoverflow]}
+                        effect="coverflow"
+                        grabCursor={true}
+                        centeredSlides={true}
+                        slidesPerView="auto"
+                        spaceBetween={-40}
+                        initialSlide={instagramIndex}
+                        coverflowEffect={{
+                            rotate: 0,
+                            stretch: 0,
+                            depth: 200,
+                            modifier: 1.8,
+                            slideShadows: false,
+                        }}
+                        onSlideChange={(swiper) => {
+                            setActiveSlideIndex(swiper.realIndex);
+                        }}
+                        onInit={(swiper) => {
+                            setActiveSlideIndex(swiper.realIndex);
+                        }}
+                        style={{
+                            paddingBottom: '70px',
+                            paddingTop: '20px'
+                        }}
+                    >
+                        {allCards.map((card, index) => {
+                            const isActive = index === activeSlideIndex;
+                            // Perspective için distance hesapla - ölçülü ve hizalı scale gradient
+                            const distance = Math.abs(index - activeSlideIndex);
+                            const opacity = 1; // Tüm kartlar opacity 1
+                            // Ölçülü scale gradient - her katman için düzenli küçülme
+                            const scale = isActive ? 1.2 : Math.max(0.7, 1.2 - distance * 0.12);
+                            
+                            return (
+                                <SwiperSlide 
+                                    key={card.id}
+                                    style={{
+                                        width: '120px',
+                                        height: '120px',
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        flexDirection: 'column'
+                                    }}
+                                >
+                                    <Box
+                                        onClick={card.action}
+                                        sx={{
+                                            width: '120px',
+                                            height: '120px',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            background: 'transparent',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1)',
+                                            transform: `scale(${scale})`,
+                                            opacity: opacity,
+                                            zIndex: isActive ? 10 : 1,
+                                            boxShadow: 'none',
+                                            filter: 'none',
+                                            '& img': {
+                                                width: isActive ? '120px !important' : `${90 * scale}px !important`,
+                                                height: isActive ? '120px !important' : `${90 * scale}px !important`,
+                                                objectFit: 'contain',
+                                                filter: 'none'
+                                            },
+                                            '& svg': {
+                                                fontSize: isActive ? '120px !important' : `${90 * scale}px !important`,
+                                                color: 'inherit',
+                                                filter: 'none'
+                                            }
+                                        }}
+                                    >
+                                        {renderLegacyIcon(card.iconSrc, card.label, card.fallback)}
+                                    </Box>
+                                    {/* Sadece aktif kartın altında text */}
+                                    {isActive && (
+                                        <Typography sx={{
+                                            fontSize: 16,
+                                            color: '#333333',
+                                            fontWeight: 700,
+                                            fontFamily: '"Open Sans", sans-serif',
+                                            mt: 1.5,
+                                            textAlign: 'center',
+                                            lineHeight: 1.2,
+                                            position: 'absolute',
+                                            bottom: '-40px',
+                                            width: '120px',
+                                            letterSpacing: '0.5px'
+                                        }}>
+                                            {card.label}
+                                        </Typography>
+                                    )}
+                                </SwiperSlide>
+                            );
+                        })}
+                    </Swiper>
+                </Box>
+            )}
+
+            {/* Footer - Banka ve Fatura Bilgileri */}
+            <Box sx={{ 
+                display: 'flex', 
+                gap: 1, 
+                px: 2.5, 
+                pb: 2.5,
+                pt: 1,
+                alignItems: 'center',
+                mt: 'auto'
+            }}>
+                <Button 
+                    onClick={() => bankAccounts.length > 0 ? openModal('bank') : null}
+                    disabled={bankAccounts.length === 0}
+                    sx={{
+                        flex: 1,
+                        background: bankAccounts.length > 0 ? '#f8f8f8' : '#fafafa',
+                        border: '1px solid',
+                        borderColor: bankAccounts.length > 0 ? '#e5e5e5' : '#f0f0f0',
+                        borderRadius: '10px',
+                        color: bankAccounts.length > 0 ? '#333333' : '#999999',
+                        fontSize: '11px',
+                        fontWeight: 500,
+                        textTransform: 'none',
+                        py: 1.25,
+                        px: 1.5,
+                        minHeight: 'auto',
+                        boxShadow: 'none',
+                        transition: 'all 0.2s ease',
+                        '&:hover': bankAccounts.length > 0 ? {
+                            background: '#f0f0f0',
+                            borderColor: '#d5d5d5'
+                        } : {},
+                        '&.Mui-disabled': {
+                            opacity: 0.4,
+                            color: '#999999',
+                            background: '#fafafa',
+                            borderColor: '#f0f0f0'
+                        }
+                    }}
+                >
+                    Banka Bilgileri
+                </Button>
+                
+                <Button 
+                    onClick={() => documents.length > 0 ? openModal('documents') : null}
+                    disabled={documents.length === 0}
+                    sx={{
+                        flex: 1,
+                        background: documents.length > 0 ? '#f8f8f8' : '#fafafa',
+                        border: '1px solid',
+                        borderColor: documents.length > 0 ? '#e5e5e5' : '#f0f0f0',
+                        borderRadius: '10px',
+                        color: documents.length > 0 ? '#333333' : '#999999',
+                        fontSize: '11px',
+                        fontWeight: 500,
+                        textTransform: 'none',
+                        py: 1.25,
+                        px: 1.5,
+                        minHeight: 'auto',
+                        boxShadow: 'none',
+                        transition: 'all 0.2s ease',
+                        '&:hover': documents.length > 0 ? {
+                            background: '#f0f0f0',
+                            borderColor: '#d5d5d5'
+                        } : {},
+                        '&.Mui-disabled': {
+                            opacity: 0.4,
+                            color: '#999999',
+                            background: '#fafafa',
+                            borderColor: '#f0f0f0'
+                        }
+                    }}
+                >
+                    Fatura Bilgileri
+                </Button>
+            </Box>
+
+            {/* Modals */}
+            <Dialog 
+                open={activeModal !== null}
+                onClose={() => setActiveModal(null)}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        bgcolor: '#ffffff',
+                        color: '#000000',
+                        borderRadius: 3
+                    }
+                }}
+            >
+                <DialogTitle sx={{ borderBottom: '1px solid rgba(0, 0, 0, 0.1)', color: '#000000' }}>
+                    {activeModal === 'gallery' && 'Ürünler / Galeri'}
+                    {activeModal === 'bank' && 'Banka Bilgileri'}
+                    {activeModal === 'documents' && 'Dökümanlar'}
+                    {activeModal === 'about' && 'Hakkımda'}
+                </DialogTitle>
+                <DialogContent sx={{ mt: 2 }}>
+                    {activeModal === 'about' && (
+                        <Typography sx={{ color: '#333', lineHeight: 1.7 }}>
+                            {cardData?.bio}
+                        </Typography>
+                    )}
+                    {activeModal === 'gallery' && (
+                        <Grid container spacing={2}>
+                            {galleryItems.map((item, index) => (
+                                <Grid item xs={6} key={index}>
+                                    <Box
+                                        component="img"
+                                        src={pathToFullUrl(item.url, 'gallery')}
+                                        alt={item.title}
+                                        sx={{
+                                            width: '100%',
+                                            height: 150,
+                                            objectFit: 'cover',
+                                            borderRadius: 2,
+                                            cursor: 'pointer'
+                                        }}
+                                        onClick={() => window.open(pathToFullUrl(item.url, 'gallery'), '_blank')}
+                                    />
+                                </Grid>
+                            ))}
+                        </Grid>
+                    )}
+                    {activeModal === 'bank' && (
+                        <List>
+                            {bankAccounts.map((account, index) => {
+                                const bankLogo = getBankLogo(account.bankName);
+                                return (
+                                    <ListItem key={index} sx={{ flexDirection: 'column', alignItems: 'flex-start', borderBottom: '1px solid rgba(0, 0, 0, 0.1)' }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                            {bankLogo && (
+                                                <Box
+                                                    component="img"
+                                                    src={bankLogo}
+                                                    alt={account.bankName}
+                                                    sx={{ width: 32, height: 32, mr: 1.5 }}
+                                                />
+                                            )}
+                                            <Typography sx={{ fontWeight: 600, color: '#000000' }}>{account.bankName}</Typography>
+                                        </Box>
+                                        <Typography variant="body2" sx={{ color: '#666' }}>
+                                            {formatIban(account.iban)}
+                                        </Typography>
+                                        {account.accountName && (
+                                            <Typography variant="caption" sx={{ color: '#999', mt: 0.5 }}>
+                                                {account.accountName}
+                                            </Typography>
+                                        )}
+                                    </ListItem>
+                                );
+                            })}
+                        </List>
+                    )}
+                    {activeModal === 'documents' && (
+                        <Stack spacing={1.5}>
+                            {documents.map((doc, index) => (
+                                <Button
+                                    key={index}
+                                    variant="outlined"
+                                    startIcon={<DescriptionIcon />}
+                                    component="a"
+                                    href={pathToFullUrl(doc.url, 'documents')}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    sx={{
+                                        justifyContent: 'flex-start',
+                                        borderRadius: 2,
+                                        borderColor: 'rgba(0, 0, 0, 0.2)',
+                                        color: '#000000',
+                                        '&:hover': {
+                                            borderColor: 'rgba(0, 0, 0, 0.4)',
+                                            bgcolor: 'rgba(0, 0, 0, 0.05)'
+                                        }
+                                    }}
+                                >
+                                    {doc.name || `Döküman ${index + 1}`}
+                                </Button>
+                            ))}
+                        </Stack>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setActiveModal(null)} sx={{ color: '#000000' }}>
+                        Kapat
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <QrModal />
+            <ShareSnackbar />
+            <VideoModal />
+        </Box>
+    );
+};
+
 export const getThemeComponent = (theme) => {
     switch (theme) {
         case 'modern':
@@ -4941,6 +7919,12 @@ export const getThemeComponent = (theme) => {
             return CorporateDigitalTheme;
         case 'corporatevideo':
             return CorporateVideoTheme;
+        case 'tema1':
+            return Tema1Theme;
+        case 'tema2':
+            return Tema2Theme;
+        case 'tema3':
+            return Tema3Theme;
         case 'light':
         default:
             return DefaultTheme;

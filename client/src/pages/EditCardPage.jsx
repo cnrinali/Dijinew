@@ -2316,6 +2316,15 @@ function EditCardPage() {
                           <MenuItem value="legacybusiness">
                             Klasik Business
                           </MenuItem>
+                          <MenuItem value="tema1">
+                            Tema 1
+                          </MenuItem>
+                          <MenuItem value="tema2">
+                            Tema 2
+                          </MenuItem>
+                          <MenuItem value="tema3">
+                            Tema 3
+                          </MenuItem>
                         </Select>
                       </FormControl>
                     </Grid>
