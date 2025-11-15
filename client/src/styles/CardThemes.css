@@ -1,0 +1,105 @@
+.tema1-cards-wrapper {
+    display: flex; 
+    align-items: flex-end;
+    justify-content: center;
+    position: relative;
+    padding-bottom: 1px;
+    min-height: 500px;
+    margin-top: auto;
+}
+@media (max-height: 830px) {
+    .tema1-cards-wrapper {
+        zoom:0.8;
+    }
+}
+
+/* Tema3 - iOS Optimizasyonu */
+.tema3-swiper-slider {
+    -webkit-overflow-scrolling: touch;
+    overflow: visible;
+}
+
+.tema3-swiper-slider .swiper-slide {
+    overflow: visible !important;
+}
+
+.tema3-swiper-slider .swiper-coverflow{
+    padding-bottom:0 !important;
+}
+/* iOS için aktif kartın altındaki metin optimizasyonu */
+@supports (-webkit-touch-callout: none) {
+    .tema3-swiper-slider .swiper-slide-active {
+        overflow: visible !important;
+        z-index: 10 !important;
+    }
+    
+    .tema3-swiper-slider .swiper-slide-active > div {
+        overflow: visible !important;
+    }
+}
+
+/* Tema3 aktif kart metni - iOS ve genel optimizasyon */
+.tema3-swiper-slider .swiper-slide-active p,
+.tema3-swiper-slider .swiper-slide-active span,
+.tema3-swiper-slider .swiper-slide-active .MuiTypography-root {
+    position: absolute !important;
+    z-index: 9999 !important;
+    transform: translateZ(0) !important;
+    -webkit-transform: translateZ(0) !important;
+    will-change: transform;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    pointer-events: none;
+    isolation: isolate;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+/* iOS Safari için özel düzeltmeler */
+@supports (-webkit-touch-callout: none) {
+    .tema3-swiper-slider .swiper-slide {
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+        overflow: visible !important;
+    }
+    
+    .tema3-swiper-slider .swiper-slide-active {
+        overflow: visible !important;
+        z-index: 10 !important;
+    }
+    
+    .tema3-swiper-slider .swiper-slide-active .MuiTypography-root {
+        z-index: 9999 !important;
+        position: absolute !important;
+        isolation: isolate;
+        -webkit-transform: translate3d(0, 0, 0);
+        transform: translate3d(0, 0, 0);
+    }
+    
+    /* 2 satırlık metinler için ekstra alan */
+    .tema3-swiper-slider .swiper-wrapper {
+        padding-bottom: 80px !important;
+    }
+}
+@media (max-height: 713px) {
+    .tema1-cards-wrapper {
+        zoom:0.8;
+    }
+    .tema1-profile-image {
+        margin-top: -40px !important;
+    }   
+    .tema1-profile-image-avatar {
+        width: 80px !important;
+        height: 80px !important;
+    }
+}
+@media (max-width: 768px) {
+    .tema1-card{
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}
+
+.tema3-swiper-slider {
+   margin-top:auto !important;
+}

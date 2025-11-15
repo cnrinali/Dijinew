@@ -3,6 +3,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { EffectCoverflow } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/effect-coverflow';
+import '../styles/CardThemes.css';
 import {
     Box,
     Card,
@@ -74,6 +75,8 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import DownloadIcon from '@mui/icons-material/Download';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { formatIban, getBankLogo } from '../constants/turkishBanks';
 
 // Pazaryeri ikonları ve isimleri
@@ -370,7 +373,7 @@ export const DefaultTheme = ({ cardData }) => {
 
 
     return (
-        <Card sx={{ maxWidth: 500, width: '100%', mt: 2 }}>
+        <Card sx={{ maxWidth: 500, width: '100%', mt: 2 }} >
             {cardData.coverImageUrl && (
                 <CardMedia
                     component="img"
@@ -2305,7 +2308,7 @@ export const LegacyBusinessTheme = ({ cardData }) => {
                     <Box
                         sx={{
                             width: '100%',
-                            height: { xs: 180, sm: 200 },
+                            height: '100px',
                             backgroundImage: `url(${cardData.coverImageUrl})`,
                             backgroundSize: 'cover',
                             backgroundPosition: 'center',
@@ -2326,7 +2329,8 @@ export const LegacyBusinessTheme = ({ cardData }) => {
                         display: 'flex',
                         flexDirection: { xs: 'column', sm: 'row' },
                         alignItems: 'center',
-                        gap: { xs: 2, sm: 4 }
+                        mt: '-70px',    
+                        mb: '15px'
                     }}
                 >
                     <Avatar
@@ -2381,8 +2385,8 @@ export const LegacyBusinessTheme = ({ cardData }) => {
                 <Box
                     sx={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                        columnGap: { xs: 1.5, sm: 2 },
+                        gridTemplateColumns: 'repeat(4, 1fr)',
+                        columnGap: 0,
                         rowGap: { xs: 1.5, sm: 2 },
                         justifyItems: 'center'
                     }}
@@ -2432,7 +2436,8 @@ export const LegacyBusinessTheme = ({ cardData }) => {
                                         fontWeight: 700,
                                         textAlign: 'center',
                                         color: '#0f172a',
-                                        lineHeight: 1.3
+                                        lineHeight: 1.3,
+                                        minHeight: '35px'
                                     }}
                                 >
                                     {tile.label}
@@ -4939,6 +4944,8 @@ export const Tema1Theme = ({ cardData }) => {
     const [currentIndex, setCurrentIndex] = useState(3);
     const [isAnimating, setIsAnimating] = useState(false);
     const [activeModal, setActiveModal] = useState(null);
+    const [touchStartY, setTouchStartY] = useState(0);
+    const [touchEndY, setTouchEndY] = useState(0);
 
     // Kart görüntülenmesini kaydet
     useEffect(() => {
@@ -5346,6 +5353,35 @@ export const Tema1Theme = ({ cardData }) => {
         setTimeout(() => setIsAnimating(false), 500);
     }, [isAnimating, actionCards.length]);
 
+    // Touch handlers for mobile swipe (iOS & Android)
+    const handleTouchStart = useCallback((e) => {
+        setTouchStartY(e.touches[0].clientY);
+    }, []);
+
+    const handleTouchMove = useCallback((e) => {
+        setTouchEndY(e.touches[0].clientY);
+    }, []);
+
+    const handleTouchEnd = useCallback(() => {
+        if (!touchStartY || !touchEndY || isAnimating || actionCards.length === 0) return;
+        
+        const distance = touchStartY - touchEndY;
+        const minSwipeDistance = 50; // Minimum kaydırma mesafesi (px)
+        
+        if (Math.abs(distance) > minSwipeDistance) {
+            setIsAnimating(true);
+            setCurrentIndex((prev) => {
+                const next = distance > 0 ? (prev + 1) % actionCards.length : (prev - 1 + actionCards.length) % actionCards.length;
+                return next;
+            });
+            
+            setTimeout(() => setIsAnimating(false), 500);
+        }
+        
+        setTouchStartY(0);
+        setTouchEndY(0);
+    }, [touchStartY, touchEndY, isAnimating, actionCards.length]);
+
     // Klavye kontrolleri
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -5375,9 +5411,9 @@ export const Tema1Theme = ({ cardData }) => {
     }
 
     return (
-        <Box sx={{ 
-            width: '100%', 
-            maxWidth: '400px', 
+        <Box className="tema1-card" sx={{ 
+            width: { xs: '100%', sm: '100%' },
+            maxWidth: '500px', 
             height: '100vh',
             bgcolor: '#0E0E0E',
             color: 'white',
@@ -5456,8 +5492,8 @@ export const Tema1Theme = ({ cardData }) => {
                 mb: 1.5,
                 zIndex: 100,
                 position: 'relative'
-            }}>
-                <Avatar
+            }} className="tema1-profile-image">
+                <Avatar className="tema1-profile-image-avatar"
                     src={cardData.profileImageUrl}
                     alt={cardData.name || cardData.company}
                     sx={{
@@ -5491,18 +5527,6 @@ export const Tema1Theme = ({ cardData }) => {
                 {cardData.company && (
                     <Typography sx={{ fontSize: 11, color: '#999', mt: 0.5 }}>
                         {cardData.company}
-                    </Typography>
-                )}
-                {/* Hakkımızda */}
-                {cardData.bio && (
-                    <Typography sx={{ 
-                        fontSize: 11, 
-                        color: '#BFBFBF', 
-                        mt: 1, 
-                        lineHeight: 1.5,
-                        px: 1
-                    }}>
-                        {cardData.bio}
                     </Typography>
                 )}
                 
@@ -5547,20 +5571,17 @@ export const Tema1Theme = ({ cardData }) => {
             </Box>
 
             {/* Spacer - Kartları alta itmek için */}
-            <Box sx={{ flex: 1 }} />
+            {/* <Box sx={{ flex: 1 }} /> */}
 
             {/* Cards Stack - En altta */}
             {actionCards.length > 0 ? (
                 <Box 
-                    sx={{ 
-                        display: 'flex', 
-                        alignItems: 'flex-end',
-                        justifyContent: 'center',
-                        position: 'relative',
-                        pb: 1,
-                        minHeight: '320px'
-                    }}
+                    className="tema1-cards-wrapper"
                     onWheel={handleWheel}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                    sx={{ touchAction: 'pan-y' }}
                 >
                     <Box sx={{ 
                         position: 'relative', 
@@ -6323,7 +6344,7 @@ export const Tema2Theme = ({ cardData }) => {
     }
 
     return (
-        <Box sx={{ 
+        <Box  sx={{ 
             width: '100%', 
             maxWidth: '400px', 
             minHeight: '100vh',
@@ -6742,34 +6763,28 @@ export const Tema2Theme = ({ cardData }) => {
                                     sx={{
                                         bgcolor: '#ffffff',
                                         border: '2px solid #e0e0e0',
-                                        width: 40,
-                                        height: 40,
-                                        transition: 'all 0.3s ease',
-                                        '&:hover': { 
-                                            bgcolor: '#f5f5f5',
-                                            borderColor: '#d0d0d0',
-                                            transform: 'translateX(-2px)'
-                                        }
+                                        width: 48,
+                                        height: 48,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
                                     }}
                                 >
-                                    <Box sx={{ fontSize: 24, fontWeight: 700, color: '#333333' }}>‹</Box>
+                                    <ChevronLeftIcon sx={{ fontSize: 32, color: '#333333' }} />
                                 </IconButton>
                                 <IconButton
                                     onClick={handleSliderNext}
                                     sx={{
                                         bgcolor: '#ffffff',
                                         border: '2px solid #e0e0e0',
-                                        width: 40,
-                                        height: 40,
-                                        transition: 'all 0.3s ease',
-                                        '&:hover': { 
-                                            bgcolor: '#f5f5f5',
-                                            borderColor: '#d0d0d0',
-                                            transform: 'translateX(2px)'
-                                        }
+                                        width: 48,
+                                        height: 48,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
                                     }}
                                 >
-                                    <Box sx={{ fontSize: 24, fontWeight: 700, color: '#333333' }}>›</Box>
+                                    <ChevronRightIcon sx={{ fontSize: 32, color: '#333333' }} />
                                 </IconButton>
                             </Box>
                         )}
@@ -7414,7 +7429,7 @@ END:VCARD`;
     }
 
     return (
-        <Box sx={{ 
+        <Box className="tema3-card" sx={{ 
             width: '100%', 
             maxWidth: '400px', 
             minHeight: '100vh',
@@ -7583,19 +7598,25 @@ END:VCARD`;
 
             {/* Swiper Slider - CenterMode ve Perspective */}
             {allCards.length > 0 && (
-                <Box sx={{ 
+                <Box className="tema3-swiper-slider" sx={{ 
                     width: '100%',
                     py: 3,
                     mb: 2,
                     position: 'relative',
+                    overflow: 'visible',
                     '& .swiper-slide': {
-                        opacity: '1 !important'
+                        opacity: '1 !important',
+                        overflow: 'visible !important'
                     },
                     '& .swiper-slide-shadow': {
                         display: 'none !important'
                     },
                     '& .swiper-slide-shadow-left, & .swiper-slide-shadow-right': {
                         display: 'none !important'
+                    },
+                    '& .swiper-wrapper': {
+                        overflow: 'visible !important',
+                        paddingBottom: '80px !important'
                     }
                 }}>
                     <Swiper
@@ -7620,7 +7641,7 @@ END:VCARD`;
                             setActiveSlideIndex(swiper.realIndex);
                         }}
                         style={{
-                            paddingBottom: '70px',
+                            paddingBottom: '100px',
                             paddingTop: '20px'
                         }}
                     >
@@ -7641,7 +7662,9 @@ END:VCARD`;
                                         display: 'flex',
                                         justifyContent: 'center',
                                         alignItems: 'center',
-                                        flexDirection: 'column'
+                                        flexDirection: 'column',
+                                        overflow: 'visible',
+                                        position: 'relative'
                                     }}
                                 >
                                     <Box
@@ -7685,11 +7708,24 @@ END:VCARD`;
                                             fontFamily: '"Open Sans", sans-serif',
                                             mt: 1.5,
                                             textAlign: 'center',
-                                            lineHeight: 1.2,
+                                            lineHeight: 1.3,
                                             position: 'absolute',
-                                            bottom: '-40px',
-                                            width: '120px',
-                                            letterSpacing: '0.5px'
+                                            bottom: '-50px',
+                                            width: '250px',
+                                            minWidth: '250px',
+                                            maxWidth: '250px',
+                                            letterSpacing: '0.5px',
+                                            zIndex: 100,
+                                            backgroundColor: 'transparent',
+                                            wordWrap: 'break-word',
+                                            overflowWrap: 'break-word',
+                                            hyphens: 'auto',
+                                            WebkitHyphens: 'auto',
+                                            msHyphens: 'auto',
+                                            WebkitTransform: 'translateZ(0)',
+                                            transform: 'translateZ(0)',
+                                            backfaceVisibility: 'hidden',
+                                            WebkitBackfaceVisibility: 'hidden'
                                         }}>
                                             {card.label}
                                         </Typography>
