@@ -945,6 +945,25 @@ export default function CardWizard() {
     });
   };
 
+  const placeholderSocial = {
+    whatsappUrl: "Örnek:05001231212",
+    instagramUrl:
+      "https://wwww.instagram.com/ kısmından sonraki kullanıcı adınız.",
+    facebookUrl:
+      "https://wwww.facebook.com/ kısmından sonraki kullanıcı adınız.",
+    linkedinUrl:
+      "https://wwww.linkedin.com/ kısmından sonraki kullanıcı adınız.",
+    twitterUrl: "https://wwww.x.com/ kısmından sonraki kullanıcı adınız.",
+    youtubeUrl: "https://wwww.youtube.com/ kısmından sonraki kullanıcı adınız.",
+    tiktokUrl: "https://wwww.tiktok.com/ kısmından sonraki kullanıcı adınız.",
+    telegramUrl:
+      "https://wwww.telegram.com/ kısmından sonraki kullanıcı adınız.",
+    pinterestUrl:
+      "https://wwww.pinterest.com/ kısmından sonraki kullanıcı adınız.",
+    skypeUrl: "https://wwww.skype.com/ kısmından sonraki kullanıcı adınız.",
+    wechatUrl: "https://wwww.wechat.com/ kısmından sonraki kullanıcı adınız.",
+  };
+
   // Step içerikleri
   const renderStepContent = (step) => {
     switch (step) {
@@ -2182,6 +2201,7 @@ export default function CardWizard() {
                         handleSocialUrlChange(key, e.target.value);
                         handleUrlChange(key, e.target.value);
                       }}
+                      placeholder={placeholderSocial[key]}
                       border="none"
                       sx={{ border: 0, borderColor: "transparent" }}
                     />
