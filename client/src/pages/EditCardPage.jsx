@@ -2278,7 +2278,7 @@ function EditCardPage() {
               </Grid>
 
               {/* Tema Seçimi ve Önizlemesi */}
-              <Grid item xs={12}>
+              <Grid item size={{ xs: 12, sm: 12, md: 12 }}>
                 <Paper
                   sx={{
                     p: { xs: 2, sm: 3 },
@@ -2300,7 +2300,7 @@ function EditCardPage() {
                   </Box>
 
                   <Grid container spacing={3}>
-                    <Grid item xs={12} md={4}>
+                    <Grid item size={{ xs: 12, sm: 12, md: 12 }}>
                       <FormControl fullWidth disabled={formLoading}>
                         <InputLabel id="theme-select-label">
                           Kartvizit Teması
@@ -2316,15 +2316,9 @@ function EditCardPage() {
                           <MenuItem value="legacybusiness">
                             Klasik Business
                           </MenuItem>
-                          <MenuItem value="tema1">
-                            Tema 1
-                          </MenuItem>
-                          <MenuItem value="tema2">
-                            Tema 2
-                          </MenuItem>
-                          <MenuItem value="tema3">
-                            Tema 3
-                          </MenuItem>
+                          <MenuItem value="tema1">Tema 1</MenuItem>
+                          <MenuItem value="tema2">Tema 2</MenuItem>
+                          <MenuItem value="tema3">Tema 3</MenuItem>
                         </Select>
                       </FormControl>
                     </Grid>

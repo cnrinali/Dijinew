@@ -111,6 +111,7 @@ export default function CardWizard() {
       value &&
       (value.startsWith("http://") || value.startsWith("https://"))
     ) {
+      console.log({ value });
       pathValue = extractPathOnly(value, fieldName);
     } else if (value) {
       // Zaten path ise, domain kısmını kaldır (varsa)
@@ -619,8 +620,9 @@ export default function CardWizard() {
         documents: documents, // Dökümanları dahil et
         isActive: true, // Kartı aktif hale getir
         customSlug: crypto.randomUUID(), // UUID oluştur
+        theme: "legacybusiness",
       };
-
+      console.log({ finalCardData });
       // Simple wizard API ile kartı güncelle
       const apiBaseUrl =
         window.location.hostname === "localhost"
@@ -2082,7 +2084,7 @@ export default function CardWizard() {
                         padding: { xs: "16px 12px", sm: "20px 16px" },
                       },
                       "& textarea": {
-                        color: "#1a1a1a",
+                        color: "#FFF",
                         fontWeight: 500,
                         padding: { xs: "16px 14px", sm: "18px 16px" },
                       },
@@ -3214,7 +3216,6 @@ export default function CardWizard() {
                     </MenuItem>
                     <MenuItem value="getirUrl">Getir</MenuItem>
                     <MenuItem value="yemeksepetiUrl">Yemek Sepeti</MenuItem>
-                    <MenuItem value="ciceksepetiUrl">Çiçek Sepeti</MenuItem>
                   </Select>
                 </FormControl>
 
@@ -3287,7 +3288,7 @@ export default function CardWizard() {
               gutterBottom
               sx={{
                 fontWeight: 700,
-                color: "#1a1a1a",
+                color: "#DDD",
                 mb: 1.5,
                 textAlign: "center",
               }}
@@ -3409,7 +3410,7 @@ export default function CardWizard() {
               gutterBottom
               sx={{
                 fontWeight: 700,
-                color: "#1a1a1a",
+                color: "#DDD",
                 mb: 1.5,
                 textAlign: "center",
               }}
@@ -3431,7 +3432,7 @@ export default function CardWizard() {
             <Grid container spacing={{ xs: 2, sm: 3 }} justifyContent="center">
               <Grid
                 item
-                size={{ sm: 12, md: 12, lg: 12 }}
+                size={{ xs: 12, sm: 12, md: 12, lg: 12 }}
                 sx={{ display: "flex", justifyContent: "center" }}
               >
                 <TextField
@@ -3521,7 +3522,7 @@ export default function CardWizard() {
               gutterBottom
               sx={{
                 fontWeight: 700,
-                color: "#1a1a1a",
+                color: "#DDD",
                 mb: 1.5,
                 textAlign: "center",
               }}
@@ -3654,6 +3655,275 @@ export default function CardWizard() {
                 textAlign: "center",
               }}
             >
+              Firma Bilgileri
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{
+                color: "#666",
+                mb: 2.5,
+                textAlign: "center",
+                fontSize: "0.95rem",
+              }}
+            >
+              Fırma Bilgilerinizi Ekleyiniz
+            </Typography>
+            <Grid container spacing={2} size={12}>
+              <Grid item size={{ xs: 12, sm: 12, md: 6, lg: 6 }}>
+                <TextField
+                  fullWidth
+                  label="Firma Adı"
+                  value={cardData.videoUrl}
+                  onChange={(e) => handleUrlChange("videoUrl", e.target.value)}
+                  variant="outlined"
+                  //placeholder="https://www.youtube.com/watch?v=..."
+                  size="large"
+                  sx={{
+                    mb: { xs: 1.5, sm: 2 },
+                    maxWidth: { xs: "100%", sm: "400px", md: "450px" },
+                    mx: "auto",
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                      backgroundColor: "transparent",
+                      minHeight: { xs: "56px", sm: "60px" },
+                      fontSize: { xs: "16px", sm: "18px" },
+                      "& fieldset": {
+                        borderColor: "#e0e0e0",
+                        borderWidth: 2,
+                      },
+                      "&:hover fieldset": {
+                        borderColor: "#FFD700",
+                        borderWidth: 2,
+                        boxShadow: "0 0 0 3px rgba(255, 215, 0, 0.1)",
+                      },
+                      "&.Mui-focused fieldset": {
+                        borderColor: "#FFD700",
+                        borderWidth: 2,
+                        boxShadow: "0 0 0 3px rgba(255, 215, 0, 0.2)",
+                      },
+                      "& input": {
+                        color: "#bababaff",
+                        fontWeight: 500,
+                        padding: { xs: "16px 12px", sm: "20px 16px" },
+                      },
+                      "& textarea": {
+                        color: "#1a1a1a",
+                        fontWeight: 500,
+                        padding: { xs: "16px 14px", sm: "18px 16px" },
+                      },
+                    },
+                    "& .MuiInputLabel-root": {
+                      fontWeight: 600,
+                      color: "#DDD",
+                      fontSize: { xs: "14px", sm: "16px" },
+                      transform: "translate(16px, 20px) scale(1)",
+                      "&.Mui-focused": {
+                        transform: "translate(14px, -9px) scale(0.85)",
+                      },
+                      "&.MuiFormLabel-filled": {
+                        transform: "translate(14px, -9px) scale(0.85)",
+                      },
+                    },
+                    "& .MuiInputLabel-root.Mui-focused": {
+                      color: "#FFD700",
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item size={{ xs: 12, sm: 12, md: 6, lg: 6 }}>
+                <TextField
+                  fullWidth
+                  label="Vergi Dairesi"
+                  value={cardData.videoUrl}
+                  onChange={(e) => handleUrlChange("videoUrl", e.target.value)}
+                  variant="outlined"
+                  //placeholder="https://www.youtube.com/watch?v=..."
+                  size="large"
+                  sx={{
+                    mb: { xs: 1.5, sm: 2 },
+                    maxWidth: { xs: "100%", sm: "400px", md: "450px" },
+                    mx: "auto",
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                      backgroundColor: "transparent",
+                      minHeight: { xs: "56px", sm: "60px" },
+                      fontSize: { xs: "16px", sm: "18px" },
+                      "& fieldset": {
+                        borderColor: "#e0e0e0",
+                        borderWidth: 2,
+                      },
+                      "&:hover fieldset": {
+                        borderColor: "#FFD700",
+                        borderWidth: 2,
+                        boxShadow: "0 0 0 3px rgba(255, 215, 0, 0.1)",
+                      },
+                      "&.Mui-focused fieldset": {
+                        borderColor: "#FFD700",
+                        borderWidth: 2,
+                        boxShadow: "0 0 0 3px rgba(255, 215, 0, 0.2)",
+                      },
+                      "& input": {
+                        color: "#bababaff",
+                        fontWeight: 500,
+                        padding: { xs: "16px 12px", sm: "20px 16px" },
+                      },
+                      "& textarea": {
+                        color: "#1a1a1a",
+                        fontWeight: 500,
+                        padding: { xs: "16px 14px", sm: "18px 16px" },
+                      },
+                    },
+                    "& .MuiInputLabel-root": {
+                      fontWeight: 600,
+                      color: "#DDD",
+                      fontSize: { xs: "14px", sm: "16px" },
+                      transform: "translate(16px, 20px) scale(1)",
+                      "&.Mui-focused": {
+                        transform: "translate(14px, -9px) scale(0.85)",
+                      },
+                      "&.MuiFormLabel-filled": {
+                        transform: "translate(14px, -9px) scale(0.85)",
+                      },
+                    },
+                    "& .MuiInputLabel-root.Mui-focused": {
+                      color: "#FFD700",
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item size={{ xs: 12, sm: 12, md: 6, lg: 6 }}>
+                <TextField
+                  fullWidth
+                  label="Vergi Numarası"
+                  value={cardData.videoUrl}
+                  onChange={(e) => handleUrlChange("videoUrl", e.target.value)}
+                  variant="outlined"
+                  //placeholder="https://www.youtube.com/watch?v=..."
+                  size="large"
+                  sx={{
+                    mb: { xs: 1.5, sm: 2 },
+                    maxWidth: { xs: "100%", sm: "400px", md: "450px" },
+                    mx: "auto",
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                      backgroundColor: "transparent",
+                      minHeight: { xs: "56px", sm: "60px" },
+                      fontSize: { xs: "16px", sm: "18px" },
+                      "& fieldset": {
+                        borderColor: "#e0e0e0",
+                        borderWidth: 2,
+                      },
+                      "&:hover fieldset": {
+                        borderColor: "#FFD700",
+                        borderWidth: 2,
+                        boxShadow: "0 0 0 3px rgba(255, 215, 0, 0.1)",
+                      },
+                      "&.Mui-focused fieldset": {
+                        borderColor: "#FFD700",
+                        borderWidth: 2,
+                        boxShadow: "0 0 0 3px rgba(255, 215, 0, 0.2)",
+                      },
+                      "& input": {
+                        color: "#bababaff",
+                        fontWeight: 500,
+                        padding: { xs: "16px 12px", sm: "20px 16px" },
+                      },
+                      "& textarea": {
+                        color: "#1a1a1a",
+                        fontWeight: 500,
+                        padding: { xs: "16px 14px", sm: "18px 16px" },
+                      },
+                    },
+                    "& .MuiInputLabel-root": {
+                      fontWeight: 600,
+                      color: "#DDD",
+                      fontSize: { xs: "14px", sm: "16px" },
+                      transform: "translate(16px, 20px) scale(1)",
+                      "&.Mui-focused": {
+                        transform: "translate(14px, -9px) scale(0.85)",
+                      },
+                      "&.MuiFormLabel-filled": {
+                        transform: "translate(14px, -9px) scale(0.85)",
+                      },
+                    },
+                    "& .MuiInputLabel-root.Mui-focused": {
+                      color: "#FFD700",
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item size={{ xs: 12, sm: 12, md: 6, lg: 6 }}>
+                <TextField
+                  fullWidth
+                  label="Vergi Adresi"
+                  value={cardData.videoUrl}
+                  onChange={(e) => handleUrlChange("videoUrl", e.target.value)}
+                  variant="outlined"
+                  //placeholder="https://www.youtube.com/watch?v=..."
+                  size="large"
+                  sx={{
+                    mb: { xs: 1.5, sm: 2 },
+                    maxWidth: { xs: "100%", sm: "400px", md: "450px" },
+                    mx: "auto",
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                      backgroundColor: "transparent",
+                      minHeight: { xs: "56px", sm: "60px" },
+                      fontSize: { xs: "16px", sm: "18px" },
+                      "& fieldset": {
+                        borderColor: "#e0e0e0",
+                        borderWidth: 2,
+                      },
+                      "&:hover fieldset": {
+                        borderColor: "#FFD700",
+                        borderWidth: 2,
+                        boxShadow: "0 0 0 3px rgba(255, 215, 0, 0.1)",
+                      },
+                      "&.Mui-focused fieldset": {
+                        borderColor: "#FFD700",
+                        borderWidth: 2,
+                        boxShadow: "0 0 0 3px rgba(255, 215, 0, 0.2)",
+                      },
+                      "& input": {
+                        color: "#bababaff",
+                        fontWeight: 500,
+                        padding: { xs: "16px 12px", sm: "20px 16px" },
+                      },
+                      "& textarea": {
+                        color: "#1a1a1a",
+                        fontWeight: 500,
+                        padding: { xs: "16px 14px", sm: "18px 16px" },
+                      },
+                    },
+                    "& .MuiInputLabel-root": {
+                      fontWeight: 600,
+                      color: "#DDD",
+                      fontSize: { xs: "14px", sm: "16px" },
+                      transform: "translate(16px, 20px) scale(1)",
+                      "&.Mui-focused": {
+                        transform: "translate(14px, -9px) scale(0.85)",
+                      },
+                      "&.MuiFormLabel-filled": {
+                        transform: "translate(14px, -9px) scale(0.85)",
+                      },
+                    },
+                    "& .MuiInputLabel-root.Mui-focused": {
+                      color: "#FFD700",
+                    },
+                  }}
+                />
+              </Grid>
+            </Grid>
+            {/*  <Typography
+              variant="h5"
+              gutterBottom
+              sx={{
+                fontWeight: 700,
+                color: "#FFF",
+                mb: 1.5,
+                textAlign: "center",
+              }}
+            >
               Tema Seçimi
             </Typography>
             <Typography
@@ -3740,7 +4010,7 @@ export default function CardWizard() {
               >
                 <ThemePreview formData={cardData} theme={cardData.theme} />
               </Box>
-            </Box>
+            </Box> */}
           </Box>
         );
 
@@ -3903,6 +4173,7 @@ export default function CardWizard() {
                   //alignItems: "center",
                   mb: { xs: 1.5, sm: 2 },
                   position: "relative",
+                  overflowY: "auto",
                   "&::before": {
                     content: '""',
                     position: "absolute",
@@ -4119,9 +4390,13 @@ export default function CardWizard() {
                 display: "flex",
                 justifyContent: "space-between",
                 gap: { xs: 1.5, sm: 2 },
-                flexDirection: { xs: "column", sm: "row" },
+                flexDirection: {
+                  xs: activeStep === steps.length - 1 ? "column" : "row",
+                  sm: "row",
+                },
                 width: "100%",
                 px: { xs: 0, sm: 1 },
+                marginBottom: "100px",
               }}
             >
               <Button
@@ -4131,7 +4406,7 @@ export default function CardWizard() {
                 size="large"
                 sx={{
                   flex: { xs: 1, sm: "0 1 35%" },
-                  minWidth: { xs: "100%", sm: "200px" },
+                  //minWidth: { xs: "100%", sm: "100%" },
                   px: { xs: 4, sm: 5 },
                   py: 2,
                   borderRadius: 3,
@@ -4164,7 +4439,7 @@ export default function CardWizard() {
                 size="large"
                 sx={{
                   flex: { xs: 1, sm: "0 1 35%" },
-                  minWidth: { xs: "100%", sm: "200px" },
+                  // minWidth: { xs: "100%", sm: "200px" },
                   px: { xs: 4, sm: 5 },
                   py: 2,
                   borderRadius: 3,
