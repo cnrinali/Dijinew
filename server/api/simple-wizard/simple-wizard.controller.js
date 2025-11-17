@@ -253,6 +253,20 @@ const createSimpleWizard = async (req, res) => {
       console.log("Email gönderilmiyor - geçersiz veya boş email:", email);
     }
 
+    console.log({
+      ...wizardToken,
+      cardId: card.id,
+      cardSlug: card.customSlug,
+      permanentSlug: card.permanentSlug || card.customSlug, // Fallback to customSlug if permanentSlug doesn't exist yet
+      wizardUrl,
+      qrCodeUrl,
+      qrCodeDataURL: qrResult.success ? qrResult.qrCodeDataURL : null,
+      cardPath: qrResult.success ? qrResult.cardPath : null,
+      emailSent: emailResult?.success || false,
+      emailMessage: emailResult?.message,
+      theme: card.theme,
+    });
+
     res.status(201).json({
       success: true,
       data: {
@@ -266,6 +280,7 @@ const createSimpleWizard = async (req, res) => {
         cardPath: qrResult.success ? qrResult.cardPath : null,
         emailSent: emailResult?.success || false,
         emailMessage: emailResult?.message,
+        theme: card.theme,
       },
       message:
         "Sihirbaz linki başarıyla oluşturuldu." +
@@ -515,6 +530,7 @@ const updateCardByToken = async (req, res) => {
       .input("pttAvmUrl", sql.NVarChar, cardData.pttAvmUrl || "")
       .input("ciceksepetiUrl", sql.NVarChar, cardData.ciceksepetiUrl || "")
       .input("websiteUrl", sql.NVarChar, cardData.websiteUrl || "")
+      .input("theme", sql.NVarChar, cardData.theme || "")
       .input(
         "whatsappBusinessUrl",
         sql.NVarChar,
@@ -569,6 +585,7 @@ const updateCardByToken = async (req, res) => {
                     websiteUrl = @websiteUrl,
                     whatsappBusinessUrl = @whatsappBusinessUrl,
                     videoUrl = @videoUrl,
+                    theme = @theme,
                     documents = @documents,
                     updatedAt = GETDATE()
                 WHERE id = @cardId
