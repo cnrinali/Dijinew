@@ -38,6 +38,8 @@ import {
   Alert,
   Grid,
   CircularProgress,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 import analyticsService, { trackClick } from "../services/analyticsService";
 import { QRCodeSVG } from "qrcode.react";
@@ -84,6 +86,7 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { formatIban, getBankLogo } from "../constants/turkishBanks";
+import { useTranslation } from "react-i18next";
 
 // Pazaryeri ikonları ve isimleri
 const getMarketplaceIcon = (marketplace) => {
@@ -323,6 +326,7 @@ const useCardActions = (cardData) => {
   };
 
   const VideoModal = () => {
+    const { t } = useTranslation();
     return (
       <Dialog
         open={videoModalOpen}
@@ -340,7 +344,7 @@ const useCardActions = (cardData) => {
             alignItems: "center",
           }}
         >
-          Tanıtım Videosu
+          {t("teaser")}
           <IconButton onClick={() => setVideoModalOpen(false)} size="small">
             <CloseIcon />
           </IconButton>
@@ -395,6 +399,7 @@ const useCardActions = (cardData) => {
 
 // Default tema (şu anki)
 export const DefaultTheme = ({ cardData }) => {
+  const { t } = useTranslation();
   const {
     handleQrClick,
     handleShareClick,
@@ -886,7 +891,7 @@ export const DefaultTheme = ({ cardData }) => {
                   <ListItemIcon>
                     <LanguageIcon />
                   </ListItemIcon>
-                  <ListItemText primary="Web Sitesi" />
+                  <ListItemText primary={t("website")} />
                 </ListItem>
               )}
               {cardData.whatsappBusinessUrl && (
@@ -1599,6 +1604,7 @@ export const ModernTheme = ({ cardData }) => {
 
 // İkon Grid Tema (ekran görüntüsündeki gibi)
 export const IconGridTheme = ({ cardData }) => {
+  const { t } = useTranslation();
   const { handleQrClick, handleShareClick, QrModal, ShareSnackbar } =
     useCardActions(cardData);
 
@@ -1749,7 +1755,7 @@ export const IconGridTheme = ({ cardData }) => {
                   sx={{ fontSize: 28, color: "purple.main", mb: 0.5 }}
                 />
                 <Typography variant="caption" display="block">
-                  WEB SİTESİ
+                  {t("website")}
                 </Typography>
               </Box>
             )}
@@ -1768,7 +1774,7 @@ export const IconGridTheme = ({ cardData }) => {
                   sx={{ fontSize: 28, color: "orange.main", mb: 0.5 }}
                 />
                 <Typography variant="caption" display="block">
-                  HAKKIMDA
+                  {t("about_me")}
                 </Typography>
               </Box>
             )}
@@ -1805,7 +1811,7 @@ export const IconGridTheme = ({ cardData }) => {
                 sx={{ fontSize: 28, color: "secondary.main", mb: 0.5 }}
               />
               <Typography variant="caption" display="block">
-                PAYLAŞ
+                {t("share")}
               </Typography>
             </Box>
           </Stack>
@@ -2411,6 +2417,7 @@ export const BusinessTheme = ({ cardData }) => {
 
 // Legacy Business Tema (eski DijitaCO görünümüne yakınlaştırılmış versiyon)
 export const LegacyBusinessTheme = ({ cardData }) => {
+  const { t } = useTranslation();
   const {
     handleQrClick,
     handleShareClick,
@@ -2629,7 +2636,7 @@ export const LegacyBusinessTheme = ({ cardData }) => {
 
     pushTile({
       key: "add_contact",
-      label: "REHBERE EKLE",
+      label: t("add_to_contact"),
       iconSrc: getLegacyIconPath("rehber.png"),
       onClick: handleAddToContacts,
       trackType: "add_contact",
@@ -2638,7 +2645,7 @@ export const LegacyBusinessTheme = ({ cardData }) => {
     if (cardData?.bio) {
       pushTile({
         key: "about",
-        label: "HAKKIMDA",
+        label: t("about_me"),
         iconSrc: getLegacyIconPath("hakkimda.png"),
         onClick: () => openModal("about"),
         track: "about",
@@ -2682,7 +2689,7 @@ export const LegacyBusinessTheme = ({ cardData }) => {
     if (cardData?.website) {
       pushTile({
         key: "website",
-        label: "WEB SİTESİ",
+        label: t("website"),
         iconSrc: getLegacyIconPath("web.png"),
         fallbackIcon: <LanguageIcon sx={{ fontSize: 26 }} />,
         href: ensureFullUrl(cardData.website, "website"),
@@ -2694,7 +2701,7 @@ export const LegacyBusinessTheme = ({ cardData }) => {
     if (cardData?.videoUrl) {
       pushTile({
         key: "video",
-        label: "TANITIM VİDEO",
+        label: t("teaser"),
         iconSrc: getLegacyIconPath("video.png"),
         fallbackIcon: <PlayArrowIcon sx={{ fontSize: 26 }} />,
         onClick: handleVideoClick,
@@ -2713,7 +2720,7 @@ export const LegacyBusinessTheme = ({ cardData }) => {
 
     pushTile({
       key: "share",
-      label: "PAYLAŞ",
+      label: t("share"),
       iconSrc: getLegacyIconPath("paylas.png"),
       fallbackIcon: <ShareIcon sx={{ fontSize: 26 }} />,
       onClick: handleShareClick,
@@ -2723,7 +2730,7 @@ export const LegacyBusinessTheme = ({ cardData }) => {
     if (documents.length) {
       pushTile({
         key: "documents",
-        label: "DÖKÜMANLAR",
+        label: t("documents"),
         iconSrc: getLegacyIconPath("dokuman.png"),
         fallbackIcon: <DescriptionIcon sx={{ fontSize: 26 }} />,
         onClick: () => openModal("documents"),
@@ -2734,7 +2741,7 @@ export const LegacyBusinessTheme = ({ cardData }) => {
     if (bankAccounts.length) {
       pushTile({
         key: "bank",
-        label: "FATURA B.",
+        label: t("invoice_info"),
         iconSrc: getLegacyIconPath("fatura.png"),
         fallbackIcon: <AccountBalanceIcon sx={{ fontSize: 26 }} />,
         onClick: () => openModal("bank"),
@@ -4033,6 +4040,7 @@ export const DarkTheme = ({ cardData }) => {
 
 // 3D Carousel Tema - Dönen ikonlar ile interaktif tasarım
 export const CarouselTheme = ({ cardData }) => {
+  const { t } = useTranslation();
   const { handleQrClick, handleShareClick, QrModal, ShareSnackbar } =
     useCardActions(cardData);
   const [rotation, setRotation] = useState(0);
@@ -4130,7 +4138,7 @@ export const CarouselTheme = ({ cardData }) => {
     },
     {
       icon: <ShareIcon sx={{ fontSize: 32 }} />,
-      label: "Paylaş",
+      label: t("share"),
       color: "#000000",
       action: handleShareClick,
     },
@@ -4455,6 +4463,7 @@ export const CarouselTheme = ({ cardData }) => {
 
 // Oval Carousel Tema - Sola yaslanan oval düzen
 export const OvalCarouselTheme = ({ cardData }) => {
+  const { t } = useTranslation();
   const { handleQrClick, handleShareClick, QrModal, ShareSnackbar } =
     useCardActions(cardData);
   const [rotation, setRotation] = useState(0);
@@ -4537,7 +4546,7 @@ export const OvalCarouselTheme = ({ cardData }) => {
     },
     cardData.address && {
       icon: <LocationOnIcon sx={{ fontSize: 32 }} />,
-      label: "Konum",
+      label: t("locations"),
       color: "#F4C734",
       action: null,
     },
@@ -4549,7 +4558,7 @@ export const OvalCarouselTheme = ({ cardData }) => {
     },
     {
       icon: <ShareIcon sx={{ fontSize: 32 }} />,
-      label: "Paylaş",
+      label: t("share"),
       color: "#000000",
       action: handleShareClick,
     },
@@ -4994,6 +5003,7 @@ export const OvalCarouselTheme = ({ cardData }) => {
 // Tema seçici fonksiyonu
 // Kurumsal Dijital Tema - Resimdeki tasarıma göre
 export const CorporateDigitalTheme = ({ cardData }) => {
+  const { t } = useTranslation();
   const {
     handleQrClick,
     handleShareClick,
@@ -5027,7 +5037,7 @@ export const CorporateDigitalTheme = ({ cardData }) => {
     {
       type: "phone",
       icon: <PhoneIcon />,
-      label: "Ara",
+      label: t("search"),
       value: cardData.phone,
       color: "#4CAF50",
     },
@@ -5048,14 +5058,14 @@ export const CorporateDigitalTheme = ({ cardData }) => {
     {
       type: "website",
       icon: <LanguageIcon />,
-      label: "Web Sitesi",
+      label: t("website"),
       value: cardData.websiteUrl,
       color: "#2196F3",
     },
     {
       type: "location",
       icon: <LocationOnIcon />,
-      label: "Konum",
+      label: t("locations"),
       value: cardData.address,
       color: "#F44336",
     },
@@ -5477,18 +5487,22 @@ export const CorporateDigitalTheme = ({ cardData }) => {
           }}
         >
           {[
-            { icon: <StorefrontIcon />, label: "Ürünler", color: "#FF5722" },
-            { icon: <PhoneIcon />, label: "Özellikler", color: "#2196F3" },
+            {
+              icon: <StorefrontIcon />,
+              label: t("products"),
+              color: "#FF5722",
+            },
+            { icon: <PhoneIcon />, label: t("features"), color: "#2196F3" },
             {
               icon: <BusinessIcon />,
-              label: "Referanslarımız",
+              label: t("references"),
               color: "#4CAF50",
             },
-            { icon: <CameraAltIcon />, label: "Temalar", color: "#9C27B0" },
-            { icon: <StoreIcon />, label: "Bayilik", color: "#FF9800" },
+            { icon: <CameraAltIcon />, label: t("themes"), color: "#9C27B0" },
+            { icon: <StoreIcon />, label: t("dealer"), color: "#FF9800" },
             {
               icon: <DescriptionIcon />,
-              label: "Kurumsal Takip",
+              label: t("corporate_monitoring"),
               color: "#607D8B",
             },
           ].map((item, index) => (
@@ -5603,6 +5617,7 @@ export const CorporateDigitalTheme = ({ cardData }) => {
 
 // Kurumsal Videolu Tema - Resimdeki tasarıma göre
 export const CorporateVideoTheme = ({ cardData }) => {
+  const { t } = useTranslation();
   const {
     handleQrClick,
     handleShareClick,
@@ -5878,7 +5893,7 @@ export const CorporateVideoTheme = ({ cardData }) => {
     {
       icon: <ShareIcon />,
       color: "#FF9800",
-      label: "Paylaş",
+      label: t("share"),
       type: "share",
       value: "share",
     },
@@ -5934,7 +5949,7 @@ export const CorporateVideoTheme = ({ cardData }) => {
           {
             icon: <ShareIcon />,
             color: "#FF9800",
-            label: "Paylaş",
+            label: t("share"),
             type: "share",
             value: "share",
           },
@@ -6239,7 +6254,7 @@ export const CorporateVideoTheme = ({ cardData }) => {
               boxShadow: "0 10px 20px rgba(255,0,0,0.25)",
             }}
           >
-            Tanıtım Videosu
+            {t("teaser")}
           </Button>
         )}
       </Box>
@@ -6476,7 +6491,7 @@ export const CorporateVideoTheme = ({ cardData }) => {
                 fontSize: { xs: "0.8rem", sm: "0.9rem" },
               }}
             >
-              Fatura Bilgileri
+              {t("invoice_info")}
             </Typography>
           </Box>
         </Box>
@@ -6550,6 +6565,7 @@ export const CorporateVideoTheme = ({ cardData }) => {
 
 // Tema1 Theme - Dark tema, stacked cards animasyonu (LegacyBusiness icon yapısı ile)
 export const Tema1Theme = ({ cardData }) => {
+  const { t } = useTranslation();
   const {
     handleQrClick,
     handleShareClick,
@@ -6725,7 +6741,7 @@ export const Tema1Theme = ({ cardData }) => {
     if (cardData?.bio) {
       cards.push({
         id: "about",
-        label: "HAKKIMDA",
+        label: t("about_me"),
         color: "#00afa5",
         iconSrc: getLegacyIconPath("hakkimda.png"),
         fallback: <InfoIcon />,
@@ -6767,7 +6783,7 @@ export const Tema1Theme = ({ cardData }) => {
     if (mapUrl) {
       cards.push({
         id: "map",
-        label: "KONUM",
+        label: t("location"),
         color: "#e0453f",
         iconSrc: getLegacyIconPath("map.png"),
         fallback: <LocationOnIcon />,
@@ -6782,7 +6798,7 @@ export const Tema1Theme = ({ cardData }) => {
     if (cardData?.website) {
       cards.push({
         id: "website",
-        label: "WEB SİTESİ",
+        label: t("website"),
         color: "#000000",
         iconSrc: getLegacyIconPath("web.png"),
         fallback: <LanguageIcon />,
@@ -6797,7 +6813,7 @@ export const Tema1Theme = ({ cardData }) => {
     if (cardData?.videoUrl) {
       cards.push({
         id: "video",
-        label: "TANITIM VİDEO",
+        label: t("teaser"),
         color: "#000000",
         iconSrc: getLegacyIconPath("video.png"),
         fallback: <PlayArrowIcon />,
@@ -6824,7 +6840,7 @@ export const Tema1Theme = ({ cardData }) => {
     // 9. PAYLAŞ
     cards.push({
       id: "share",
-      label: "PAYLAŞ",
+      label: t("share"),
       color: "#000000",
       iconSrc: getLegacyIconPath("paylas.png"),
       fallback: <ShareIcon />,
@@ -6838,7 +6854,7 @@ export const Tema1Theme = ({ cardData }) => {
     if (documents.length) {
       cards.push({
         id: "documents",
-        label: "DÖKÜMANLAR",
+        label: t("documents"),
         color: "#ffffff",
         iconSrc: getLegacyIconPath("dokuman.png"),
         fallback: <DescriptionIcon />,
@@ -6850,7 +6866,7 @@ export const Tema1Theme = ({ cardData }) => {
     if (bankAccounts.length) {
       cards.push({
         id: "bank",
-        label: "FATURA B.",
+        label: t("invoice_info"),
         color: "#16a085",
         iconSrc: getLegacyIconPath("fatura.png"),
         fallback: <AccountBalanceIcon />,
@@ -6862,7 +6878,7 @@ export const Tema1Theme = ({ cardData }) => {
     if (galleryItems.length) {
       cards.push({
         id: "gallery",
-        label: "ÜRÜNLER",
+        label: t("products"),
         color: "#ffffff",
         iconSrc: getLegacyIconPath("galeri.png"),
         fallback: <CollectionsIcon />,
@@ -7451,7 +7467,7 @@ export const Tema1Theme = ({ cardData }) => {
                 textTransform: "uppercase",
               }}
             >
-              Tanıtım Videosu
+              {t("teaser")}
             </Typography>
           </Box>
         )}
@@ -7693,7 +7709,7 @@ export const Tema1Theme = ({ cardData }) => {
             },
           }}
         >
-          Fatura Bilgileri
+          {t("invoice_info")}
         </Button>
       </Box>
 
@@ -7717,10 +7733,10 @@ export const Tema1Theme = ({ cardData }) => {
             color: "white",
           }}
         >
-          {activeModal === "gallery" && "Ürünler / Galeri"}
-          {activeModal === "bank" && "Banka Bilgileri"}
-          {activeModal === "documents" && "Dökümanlar"}
-          {activeModal === "about" && "Hakkımda"}
+          {activeModal === "gallery" && t("products")}
+          {activeModal === "bank" && t("bank_info")}
+          {activeModal === "documents" && t("documents")}
+          {activeModal === "about" && t("about_me")}
         </DialogTitle>
         <DialogContent sx={{ mt: 2 }}>
           {activeModal === "about" && (
@@ -7835,6 +7851,16 @@ export const Tema1Theme = ({ cardData }) => {
 
 // Tema2 Theme - Grid layout with slider
 export const Tema2Theme = ({ cardData }) => {
+  const { t, i18n } = useTranslation();
+  const [anchorEl, setAnchorEl] = useState();
+  const open = Boolean(anchorEl);
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = (lang) => {
+    setAnchorEl(null);
+    i18n.changeLanguage(lang);
+  };
   const {
     handleQrClick,
     handleShareClick,
@@ -7845,6 +7871,8 @@ export const Tema2Theme = ({ cardData }) => {
     cardUrl,
   } = useCardActions(cardData);
 
+  const current = i18n.language;
+  console.log({ current });
   const [sliderIndex, setSliderIndex] = useState(0);
   const [activeModal, setActiveModal] = useState(null);
   const [isSliderHovered, setIsSliderHovered] = useState(false);
@@ -7996,7 +8024,7 @@ export const Tema2Theme = ({ cardData }) => {
     // REHBERE EKLE
     cards.push({
       id: "contact",
-      label: "REHBERE EKLE",
+      label: t("add_to_contact"),
       color: "#F39C12",
       iconSrc: getLegacyIconPath("rehber.png"),
       fallback: <AccountCircleIcon />,
@@ -8022,7 +8050,7 @@ export const Tema2Theme = ({ cardData }) => {
     if (mapUrl) {
       cards.push({
         id: "map",
-        label: "KONUM",
+        label: t("location"),
         color: "#e0453f",
         iconSrc: getLegacyIconPath("map.png"),
         fallback: <LocationOnIcon />,
@@ -8050,7 +8078,7 @@ export const Tema2Theme = ({ cardData }) => {
     if (cardData?.website) {
       cards.push({
         id: "website",
-        label: "WEB SİTESİ",
+        label: t("website"),
         color: "#000000",
         iconSrc: getLegacyIconPath("web.png"),
         fallback: <LanguageIcon />,
@@ -8064,7 +8092,7 @@ export const Tema2Theme = ({ cardData }) => {
     // PAYLAŞ
     cards.push({
       id: "share",
-      label: "PAYLAŞ",
+      label: t("share"),
       color: "#000000",
       iconSrc: getLegacyIconPath("paylas.png"),
       fallback: <ShareIcon />,
@@ -8093,7 +8121,7 @@ export const Tema2Theme = ({ cardData }) => {
     if (cardData?.bio) {
       cards.push({
         id: "about",
-        label: "HAKKIMDA",
+        label: t("about_me"),
         color: "#00afa5",
         iconSrc: getLegacyIconPath("hakkimda.png"),
         fallback: <InfoIcon />,
@@ -8120,7 +8148,7 @@ export const Tema2Theme = ({ cardData }) => {
     if (cardData?.videoUrl) {
       cards.push({
         id: "video",
-        label: "TANITIM VİDEO",
+        label: t("teaser"),
         color: "#000000",
         iconSrc: getLegacyIconPath("video.png"),
         fallback: <PlayArrowIcon />,
@@ -8135,7 +8163,7 @@ export const Tema2Theme = ({ cardData }) => {
     if (documents.length) {
       cards.push({
         id: "documents",
-        label: "DÖKÜMANLAR",
+        label: t("documents"),
         color: "#ffffff",
         iconSrc: getLegacyIconPath("dokuman.png"),
         fallback: <DescriptionIcon />,
@@ -8147,7 +8175,7 @@ export const Tema2Theme = ({ cardData }) => {
     if (bankAccounts.length) {
       cards.push({
         id: "bank",
-        label: "FATURA B.",
+        label: t("invoice_info"),
         color: "#16a085",
         iconSrc: getLegacyIconPath("fatura.png"),
         fallback: <AccountBalanceIcon />,
@@ -8159,7 +8187,7 @@ export const Tema2Theme = ({ cardData }) => {
     if (galleryItems.length) {
       cards.push({
         id: "gallery",
-        label: "ÜRÜNLER",
+        label: t("products"),
         color: "#ffffff",
         iconSrc: getLegacyIconPath("galeri.png"),
         fallback: <CollectionsIcon />,
@@ -8773,7 +8801,7 @@ export const Tema2Theme = ({ cardData }) => {
               textAlign: "center",
             }}
           >
-            Tanıtım Videosu
+            {t("teaser")}
           </Typography>
           <Box
             sx={{
@@ -9099,11 +9127,16 @@ export const Tema2Theme = ({ cardData }) => {
             },
           }}
         >
-          Banka Bilgileri
+          {t("bank_info")}
         </Button>
 
         {/* Dil Seçimi */}
         <Button
+          id="basic-button"
+          aria-controls={open ? "basic-menu" : undefined}
+          aria-haspopup="true"
+          aria-expanded={open ? "true" : undefined}
+          onClick={handleClick}
           sx={{
             minWidth: "auto",
             px: 1.5,
@@ -9122,8 +9155,24 @@ export const Tema2Theme = ({ cardData }) => {
             },
           }}
         >
-          🇹🇷 TR
+          {current.toUpperCase()}
         </Button>
+        <Menu
+          id="basic-menu"
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleClose}
+          slotProps={{
+            list: {
+              "aria-labelledby": "basic-button",
+            },
+          }}
+        >
+          <MenuItem onClick={() => handleClose("tr")}> TR</MenuItem>
+          <MenuItem onClick={() => handleClose("en")}>EN</MenuItem>
+          <MenuItem onClick={() => handleClose("de")}>DE</MenuItem>
+          <MenuItem onClick={() => handleClose("ar")}>AR</MenuItem>
+        </Menu>
 
         <Button
           onClick={() => (documents.length > 0 ? openModal("documents") : null)}
@@ -9158,7 +9207,7 @@ export const Tema2Theme = ({ cardData }) => {
             },
           }}
         >
-          Fatura Bilgileri
+          {t("bank_info")}
         </Button>
       </Box>
 
@@ -9182,10 +9231,10 @@ export const Tema2Theme = ({ cardData }) => {
             color: "#000000",
           }}
         >
-          {activeModal === "gallery" && "Ürünler / Galeri"}
-          {activeModal === "bank" && "Banka Bilgileri"}
-          {activeModal === "documents" && "Dökümanlar"}
-          {activeModal === "about" && "Hakkımda"}
+          {activeModal === "gallery" && t("products")}
+          {activeModal === "bank" && t("bank_info")}
+          {activeModal === "documents" && t("documents")}
+          {activeModal === "about" && t("about_me")}
         </DialogTitle>
         <DialogContent sx={{ mt: 2 }}>
           {activeModal === "about" && (
@@ -9303,6 +9352,7 @@ export const Tema2Theme = ({ cardData }) => {
 
 // Tema3 Theme - Swiper ile centerMode ve perspective
 export const Tema3Theme = ({ cardData }) => {
+  const { t } = useTranslation();
   const [activeModal, setActiveModal] = useState(null);
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [showReadMore, setShowReadMore] = useState(false);
@@ -9482,7 +9532,7 @@ END:VCARD`;
     // REHBERE EKLE
     cards.push({
       id: "contact",
-      label: "REHBERE EKLE",
+      label: t("add_to_contact"),
       color: "#F39C12",
       iconSrc: getLegacyIconPath("rehber.png"),
       fallback: <AccountCircleIcon />,
@@ -9508,7 +9558,7 @@ END:VCARD`;
     if (mapUrl) {
       cards.push({
         id: "map",
-        label: "KONUM",
+        label: t("location"),
         color: "#e0453f",
         iconSrc: getLegacyIconPath("map.png"),
         fallback: <LocationOnIcon />,
@@ -9536,7 +9586,7 @@ END:VCARD`;
     if (cardData?.website) {
       cards.push({
         id: "website",
-        label: "WEB SİTESİ",
+        label: t("website"),
         color: "#000000",
         iconSrc: getLegacyIconPath("web.png"),
         fallback: <LanguageIcon />,
@@ -9550,7 +9600,7 @@ END:VCARD`;
     // PAYLAŞ
     cards.push({
       id: "share",
-      label: "PAYLAŞ",
+      label: t("share"),
       color: "#000000",
       iconSrc: getLegacyIconPath("paylas.png"),
       fallback: <ShareIcon />,
@@ -9564,7 +9614,7 @@ END:VCARD`;
     if (cardData?.bio) {
       cards.push({
         id: "about",
-        label: "HAKKIMDA",
+        label: t("about_me"),
         color: "#00afa5",
         iconSrc: getLegacyIconPath("hakkimda.png"),
         fallback: <InfoIcon />,
@@ -9576,7 +9626,7 @@ END:VCARD`;
     if (cardData?.email) {
       cards.push({
         id: "email",
-        label: "E-POSTA",
+        label: t("email"),
         color: "#5877ff",
         iconSrc: getLegacyIconPath("mail.png"),
         fallback: <EmailIcon />,
@@ -9591,7 +9641,7 @@ END:VCARD`;
     if (cardData?.videoUrl) {
       cards.push({
         id: "video",
-        label: "TANITIM VİDEO",
+        label: t("teaser"),
         color: "#000000",
         iconSrc: getLegacyIconPath("video.png"),
         fallback: <PlayArrowIcon />,
@@ -9606,7 +9656,7 @@ END:VCARD`;
     if (documents.length) {
       cards.push({
         id: "documents",
-        label: "DÖKÜMANLAR",
+        label: t("documents"),
         color: "#ffffff",
         iconSrc: getLegacyIconPath("dokuman.png"),
         fallback: <DescriptionIcon />,
@@ -9618,7 +9668,7 @@ END:VCARD`;
     if (bankAccounts.length) {
       cards.push({
         id: "bank",
-        label: "FATURA B.",
+        label: t("invoice_info"),
         color: "#16a085",
         iconSrc: getLegacyIconPath("fatura.png"),
         fallback: <AccountBalanceIcon />,
@@ -9630,7 +9680,7 @@ END:VCARD`;
     if (galleryItems.length) {
       cards.push({
         id: "gallery",
-        label: "ÜRÜNLER",
+        label: t("products"),
         color: "#ffffff",
         iconSrc: getLegacyIconPath("galeri.png"),
         fallback: <CollectionsIcon />,
@@ -10114,7 +10164,7 @@ END:VCARD`;
                   letterSpacing: "1px",
                 }}
               >
-                Tanıtım Videosu
+                {t("teaser")}
               </Typography>
             </Box>
             <Box
@@ -10379,7 +10429,7 @@ END:VCARD`;
             },
           }}
         >
-          Fatura Bilgileri
+          {t("invoice_info")}
         </Button>
       </Box>
 
@@ -10403,10 +10453,10 @@ END:VCARD`;
             color: "#000000",
           }}
         >
-          {activeModal === "gallery" && "Ürünler / Galeri"}
-          {activeModal === "bank" && "Banka Bilgileri"}
-          {activeModal === "documents" && "Dökümanlar"}
-          {activeModal === "about" && "Hakkımda"}
+          {activeModal === "gallery" && t("products")}
+          {activeModal === "bank" && t("bank_info")}
+          {activeModal === "documents" && t("documents")}
+          {activeModal === "about" && t("about_me")}
         </DialogTitle>
         <DialogContent sx={{ mt: 2 }}>
           {activeModal === "about" && (

@@ -111,14 +111,13 @@ export default function CardWizard() {
       value &&
       (value.startsWith("http://") || value.startsWith("https://"))
     ) {
-      console.log({ value });
       pathValue = extractPathOnly(value, fieldName);
     } else if (value) {
       // Zaten path ise, domain kısmını kaldır (varsa)
       pathValue = value.replace(/^https?:\/\//i, "").trim();
-      const domainPattern =
+      /*  const domainPattern =
         /^[^/]+\.(com|net|org|io|tr|me|qq\.com|co\.uk)[/]?/i;
-      pathValue = pathValue.replace(domainPattern, "").replace(/^\/+/, "");
+      pathValue = pathValue.replace(domainPattern, "").replace(/^\/+/, ""); */
     }
     setCardData((prev) => ({ ...prev, [fieldName]: pathValue }));
   };
@@ -203,6 +202,10 @@ export default function CardWizard() {
     videoUrl: "",
     documents: [],
     bankAccounts: [],
+    companyName: "",
+    taxOffice: "",
+    taxNumber: "",
+    taxAddress: "",
   });
 
   // Banka hesap yönetimi
@@ -3673,8 +3676,10 @@ export default function CardWizard() {
                 <TextField
                   fullWidth
                   label="Firma Adı"
-                  value={cardData.videoUrl}
-                  onChange={(e) => handleUrlChange("videoUrl", e.target.value)}
+                  value={cardData.companyName}
+                  onChange={(e) =>
+                    handleUrlChange("companyName", e.target.value)
+                  }
                   variant="outlined"
                   //placeholder="https://www.youtube.com/watch?v=..."
                   size="large"
@@ -3734,8 +3739,8 @@ export default function CardWizard() {
                 <TextField
                   fullWidth
                   label="Vergi Dairesi"
-                  value={cardData.videoUrl}
-                  onChange={(e) => handleUrlChange("videoUrl", e.target.value)}
+                  value={cardData.taxOffice}
+                  onChange={(e) => handleUrlChange("taxOffice", e.target.value)}
                   variant="outlined"
                   //placeholder="https://www.youtube.com/watch?v=..."
                   size="large"
@@ -3795,8 +3800,8 @@ export default function CardWizard() {
                 <TextField
                   fullWidth
                   label="Vergi Numarası"
-                  value={cardData.videoUrl}
-                  onChange={(e) => handleUrlChange("videoUrl", e.target.value)}
+                  value={cardData.taxNumber}
+                  onChange={(e) => handleUrlChange("taxNumber", e.target.value)}
                   variant="outlined"
                   //placeholder="https://www.youtube.com/watch?v=..."
                   size="large"
@@ -3856,8 +3861,10 @@ export default function CardWizard() {
                 <TextField
                   fullWidth
                   label="Vergi Adresi"
-                  value={cardData.videoUrl}
-                  onChange={(e) => handleUrlChange("videoUrl", e.target.value)}
+                  value={cardData.taxAddress}
+                  onChange={(e) =>
+                    handleUrlChange("taxAddress", e.target.value)
+                  }
                   variant="outlined"
                   //placeholder="https://www.youtube.com/watch?v=..."
                   size="large"

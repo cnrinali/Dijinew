@@ -396,6 +396,10 @@ const getCardByToken = async (req, res) => {
                     c.profileImageUrl,
                     c.qrCodeData,
                     c.companyId,
+                    c.companyName,
+                    c.taxOffice,
+                    c.taxNumber,
+                    c.taxAddress,
                     comp.name as companyName,
                     CASE 
                         WHEN swt.expiresAt < GETDATE() THEN 1 
@@ -537,6 +541,10 @@ const updateCardByToken = async (req, res) => {
         cardData.whatsappBusinessUrl || ""
       )
       .input("videoUrl", sql.NVarChar, cardData.videoUrl || "")
+      .input("companyName", sql.NVarChar, cardData.companyName || "")
+      .input("taxOffice", sql.NVarChar, cardData.taxOffice || "")
+      .input("taxNumber", sql.NVarChar, cardData.taxNumber || "")
+      .input("taxAddress", sql.NVarChar, cardData.taxAddress || "")
       .input(
         "documents",
         sql.NVarChar,
@@ -586,6 +594,10 @@ const updateCardByToken = async (req, res) => {
                     whatsappBusinessUrl = @whatsappBusinessUrl,
                     videoUrl = @videoUrl,
                     theme = @theme,
+                    companyName = @companyName,
+                    taxOffice = @taxOffice,
+                    taxNumber = @taxNumber,
+                    taxAddress = @taxAddress,
                     documents = @documents,
                     updatedAt = GETDATE()
                 WHERE id = @cardId

@@ -1,391 +1,465 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
-import cardService from '../services/cardService';
-import simpleWizardService from '../services/simpleWizardService';
-import { getThemeComponent } from '../components/CardThemes';
+import React, { useState, useEffect } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
+import cardService from "../services/cardService";
+import simpleWizardService from "../services/simpleWizardService";
+import { getThemeComponent } from "../components/CardThemes";
 
 // MUI Imports
-import Box from '@mui/material/Box';
-import Alert from '@mui/material/Alert';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import Paper from '@mui/material/Paper';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Container from '@mui/material/Container';
-import EditIcon from '@mui/icons-material/Edit';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import AcUnitIcon from '@mui/icons-material/AcUnit';
+import Box from "@mui/material/Box";
+import Alert from "@mui/material/Alert";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
+import Paper from "@mui/material/Paper";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Container from "@mui/material/Container";
+import EditIcon from "@mui/icons-material/Edit";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import AcUnitIcon from "@mui/icons-material/AcUnit";
+import { useTranslation } from "react-i18next";
 
 function PublicCardViewPage() {
-    const [cardData, setCardData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    const { slug } = useParams();
-    const [searchParams] = useSearchParams();
-    
-    // Edit mode kontrolü
-    const isEditMode = searchParams.get('edit') === '1';
-    const token = searchParams.get('token');
-    
-    console.log('Slug or ID:', slug);
-    console.log('Edit mode:', isEditMode, 'Token:', token);
+  const { t, i18n } = useTranslation();
+  const [cardData, setCardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const { slug } = useParams();
+  const [searchParams] = useSearchParams();
 
-    // Meta tag'leri ayarla (Open Graph ve Twitter Card için)
-    useEffect(() => {
-        if (!cardData) return;
+  // Edit mode kontrolü
+  const isEditMode = searchParams.get("edit") === "1";
+  const token = searchParams.get("token");
 
-        const cardUrl = `${window.location.origin}/card/${cardData.customSlug || cardData.id}`;
-        const cardTitle = cardData.name 
-            ? `${cardData.name}${cardData.title ? ' - ' + cardData.title : ''} - Dijinew Dijital Kartvizit`
-            : 'Dijinew Dijital Kartvizit';
-        const cardDescription = cardData.bio || cardData.company || 'Yeni nesil dijital kartvizit ile tanışın';
-        
-        // Görsel URL'sini belirle (öncelik: coverImageUrl > profileImageUrl)
-        // API'den gelen görsel URL'leri zaten tam URL olarak geliyor (normalizeCardImageUrls ile)
-        let imageUrl = null;
-        if (cardData.coverImageUrl || cardData.profileImageUrl) {
-            imageUrl = cardData.coverImageUrl || cardData.profileImageUrl;
-            
-            // Eğer relative path ise (nadir durum), tam URL'ye çevir
-            if (imageUrl && !imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
-                const isProduction = window.location.hostname !== 'localhost';
-                const apiBaseUrl = isProduction 
-                    ? 'https://api.dijinew.com'
-                    : `${window.location.protocol}//${window.location.hostname}:5001`;
-                imageUrl = `${apiBaseUrl}${imageUrl.startsWith('/') ? imageUrl : '/' + imageUrl}`;
-            }
+  console.log("Slug or ID:", slug);
+  console.log("Edit mode:", isEditMode, "Token:", token);
+
+  // Meta tag'leri ayarla (Open Graph ve Twitter Card için)
+  useEffect(() => {
+    if (!cardData) return;
+
+    const cardUrl = `${window.location.origin}/card/${
+      cardData.customSlug || cardData.id
+    }`;
+    const cardTitle = cardData.name
+      ? `${cardData.name}${cardData.title ? " - " + cardData.title : ""} - ${t(
+          "digital_card"
+        )}`
+      : t("digital_card");
+    const cardDescription =
+      cardData.bio ||
+      cardData.company ||
+      "Yeni nesil dijital kartvizit ile tanışın";
+
+    // Görsel URL'sini belirle (öncelik: coverImageUrl > profileImageUrl)
+    // API'den gelen görsel URL'leri zaten tam URL olarak geliyor (normalizeCardImageUrls ile)
+    let imageUrl = null;
+    if (cardData.coverImageUrl || cardData.profileImageUrl) {
+      imageUrl = cardData.coverImageUrl || cardData.profileImageUrl;
+
+      // Eğer relative path ise (nadir durum), tam URL'ye çevir
+      if (
+        imageUrl &&
+        !imageUrl.startsWith("http://") &&
+        !imageUrl.startsWith("https://")
+      ) {
+        const isProduction = window.location.hostname !== "localhost";
+        const apiBaseUrl = isProduction
+          ? "https://api.dijinew.com"
+          : `${window.location.protocol}//${window.location.hostname}:5001`;
+        imageUrl = `${apiBaseUrl}${
+          imageUrl.startsWith("/") ? imageUrl : "/" + imageUrl
+        }`;
+      }
+    }
+
+    // Sayfa başlığını ayarla
+    document.title = cardTitle;
+
+    // Meta tag'leri ekle/güncelle
+    const setMetaTag = (property, content) => {
+      if (!content) return;
+
+      let element =
+        document.querySelector(`meta[property="${property}"]`) ||
+        document.querySelector(`meta[name="${property}"]`);
+
+      if (!element) {
+        element = document.createElement("meta");
+        if (property.startsWith("og:")) {
+          element.setAttribute("property", property);
+        } else {
+          element.setAttribute("name", property);
         }
-
-        // Sayfa başlığını ayarla
-        document.title = cardTitle;
-
-        // Meta tag'leri ekle/güncelle
-        const setMetaTag = (property, content) => {
-            if (!content) return;
-            
-            let element = document.querySelector(`meta[property="${property}"]`) || 
-                         document.querySelector(`meta[name="${property}"]`);
-            
-            if (!element) {
-                element = document.createElement('meta');
-                if (property.startsWith('og:')) {
-                    element.setAttribute('property', property);
-                } else {
-                    element.setAttribute('name', property);
-                }
-                document.head.appendChild(element);
-            }
-            element.setAttribute('content', content);
-        };
-
-        // Open Graph meta tag'leri
-        setMetaTag('og:title', cardTitle);
-        setMetaTag('og:description', cardDescription);
-        setMetaTag('og:url', cardUrl);
-        setMetaTag('og:type', 'website');
-        if (imageUrl) {
-            setMetaTag('og:image', imageUrl);
-            setMetaTag('og:image:width', '1200');
-            setMetaTag('og:image:height', '630');
-            setMetaTag('og:image:type', 'image/jpeg');
-        }
-
-        // Twitter Card meta tag'leri
-        setMetaTag('twitter:card', 'summary_large_image');
-        setMetaTag('twitter:title', cardTitle);
-        setMetaTag('twitter:description', cardDescription);
-        if (imageUrl) {
-            setMetaTag('twitter:image', imageUrl);
-        }
-
-        // Cleanup function
-        return () => {
-            // Meta tag'leri kaldırma (isteğe bağlı - genelde kaldırmaya gerek yok)
-        };
-    }, [cardData]);
-
-    // Tema uyumlu arka plan renklerini belirle
-    const getBackgroundStyle = (theme) => {
-        switch (theme) {
-            case 'dark':
-                return {
-                    background: '#0a0a0a',
-                    minHeight: '100vh',
-                    color: 'white'
-                };
-            case 'modern':
-                return {
-                    background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-                    minHeight: '100vh'
-                };
-            case 'creative':
-                return {
-                    background: 'linear-gradient(45deg, #FFF9E6, #F0F8FF, #F5F0FF)',
-                    minHeight: '100vh'
-                };
-            case 'business':
-                return {
-                    background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-                    minHeight: '100vh'
-                };
-            case 'legacybusiness':
-                return {
-                    background: '#f4f4f6',
-                    minHeight: '100vh'
-                };
-            case 'icongrid':
-                return {
-                    background: 'linear-gradient(135deg, #fafafa 0%, #f0f0f0 100%)',
-                    minHeight: '100vh'
-                };
-            case 'ovalcarousel':
-                return {
-                    background: 'linear-gradient(145deg, #0f172a 0%, #1f2937 50%, #0b1120 100%)',
-                    minHeight: '100vh',
-                    color: 'white'
-                };
-            case 'light':
-            default:
-                return {
-                    background: '#f5f5f5',
-                    minHeight: '100vh'
-                };
-        }
+        document.head.appendChild(element);
+      }
+      element.setAttribute("content", content);
     };
 
-    useEffect(() => {
-        const fetchCardData = async () => {
-            setLoading(true);
-            setError('');
-            try {
-                let data;
-                
-                // Edit mode ise token ile veri al
-                if (isEditMode && token) {
-                    try {
-                        const tokenResponse = await simpleWizardService.getCardByToken(token);
-                        if (tokenResponse.success) {
-                            data = tokenResponse.data;
-                            console.log('[PublicCardViewPage] Token ile alınan kart verisi:', data);
-                        } else {
-                            throw new Error(tokenResponse.message || 'Token geçersiz');
-                        }
-                    } catch (tokenErr) {
-                        console.error('Token ile kart getirme hatası:', tokenErr);
-                        setError(tokenErr.response?.data?.message || 'Geçersiz veya süresi dolmuş link.');
-                        return;
-                    }
-                } else {
-                    // Normal public view
-                    data = await cardService.getPublicCard(slug);
-                    console.log('[PublicCardViewPage] Public kart verisi:', data);
-                }
-                
-                // Documents parse et (JSON string ise)
-                console.log('[PublicCardViewPage] Raw documents from DB:', data?.documents);
-                if (data && typeof data.documents === 'string') {
-                    try {
-                        data.documents = JSON.parse(data.documents);
-                        console.log('[PublicCardViewPage] Documents parse edildi:', data.documents);
-                        
-                        // Tüm dökümanları göster
-                        console.log('[PublicCardViewPage] All documents from DB:', data.documents);
-                        data.documents.forEach((doc, index) => {
-                            console.log(`[PublicCardViewPage] Document ${index}:`, doc);
-                        });
-                    } catch (e) {
-                        console.error('[PublicCardViewPage] Documents parse hatası:', e);
-                        data.documents = [];
-                    }
-                } else if (!Array.isArray(data?.documents)) {
-                    data.documents = [];
-                }
-                
-                // Dökümanlara URL ekle (eğer yoksa)
-                if (data?.documents && Array.isArray(data.documents)) {
-                    data.documents = data.documents.map(doc => {
-                        if (!doc.url) {
-                            // Döküman URL'sini oluştur - server'daki static file serving'e göre
-                            // Server port'unu kullan (5001), client port'u değil (5173/5174)
-                            const serverBaseUrl = window.location.protocol + '//' + window.location.hostname + ':5001';
-                            
-                            // Eğer filename varsa onu kullan, yoksa name'i kullan
-                            const fileName = doc.filename || doc.name;
-                            
-                            // Eğer dosya adı zaten tam URL ise (http ile başlıyorsa) olduğu gibi kullan
-                            if (fileName && fileName.startsWith('http')) {
-                                doc.url = fileName;
-                            } else if (fileName) {
-                                // Server'da saklanan dosya adı formatını kontrol et
-                                // Eğer document- ile başlıyorsa server'da saklanan dosya adı
-                                if (fileName.startsWith('document-')) {
-                                    doc.url = `${serverBaseUrl}/uploads/documents/${fileName}`;
-                                } else {
-                                    // Orijinal dosya adı ise, en son yüklenen dökümanı kullan
-                                    // Bu geçici bir çözüm - gerçek çözüm için filename alanını kullanmalıyız
-                                    doc.url = `${serverBaseUrl}/uploads/documents/document-1761475380779-565979617.pdf`;
-                                }
-                            }
-                        }
-                        return doc;
-                    });
-                }
-                
-                console.log('[PublicCardViewPage] Final documents with URLs:', data?.documents);
-                
-                setCardData(data);
-            } catch (err) {
-                console.error("Kartvizit getirilirken hata:", err);
-                const errorMsg = err.response?.data?.message || 'Kartvizit yüklenemedi.';
-                setError(errorMsg);
-            } finally {
-                setLoading(false);
-            }
+    // Open Graph meta tag'leri
+    setMetaTag("og:title", cardTitle);
+    setMetaTag("og:description", cardDescription);
+    setMetaTag("og:url", cardUrl);
+    setMetaTag("og:type", "website");
+    if (imageUrl) {
+      setMetaTag("og:image", imageUrl);
+      setMetaTag("og:image:width", "1200");
+      setMetaTag("og:image:height", "630");
+      setMetaTag("og:image:type", "image/jpeg");
+    }
+
+    // Twitter Card meta tag'leri
+    setMetaTag("twitter:card", "summary_large_image");
+    setMetaTag("twitter:title", cardTitle);
+    setMetaTag("twitter:description", cardDescription);
+    if (imageUrl) {
+      setMetaTag("twitter:image", imageUrl);
+    }
+
+    // Cleanup function
+    return () => {
+      // Meta tag'leri kaldırma (isteğe bağlı - genelde kaldırmaya gerek yok)
+    };
+  }, [cardData]);
+
+  // Tema uyumlu arka plan renklerini belirle
+  const getBackgroundStyle = (theme) => {
+    switch (theme) {
+      case "dark":
+        return {
+          background: "#0a0a0a",
+          minHeight: "100vh",
+          color: "white",
         };
+      case "modern":
+        return {
+          background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+          minHeight: "100vh",
+        };
+      case "creative":
+        return {
+          background: "linear-gradient(45deg, #FFF9E6, #F0F8FF, #F5F0FF)",
+          minHeight: "100vh",
+        };
+      case "business":
+        return {
+          background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
+          minHeight: "100vh",
+        };
+      case "legacybusiness":
+        return {
+          background: "#f4f4f6",
+          minHeight: "100vh",
+        };
+      case "icongrid":
+        return {
+          background: "linear-gradient(135deg, #fafafa 0%, #f0f0f0 100%)",
+          minHeight: "100vh",
+        };
+      case "ovalcarousel":
+        return {
+          background:
+            "linear-gradient(145deg, #0f172a 0%, #1f2937 50%, #0b1120 100%)",
+          minHeight: "100vh",
+          color: "white",
+        };
+      case "light":
+      default:
+        return {
+          background: "#f5f5f5",
+          minHeight: "100vh",
+        };
+    }
+  };
 
-        if (slug) {
-            fetchCardData();
+  useEffect(() => {
+    const fetchCardData = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        let data;
+
+        // Edit mode ise token ile veri al
+        if (isEditMode && token) {
+          try {
+            const tokenResponse = await simpleWizardService.getCardByToken(
+              token
+            );
+            if (tokenResponse.success) {
+              data = tokenResponse.data;
+              console.log(
+                "[PublicCardViewPage] Token ile alınan kart verisi:",
+                data
+              );
+            } else {
+              throw new Error(tokenResponse.message || "Token geçersiz");
+            }
+          } catch (tokenErr) {
+            console.error("Token ile kart getirme hatası:", tokenErr);
+            setError(
+              tokenErr.response?.data?.message ||
+                "Geçersiz veya süresi dolmuş link."
+            );
+            return;
+          }
         } else {
-            setError('Kartvizit kimliği veya özel URL belirtilmemiş.');
-            setLoading(false);
+          // Normal public view
+          data = await cardService.getPublicCard(slug);
+          console.log("[PublicCardViewPage] Public kart verisi:", data);
         }
-    }, [slug, isEditMode, token]);
 
-    if (loading) {
-        return (
-            <Box sx={{ 
-                minHeight: '100vh',
-                background: '#ffffff'
-            }} />
+        // Documents parse et (JSON string ise)
+        console.log(
+          "[PublicCardViewPage] Raw documents from DB:",
+          data?.documents
         );
-    }
+        if (data && typeof data.documents === "string") {
+          try {
+            data.documents = JSON.parse(data.documents);
+            console.log(
+              "[PublicCardViewPage] Documents parse edildi:",
+              data.documents
+            );
 
-    if (error) {
-        // 404 durumunda daha kullanıcı dostu bir mesaj gösterilebilir
-        const isNotFound = error.toLowerCase().includes('bulunamadı') || error.toLowerCase().includes('not found') || error.toLowerCase().includes('aktif değil');
-        const message = isNotFound 
-            ? 'Bu kartvizit şu anda dondurulmuş durumda.'
-            : `Hata: ${error}`;
-        
-        return (
-            <Box sx={{ 
-                minHeight: '100vh',
-                background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #000000 100%)',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                p: 2
-            }}>
-                <Container maxWidth="sm">
-                    <Card sx={{ 
-                        borderRadius: 3,
-                        boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
-                        background: 'rgba(255, 255, 255, 0.98)',
-                        backdropFilter: 'blur(10px)',
-                        border: '2px solid rgba(255, 215, 0, 0.3)'
-                    }}>
-                        <CardContent sx={{ p: 4, textAlign: 'center' }}>
-                            <Box sx={{ 
-                                display: 'flex', 
-                                justifyContent: 'center', 
-                                mb: 3 
-                            }}>
-                                {isNotFound ? (
-                                    <AcUnitIcon sx={{ 
-                                        fontSize: 80, 
-                                        color: '#FFD700',
-                                        opacity: 0.9
-                                    }} />
-                                ) : (
-                                    <ErrorOutlineIcon sx={{ 
-                                        fontSize: 80, 
-                                        color: '#FF6B35',
-                                        opacity: 0.9
-                                    }} />
-                                )}
-                            </Box>
-                            
-                            <Typography variant="h4" sx={{ 
-                                fontWeight: 'bold',
-                                color: '#000000',
-                                mb: 2,
-                                fontSize: { xs: '1.5rem', sm: '2rem' }
-                            }}>
-                                {isNotFound ? 'Kartvizit Donduruldu' : 'Bir Hata Oluştu'}
-                            </Typography>
-                            
-                            <Typography variant="body1" sx={{ 
-                                color: '#333333',
-                                mb: 4,
-                                fontSize: '1.1rem',
-                                lineHeight: 1.6
-                            }}>
-                                {message}
-                            </Typography>
-                            
-                            {isNotFound && (
-                                <Box sx={{ 
-                                    background: 'linear-gradient(135deg, #FFF8DC 0%, #FFE4B5 100%)',
-                                    borderRadius: 2,
-                                    p: 3,
-                                    mb: 4,
-                                    border: '2px solid #FFD700'
-                                }}>
-                                    <Typography variant="body2" sx={{ 
-                                        color: '#000000',
-                                        fontStyle: 'italic',
-                                        fontWeight: '500'
-                                    }}>
-                                        Bu kartvizit geçici olarak dondurulmuş durumda. 
-                                        Kartvizit sahibi ile iletişime geçebilir veya daha sonra tekrar deneyebilirsiniz.
-                                    </Typography>
-                                </Box>
-                            )}
-                            
-                        </CardContent>
-                    </Card>
-                </Container>
-            </Box>
+            // Tüm dökümanları göster
+            console.log(
+              "[PublicCardViewPage] All documents from DB:",
+              data.documents
+            );
+            data.documents.forEach((doc, index) => {
+              console.log(`[PublicCardViewPage] Document ${index}:`, doc);
+            });
+          } catch (e) {
+            console.error("[PublicCardViewPage] Documents parse hatası:", e);
+            data.documents = [];
+          }
+        } else if (!Array.isArray(data?.documents)) {
+          data.documents = [];
+        }
+
+        // Dökümanlara URL ekle (eğer yoksa)
+        if (data?.documents && Array.isArray(data.documents)) {
+          data.documents = data.documents.map((doc) => {
+            if (!doc.url) {
+              // Döküman URL'sini oluştur - server'daki static file serving'e göre
+              // Server port'unu kullan (5001), client port'u değil (5173/5174)
+              const serverBaseUrl =
+                window.location.protocol +
+                "//" +
+                window.location.hostname +
+                ":5001";
+
+              // Eğer filename varsa onu kullan, yoksa name'i kullan
+              const fileName = doc.filename || doc.name;
+
+              // Eğer dosya adı zaten tam URL ise (http ile başlıyorsa) olduğu gibi kullan
+              if (fileName && fileName.startsWith("http")) {
+                doc.url = fileName;
+              } else if (fileName) {
+                // Server'da saklanan dosya adı formatını kontrol et
+                // Eğer document- ile başlıyorsa server'da saklanan dosya adı
+                if (fileName.startsWith("document-")) {
+                  doc.url = `${serverBaseUrl}/uploads/documents/${fileName}`;
+                } else {
+                  // Orijinal dosya adı ise, en son yüklenen dökümanı kullan
+                  // Bu geçici bir çözüm - gerçek çözüm için filename alanını kullanmalıyız
+                  doc.url = `${serverBaseUrl}/uploads/documents/document-1761475380779-565979617.pdf`;
+                }
+              }
+            }
+            return doc;
+          });
+        }
+
+        console.log(
+          "[PublicCardViewPage] Final documents with URLs:",
+          data?.documents
         );
-    }
 
-    if (!cardData) {
-        // Genellikle error state'i bu durumu yakalar ama ek kontrol
-        return (
-            <Box sx={{ 
-                minHeight: '100vh',
-                background: '#f5f5f5',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                p: 2
-            }}>
-                <Alert severity="warning">Kartvizit bilgileri alınamadı.</Alert>
-            </Box>
-        );
-    }
+        setCardData(data);
+      } catch (err) {
+        console.error("Kartvizit getirilirken hata:", err);
+        const errorMsg =
+          err.response?.data?.message || "Kartvizit yüklenemedi.";
+        setError(errorMsg);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // Tema bileşenini seç ve render et
-    const ThemeComponent = getThemeComponent(cardData.theme);
-    const backgroundStyle = getBackgroundStyle(cardData.theme);
-    
+    if (slug) {
+      fetchCardData();
+    } else {
+      setError("Kartvizit kimliği veya özel URL belirtilmemiş.");
+      setLoading(false);
+    }
+  }, [slug, isEditMode, token]);
+
+  if (loading) {
     return (
-        <Box sx={{ 
-            ...backgroundStyle,
-            display: 'flex', 
-            justifyContent: 'center', 
-            alignItems: 'center',
-            p: 0,
-            boxSizing: 'border-box',
-            width: '100%'
-        }}>
-            <ThemeComponent cardData={cardData} />
-        </Box>
+      <Box
+        sx={{
+          minHeight: "100vh",
+          background: "#ffffff",
+        }}
+      />
     );
+  }
+
+  if (error) {
+    // 404 durumunda daha kullanıcı dostu bir mesaj gösterilebilir
+    const isNotFound =
+      error.toLowerCase().includes("bulunamadı") ||
+      error.toLowerCase().includes("not found") ||
+      error.toLowerCase().includes("aktif değil");
+    const message = isNotFound
+      ? "Bu kartvizit şu anda dondurulmuş durumda."
+      : `Hata: ${error}`;
+
+    return (
+      <Box
+        sx={{
+          minHeight: "100vh",
+          background:
+            "linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #000000 100%)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          p: 2,
+        }}
+      >
+        <Container maxWidth="sm">
+          <Card
+            sx={{
+              borderRadius: 3,
+              boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
+              background: "rgba(255, 255, 255, 0.98)",
+              backdropFilter: "blur(10px)",
+              border: "2px solid rgba(255, 215, 0, 0.3)",
+            }}
+          >
+            <CardContent sx={{ p: 4, textAlign: "center" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  mb: 3,
+                }}
+              >
+                {isNotFound ? (
+                  <AcUnitIcon
+                    sx={{
+                      fontSize: 80,
+                      color: "#FFD700",
+                      opacity: 0.9,
+                    }}
+                  />
+                ) : (
+                  <ErrorOutlineIcon
+                    sx={{
+                      fontSize: 80,
+                      color: "#FF6B35",
+                      opacity: 0.9,
+                    }}
+                  />
+                )}
+              </Box>
+
+              <Typography
+                variant="h4"
+                sx={{
+                  fontWeight: "bold",
+                  color: "#000000",
+                  mb: 2,
+                  fontSize: { xs: "1.5rem", sm: "2rem" },
+                }}
+              >
+                {isNotFound ? "Kartvizit Donduruldu" : "Bir Hata Oluştu"}
+              </Typography>
+
+              <Typography
+                variant="body1"
+                sx={{
+                  color: "#333333",
+                  mb: 4,
+                  fontSize: "1.1rem",
+                  lineHeight: 1.6,
+                }}
+              >
+                {message}
+              </Typography>
+
+              {isNotFound && (
+                <Box
+                  sx={{
+                    background:
+                      "linear-gradient(135deg, #FFF8DC 0%, #FFE4B5 100%)",
+                    borderRadius: 2,
+                    p: 3,
+                    mb: 4,
+                    border: "2px solid #FFD700",
+                  }}
+                >
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "#000000",
+                      fontStyle: "italic",
+                      fontWeight: "500",
+                    }}
+                  >
+                    Bu kartvizit geçici olarak dondurulmuş durumda. Kartvizit
+                    sahibi ile iletişime geçebilir veya daha sonra tekrar
+                    deneyebilirsiniz.
+                  </Typography>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        </Container>
+      </Box>
+    );
+  }
+
+  if (!cardData) {
+    // Genellikle error state'i bu durumu yakalar ama ek kontrol
+    return (
+      <Box
+        sx={{
+          minHeight: "100vh",
+          background: "#f5f5f5",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          p: 2,
+        }}
+      >
+        <Alert severity="warning">Kartvizit bilgileri alınamadı.</Alert>
+      </Box>
+    );
+  }
+
+  // Tema bileşenini seç ve render et
+  const ThemeComponent = getThemeComponent(cardData.theme);
+  const backgroundStyle = getBackgroundStyle(cardData.theme);
+
+  return (
+    <Box
+      sx={{
+        ...backgroundStyle,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        p: 0,
+        boxSizing: "border-box",
+        width: "100%",
+      }}
+    >
+      <ThemeComponent cardData={cardData} />
+    </Box>
+  );
 }
 
 // Eski stil objesi kaldırıldı
 // const styles = { ... };
 
-export default PublicCardViewPage; 
+export default PublicCardViewPage;

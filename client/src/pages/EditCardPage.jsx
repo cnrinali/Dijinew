@@ -128,6 +128,10 @@ function EditCardPage() {
     documents: [],
     profileImage: null,
     coverImage: null,
+    companyName: "",
+    taxOffice: "",
+    taxNumber: "",
+    taxAddress: "",
   });
   const [pageLoading, setPageLoading] = useState(true);
   const [formLoading, setFormLoading] = useState(false);
@@ -259,6 +263,10 @@ function EditCardPage() {
           })(),
           profileImage: null,
           coverImage: null,
+          companyName: extractPathOnly(card.companyName || "", "companyName"),
+          taxOffice: extractPathOnly(card.taxOffice || "", "taxOffice"),
+          taxNumber: extractPathOnly(card.taxNumber || "", "taxNumber"),
+          taxAddress: extractPathOnly(card.taxAddress || "", "taxAddress"),
         });
         // Önizlemeleri ayarla
         if (card.profileImageUrl) setProfilePreview(card.profileImageUrl);
@@ -423,8 +431,12 @@ function EditCardPage() {
         "pttAvmUrl",
         "whatsappBusinessUrl",
         "videoUrl",
+        "companyName",
+        "taxOffice",
+        "taxNumber",
+        "taxAddress",
       ];
-
+      console.log({ urk: urlFields[name], value });
       if (type === "switch") {
         setFormData((prevState) => ({
           ...prevState,
@@ -439,9 +451,9 @@ function EditCardPage() {
         } else {
           // Zaten path ise, domain kısmını kaldır (varsa)
           pathValue = value.replace(/^https?:\/\//i, "").trim();
-          const domainPattern =
+          /*  const domainPattern =
             /^[^/]+\.(com|net|org|io|tr|me|qq\.com|co\.uk)[/]?/i;
-          pathValue = pathValue.replace(domainPattern, "").replace(/^\/+/, "");
+          pathValue = pathValue.replace(domainPattern, "").replace(/^\/+/, ""); */
         }
         setFormData((prevState) => ({
           ...prevState,
@@ -2276,7 +2288,90 @@ function EditCardPage() {
                   </Box>
                 )}
               </Grid>
-
+              <Grid item size={{ sm: 12, md: 6, lg: 6 }}>
+                <Paper
+                  sx={{
+                    p: { xs: 2, sm: 3 },
+                    backgroundColor: "background.paper",
+                    border: "1px solid",
+                    borderColor: "divider",
+                  }}
+                >
+                  <Box>
+                    <Typography
+                      variant="h5"
+                      gutterBottom
+                      sx={{
+                        fontWeight: 700,
+                        color: "#FFF",
+                        mb: 1.5,
+                      }}
+                    >
+                      Firma Bilgileri
+                    </Typography>
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        color: "#666",
+                        mb: 2.5,
+                        fontSize: "0.95rem",
+                      }}
+                    >
+                      Fırma Bilgilerinizi Ekleyiniz
+                    </Typography>
+                    <Grid container spacing={2} size={12}>
+                      <Grid item size={{ xs: 12, sm: 12, md: 12, lg: 12 }}>
+                        <TextField
+                          fullWidth
+                          label="Firma Adı"
+                          name="companyName"
+                          value={formData.companyName}
+                          onChange={onChange}
+                          variant="outlined"
+                          //placeholder="https://www.youtube.com/watch?v=..."
+                          size="large"
+                        />
+                      </Grid>
+                      <Grid item size={{ xs: 12, sm: 12, md: 12, lg: 12 }}>
+                        <TextField
+                          fullWidth
+                          label="Vergi Dairesi"
+                          name="taxOffice"
+                          value={formData.taxOffice}
+                          onChange={onChange}
+                          variant="outlined"
+                          //placeholder="https://www.youtube.com/watch?v=..."
+                          size="large"
+                        />
+                      </Grid>
+                      <Grid item size={{ xs: 12, sm: 12, md: 12, lg: 12 }}>
+                        <TextField
+                          fullWidth
+                          label="Vergi Numarası"
+                          name="taxNumber"
+                          value={formData.taxNumber}
+                          onChange={onChange}
+                          variant="outlined"
+                          //placeholder="https://www.youtube.com/watch?v=..."
+                          size="large"
+                        />
+                      </Grid>
+                      <Grid item size={{ xs: 12, sm: 12, md: 12, lg: 12 }}>
+                        <TextField
+                          fullWidth
+                          label="Vergi Adresi"
+                          name="taxAddress"
+                          value={formData.taxAddress}
+                          onChange={onChange}
+                          variant="outlined"
+                          //placeholder="https://www.youtube.com/watch?v=..."
+                          size="large"
+                        />
+                      </Grid>
+                    </Grid>
+                  </Box>
+                </Paper>
+              </Grid>
               {/* Tema Seçimi ve Önizlemesi */}
               <Grid item size={{ xs: 12, sm: 12, md: 12 }}>
                 <Paper
